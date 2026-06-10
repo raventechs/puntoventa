@@ -1277,9 +1277,11 @@ window._rechazarEmpleadoFb = async (id) => {
 // ── OVERRIDE: agregar negocio real ──────────────────────
 window._saveNegocioFb = async (nombre, tipo) => {
   const icons = {Kiosco:"🏪",Ferretería:"🔧",Almacén:"🛒",Verdulería:"🥦",Panadería:"🥖",Farmacia:"💊",Otro:"🏬"};
+  const uid = window._uid || fbAuth.currentUser?.uid;
+  if (!uid) { showToast("Error: no hay usuario activo", "error"); return; }
   await addDoc(collection(fbDb, "negocios"), {
     nombre, tipo, icon: icons[tipo] || "🏬",
-    duenoUid: window._uid, creadoEn: serverTimestamp()
+    duenoUid: uid, creadoEn: serverTimestamp()
   });
   closeModal();
   showToast(`${nombre} agregado`);
