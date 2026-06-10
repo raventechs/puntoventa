@@ -496,24 +496,24 @@ function ventasFiltradas(negId, desde, hasta, horaD, horaH){
 }
 
 // ── ESTADO ─────────────────────────────────────────────
-let currentRole=null, currentPage="dashboard", selectedMedio=null, negocioDetalle=null, empNegocioId="n1";
+window.currentRole=null; let currentPage="dashboard", selectedMedio=null, negocioDetalle=null, empNegocioId="n1";
 let empVentas=[];
 let chartInstances={};
 
 // ── LOGIN ──────────────────────────────────────────────
-let isRegister=false;
+window.isRegister=false;
 selectRole("owner");
 
 function selectRole(role){
-  currentRole=role;
+  window.currentRole=role;
   document.getElementById("role-owner").classList.toggle("active",role==="owner");
   document.getElementById("role-employee").classList.toggle("active",role==="employee");
   document.getElementById("employee-negocio-field").classList.toggle("hidden",role!=="employee");
 }
 document.getElementById("toggle-auth").addEventListener("click",()=>{
-  isRegister=!isRegister;
-  document.getElementById("btn-login").textContent=isRegister?"Crear cuenta →":"Ingresar →";
-  document.getElementById("toggle-auth").textContent=isRegister?"Ya tengo cuenta":"Registrarse";
+  window.isRegister=!window.isRegister;
+  document.getElementById("btn-login").textContent=window.isRegister?"Crear cuenta →":"Ingresar →";
+  document.getElementById("toggle-auth").textContent=window.isRegister?"Ya tengo cuenta":"Registrarse";
 });
 // Login manejado por Firebase en el módulo
 // Keydown manejado por Firebase en el módulo
@@ -1077,7 +1077,7 @@ onAuthStateChanged(fbAuth, async user => {
 window._doAuth = async () => {
   const email    = document.getElementById("login-email").value.trim();
   const pass     = document.getElementById("login-pass").value;
-  const isReg    = isRegister;
+  const isReg    = window.isRegister;
   const errEl    = document.getElementById("auth-error");
   const btn      = document.getElementById("btn-login");
   errEl.classList.remove("show");
@@ -1086,7 +1086,7 @@ window._doAuth = async () => {
   btn.textContent = isReg ? "Creando cuenta..." : "Ingresando...";
   try {
     if (isReg) {
-      const rol    = currentRole;
+      const rol    = window.currentRole;
       const negNombre = document.getElementById("input-negocio")?.value.trim() || "";
       const cred   = await createUserWithEmailAndPassword(fbAuth, email, pass);
       const uid    = cred.user.uid;
@@ -1125,7 +1125,7 @@ window._doAuth = async () => {
     errEl.textContent = msgs[e.code] || "Ocurrió un error. Intentá de nuevo.";
     errEl.classList.add("show");
     btn.disabled = false;
-    btn.textContent = isReg ? "Crear cuenta →" : "Ingresar →";
+    btn.textContent = window.isRegister ? "Crear cuenta →" : "Ingresar →";
   }
 };
 
