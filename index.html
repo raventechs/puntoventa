@@ -1279,7 +1279,13 @@ window._rechazarEmpleadoFb = async (id) => {
 // ── OVERRIDE: agregar negocio real ──────────────────────
 window._saveNegocioFb = async (nombre, tipo) => {
   const icons = {Kiosco:"🏪",Ferretería:"🔧",Almacén:"🛒",Verdulería:"🥦",Panadería:"🥖",Farmacia:"💊",Otro:"🏬"};
-  const uid = fbAuth.currentUser?.uid || window._uid;
+  // Reintentar hasta 3 veces si el usuario aún no está disponible
+  let uid = null;
+  for (let i = 0; i < 10; i++) {
+    uid = fbAuth.currentUser?.uid;
+    if (uid) break;
+    await new Promise(r => setTimeout(r, 200));
+  }
   if (!uid) { showToast("Error: no hay usuario activo", "error"); return; }
   await addDoc(collection(fbDb, "negocios"), {
     nombre, tipo, icon: icons[tipo] || "🏬",
@@ -1309,7 +1315,12 @@ window.saveNegocio = function() {
   const nombre = document.getElementById("m-nombre")?.value.trim();
   if (!nombre) { showToast("El nombre es obligatorio", "error"); return; }
   const tipo = document.getElementById("m-tipo")?.value;
-  window._saveNegocioFb(nombre, tipo);
+  // Esperar a que Firebase esté listo
+  if (window._saveNegocioFb) {
+    window._saveNegocioFb(nombre, tipo);
+  } else {
+    showToast("Esperando conexión, intentá de nuevo", "error");
+  }
 };
 </script>
 </body>
