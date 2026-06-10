@@ -1050,8 +1050,19 @@ onAuthStateChanged(fbAuth, async user => {
   const userDoc = await getDocs(query(collection(fbDb, "usuarios"), where("uid", "==", user.uid)));
   console.log("Perfil encontrado:", !userDoc.empty, "docs:", userDoc.docs.length);
   if (userDoc.empty) {
-    // Primer login — el perfil se crea al registrarse
-    show("login-screen");
+    // No tiene perfil — crear uno como dueño automáticamente
+    await setDoc(doc(fbDb, "usuarios", user.uid), {
+      uid: user.uid, email: user.email,
+      rol: "dueno", creadoEn: serverTimestamp()
+    });
+    // Releer
+    const userDoc2 = await getDocs(query(collection(fbDb, "usuarios"), where("uid", "==", user.uid)));
+    if (userDoc2.empty) { show("login-screen"); return; }
+    const perfil2 = userDoc2.docs[0].data();
+    window._perfil = perfil2;
+    window._uid = user.uid;
+    hide("login-screen");
+    initOwnerFb(user, perfil2);
     return;
   }
   const perfil = userDoc.docs[0].data();
