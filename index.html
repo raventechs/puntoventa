@@ -1037,6 +1037,7 @@ window._getFbUid = () => fbAuth.currentUser?.uid || window._uid;
 
 // ── AUTH STATE ──────────────────────────────────────────
 onAuthStateChanged(fbAuth, async user => {
+  console.log("onAuthStateChanged - user:", user?.email, "uid:", user?.uid);
   if (user) window._uid = user.uid;
   if (!user) {
     // No logueado → mostrar login
@@ -1047,6 +1048,7 @@ onAuthStateChanged(fbAuth, async user => {
 
   // Usuario logueado → buscar su perfil en Firestore
   const userDoc = await getDocs(query(collection(fbDb, "usuarios"), where("uid", "==", user.uid)));
+  console.log("Perfil encontrado:", !userDoc.empty, "docs:", userDoc.docs.length);
   if (userDoc.empty) {
     // Primer login — el perfil se crea al registrarse
     show("login-screen");
