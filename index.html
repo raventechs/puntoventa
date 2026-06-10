@@ -1149,9 +1149,8 @@ document.getElementById("login-pass").addEventListener("keydown", e => { if(e.ke
 // ── DUEÑO FIREBASE ──────────────────────────────────────
 function initOwnerFb(user, perfil) {
   show("app-owner");
-  document.getElementById("sidebar-avatar").textContent = (user.email||"D").substring(0,2).toUpperCase();
-  document.getElementById("sidebar-name").textContent = user.email.split("@")[0];
-  document.getElementById("sidebar-email").textContent = user.email;
+  const av = document.getElementById("owner-avatar"); if(av) av.textContent = (user.email||"D").substring(0,2).toUpperCase();
+  const nm = document.getElementById("owner-name"); if(nm) nm.textContent = user.email.split("@")[0];
 
   // Escuchar negocios del dueño
   onSnapshot(query(collection(fbDb, "negocios"), where("duenoUid", "==", user.uid)), snap => {
