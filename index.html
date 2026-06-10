@@ -92,6 +92,8 @@ input,select,button,textarea{font-family:var(--font)}
   color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;
 }
 .btn-logout:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.auth-error{background:var(--danger-bg);color:var(--danger);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.auth-error.show{display:block}
 
 /* ── LOGIN ───────────────────────────────────────────── */
 #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%);padding:24px}
@@ -340,6 +342,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div id="employee-negocio-field" class="field hidden"><label>Nombre del negocio</label><input id="input-negocio" placeholder="Ej: Kiosco Don Luis"/></div>
     <div class="field"><label>Email</label><input id="login-email" type="email" placeholder="tu@correo.com"/></div>
     <div class="field"><label>Contraseña</label><input id="login-pass" type="password" placeholder="••••••••"/></div>
+    <div id="auth-error" class="auth-error"></div>
     <button class="btn-primary" id="btn-login">Ingresar →</button>
     <div class="login-toggle">¿No tenés cuenta? <span id="toggle-auth">Registrarse</span></div>
   </div>
@@ -512,16 +515,8 @@ document.getElementById("toggle-auth").addEventListener("click",()=>{
   document.getElementById("btn-login").textContent=isRegister?"Crear cuenta →":"Ingresar →";
   document.getElementById("toggle-auth").textContent=isRegister?"Ya tengo cuenta":"Registrarse";
 });
-document.getElementById("btn-login").addEventListener("click",()=>{
-  hide("login-screen");
-  if(currentRole==="owner"){initOwner();}
-  else{
-    const neg=document.getElementById("input-negocio").value.trim();
-    if(neg.toLowerCase().includes("luis")){document.getElementById("pending-negocio-name").textContent=neg;show("pending-screen");}
-    else{document.getElementById("emp-negocio-tag").textContent=neg||"Mi negocio";initEmployee();show("app-employee");}
-  }
-});
-document.getElementById("login-pass").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("btn-login").click();});
+// Login manejado por Firebase en el módulo
+// Keydown manejado por Firebase en el módulo
 
 // ── EMPLEADO ──────────────────────────────────────────
 function initEmployee(){
@@ -1134,8 +1129,7 @@ window._doAuth = async () => {
   }
 };
 
-// Reemplazar el listener del botón de login
-document.getElementById("btn-login").removeEventListener("click", ()=>{});
+// Conectar botón de login a Firebase Auth
 document.getElementById("btn-login").addEventListener("click", window._doAuth);
 document.getElementById("login-pass").addEventListener("keydown", e => { if(e.key==="Enter") window._doAuth(); });
 
