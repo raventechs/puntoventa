@@ -522,18 +522,34 @@ async function doAuth(){
   btn.textContent = isRegister ? "Creando cuenta..." : "Ingresando...";
   try {
     if(isRegister){
+      window._registrando = true; // bloquear onAuthStateChanged durante el registro
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const uid  = cred.user.uid;
       if(currentRole === "owner"){
         await setDoc(doc(db,"usuarios",uid),{ uid, email, rol:"dueno", creadoEn:serverTimestamp() });
       } else {
         const negNombre = document.getElementById("input-negocio").value.trim();
-        if(!negNombre){ errEl.textContent="Escribí el nombre del negocio."; errEl.classList.add("show"); btn.disabled=false; btn.textContent="Crear cuenta →"; return; }
+        if(!negNombre){ errEl.textContent="Escribí el nombre del negocio."; errEl.classList.add("show"); btn.disabled=false; btn.textContent="Crear cuenta →"; window._registrando=false; return; }
         const snap = await getDocs(query(collection(db,"negocios"), where("nombre","==",negNombre)));
-        if(snap.empty){ errEl.textContent="No se encontró ese negocio. Verificá el nombre exacto."; errEl.classList.add("show"); btn.disabled=false; btn.textContent="Crear cuenta →"; return; }
+        if(snap.empty){ errEl.textContent="No se encontró ese negocio. Verificá el nombre exacto."; errEl.classList.add("show"); btn.disabled=false; btn.textContent="Crear cuenta →"; window._registrando=false; return; }
         const negDoc = snap.docs[0];
         await setDoc(doc(db,"usuarios",uid),{ uid, email, rol:"empleado", negocioId:negDoc.id, negocioNombre:negDoc.data().nombre, duenoUid:negDoc.data().duenoUid, estado:"pendiente", creadoEn:serverTimestamp() });
       }
+      window._registrando = false; // perfil guardado, ahora sí puede actuar onAuthStateChanged
+      // Forzar re-evaluación del estado
+      const user = auth.currentUser;
+      if(user) {
+        const snap2 = await getDocs(query(collection(db,"usuarios"), where("uid","==",user.uid)));
+        if(!snap2.empty){
+          const perfil = snap2.docs[0].data();
+          currentPerfil = perfil;
+          hide("login-screen");
+          if(perfil.rol==="dueno"){ iniciarDueno(user); }
+          else if(perfil.estado==="pendiente"){ document.getElementById("pending-negocio-name").textContent=perfil.negocioNombre||"Tu negocio"; show("pending-screen"); }
+          else { empNegocioId=perfil.negocioId; empDuenoUid=perfil.duenoUid; document.getElementById("emp-negocio-tag").textContent=perfil.negocioNombre||"Mi negocio"; iniciarEmpleado(user,perfil); show("app-employee"); }
+        }
+      }
+      return;
     } else {
       await signInWithEmailAndPassword(auth, email, pass);
     }
@@ -558,6 +574,7 @@ document.getElementById("login-pass").addEventListener("keydown", e => { if(e.ke
 
 // ── AUTH STATE ──────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
+  if(window._registrando) return; // esperar a que el registro termine de guardar el perfil
   hide("login-screen"); hide("pending-screen"); hide("app-employee"); hide("app-owner"); hide("mob-nav");
 
   if(!user){
@@ -573,9 +590,9 @@ onAuthStateChanged(auth, async user => {
   const snap = await getDocs(query(collection(db,"usuarios"), where("uid","==",user.uid)));
   let perfil;
   if(snap.empty){
-    // Crear perfil dueño para usuarios existentes sin perfil
-    perfil = { uid:user.uid, email:user.email, rol:"dueno", creadoEn:null };
-    await setDoc(doc(db,"usuarios",user.uid), { ...perfil, creadoEn:serverTimestamp() });
+    // Sin perfil - volver al login
+    show("login-screen");
+    return;
   } else {
     perfil = snap.docs[0].data();
   }
