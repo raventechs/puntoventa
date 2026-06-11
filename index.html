@@ -483,6 +483,8 @@ function destroyCharts(){
 function crearBarras(canvasId, labels, datasets, opts={}){
   const ctx = document.getElementById(canvasId);
   if(!ctx) return;
+  // Destruir chart existente en este canvas si lo hay
+  if(chartInstances[canvasId]){ try{ chartInstances[canvasId].destroy() }catch(e){} delete chartInstances[canvasId]; }
   chartInstances[canvasId] = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
