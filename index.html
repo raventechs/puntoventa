@@ -597,10 +597,11 @@ onAuthStateChanged(auth, async user => {
     perfil = snap.docs[0].data();
   }
   currentPerfil = perfil;
+  console.log("PERFIL:", perfil.rol, perfil.estado, perfil.negocioNombre);
 
   if(perfil.rol === "dueno"){
     iniciarDueno(user);
-  } else {
+  } else if(perfil.rol === "empleado"){
     empNegocioId = perfil.negocioId;
     empDuenoUid  = perfil.duenoUid;
     if(perfil.estado === "pendiente"){
@@ -611,6 +612,9 @@ onAuthStateChanged(auth, async user => {
       iniciarEmpleado(user, perfil);
       show("app-employee");
     }
+  } else {
+    console.log("ROL DESCONOCIDO:", perfil.rol);
+    show("login-screen");
   }
 });
 
