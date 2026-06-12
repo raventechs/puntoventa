@@ -665,10 +665,12 @@ function iniciarDueno(user){
     renderPaginaActual();
   });
 
-  // Empleados
+  // Empleados — escuchar todos los empleados, filtrar por negocios del dueño en el cliente
   if(unsubEmpleados) unsubEmpleados();
-  unsubEmpleados = onSnapshot(query(collection(db,"usuarios"), where("rol","==","empleado"), where("duenoUid","==",user.uid)), snap => {
-    empleados = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  unsubEmpleados = onSnapshot(query(collection(db,"usuarios"), where("rol","==","empleado")), snap => {
+    // Filtrar solo empleados de negocios de este dueño
+    empleados = snap.docs.map(d => ({id:d.id, ...d.data()}))
+      .filter(e => negocios.some(n => n.id === e.negocioId) || e.duenoUid === user.uid);
     actualizarBadge();
     renderPaginaActual();
   });
@@ -979,12 +981,20 @@ function renderEmpleados(){
 }
 
 window.aprobarEmpleado = async function(id){
-  await updateDoc(doc(db,"usuarios",id),{estado:"aprobado"});
-  showToast("Empleado aprobado");
+  try {
+    await updateDoc(doc(db,"usuarios",id),{estado:"aprobado"});
+    showToast("✅ Empleado aprobado correctamente");
+  } catch(e) {
+    showToast("Error al aprobar: " + e.message, "error");
+  }
 };
 window.rechazarEmpleado = async function(id){
-  await deleteDoc(doc(db,"usuarios",id));
-  showToast("Empleado rechazado","error");
+  try {
+    await deleteDoc(doc(db,"usuarios",id));
+    showToast("Empleado rechazado","error");
+  } catch(e) {
+    showToast("Error al rechazar: " + e.message, "error");
+  }
 };
 
 // ── CIERRE ──────────────────────────────────────────────
