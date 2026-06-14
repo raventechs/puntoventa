@@ -490,7 +490,7 @@ input,select,button,textarea{font-family:var(--font)}
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{getFirestore,collection,doc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,doc,addDoc,setDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 🔧 FIREBASE CONFIG
 const FIREBASE_CONFIG={
@@ -698,7 +698,7 @@ document.getElementById('btn-login').addEventListener('click',async()=>{
     if(isRegister){
       const cred=await createUserWithEmailAndPassword(auth,email,pass);
       if(roleSelected==='owner'){
-        await addDoc(collection(db,'usuarios'),{uid:cred.user.uid,email,rol:'owner',banned:false,createdAt:serverTimestamp()});
+        await setDoc(doc(db,'usuarios',cred.user.uid),{uid:cred.user.uid,email,rol:'owner',banned:false,createdAt:serverTimestamp()});
       } else {
         const ownerEmail=document.getElementById('input-owner-email').value.trim();
         if(!ownerEmail){err.textContent='Ingresá el email del dueño';err.classList.add('show');btn.disabled=false;btn.textContent='Crear cuenta →';return;}
@@ -709,7 +709,7 @@ document.getElementById('btn-login').addEventListener('click',async()=>{
         // Buscar negocio del dueño
         const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',ownerData.uid)));
         const negocioId=negSnap.empty?null:negSnap.docs[0].id;
-        await addDoc(collection(db,'usuarios'),{uid:cred.user.uid,email,rol:'employee',ownerUid:ownerData.uid,negocioId,estado:'pendiente',banned:false,createdAt:serverTimestamp()});
+        await setDoc(doc(db,'usuarios',cred.user.uid),{uid:cred.user.uid,email,rol:'employee',ownerUid:ownerData.uid,negocioId,estado:'pendiente',banned:false,createdAt:serverTimestamp()});
       }
     } else {
       await signInWithEmailAndPassword(auth,email,pass);
