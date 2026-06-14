@@ -4,56 +4,55 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PuntoVenta</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* ══ TOKENS LIGHT ══════════════════════════════════════════ */
 :root{
   --navy:#0f1e3d;--navy2:#162444;--navy3:#1e2f55;
-  --blue:#1d4ed8;--gold:#f0b84a;--gold2:#d9a33c;
-  --bg:#eef0f6;--surface:#fff;--surface2:#f4f6fb;--border:#dde1ec;
-  --text:#0f1e3d;--muted:#6b7a99;
-  --ok:#16a34a;--ok-bg:#dcfce7;--warn:#d97706;--warn-bg:#fef3c7;
-  --danger:#dc2626;--danger-bg:#fee2e2;--mp:#009ee3;--mp-bg:#e6f6fd;
-  --font:'Inter',sans-serif;--radius:14px;--radius-sm:10px;
-  --shadow:0 2px 10px rgba(15,30,61,.09);--shadow-md:0 6px 24px rgba(15,30,61,.13);
-  --shadow-btn:0 4px 12px rgba(15,30,61,.18);
-  --shadow-gold:0 4px 14px rgba(240,184,74,.35);
-  --shadow-navy:0 4px 14px rgba(15,30,61,.3);
+  --blue:#1d4ed8;--blue-dark:#1338a0;
+  --gold:#f0b84a;--gold2:#c49020;
+  --green:#16a34a;--green-bg:#dcfce7;
+  --warn:#d97706;--warn-bg:#fef3c7;
+  --danger:#dc2626;--danger-bg:#fee2e2;
+  --mp:#009ee3;--mp-bg:#e6f6fd;
+  --bg:#eef0f6;--surface:#ffffff;--surface2:#f4f6fb;
+  --border:#dde1ec;--text:#0f1e3d;--muted:#6b7a99;
+  --shadow:0 2px 8px rgba(15,30,61,.08);
+  --shadow-md:0 4px 20px rgba(15,30,61,.12);
+  --font:'Inter',sans-serif;--radius:12px;--radius-sm:8px;
 }
-html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px}
-input,select,button{font-family:var(--font)}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+/* ══ TOKENS DARK ═══════════════════════════════════════════ */
+[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#0f172a;
+  --border:#334155;--text:#f1f5f9;--muted:#94a3b8;
+  --shadow:0 2px 8px rgba(0,0,0,.3);
+  --shadow-md:0 4px 20px rgba(0,0,0,.4);
+  --green-bg:#052e16;--warn-bg:#1c1000;--danger-bg:#3f0f0f;--mp-bg:#0c1e2e;
+}
+/* ══ RESET ═════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5;transition:background .2s,color .2s}
+input,select,button,textarea{font-family:var(--font)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 .hidden{display:none!important}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .fade{animation:fadeUp .3s ease both}
 
-/* BOTONES */
-.btn-primary{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-navy);transition:all .2s}
-.btn-primary:hover{background:var(--navy3)}
-.btn-primary:disabled{opacity:.5;cursor:default}
-.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;box-shadow:var(--shadow-btn);transition:all .2s;white-space:nowrap}
-.btn-sm:hover{background:var(--surface2)}
-.btn-sm.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700;box-shadow:var(--shadow-gold)}
-.btn-sm.gold:hover{background:var(--gold2)}
-.btn-sm.navy{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:var(--shadow-navy)}
-.btn-sm.danger{background:var(--danger-bg);color:var(--danger);border-color:#fca5a5}
-.btn-cargar{width:100%;padding:16px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-navy);transition:all .2s}
-.btn-cargar:hover{background:var(--navy3)}
-.btn-cargar:disabled{opacity:.5;cursor:default}
-
-/* LOGIN */
+/* ══ LOGIN ═════════════════════════════════════════════════ */
 #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%);padding:24px}
 .login-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,.3);animation:fadeUp .4s ease both}
 .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:36px}
-.login-brand-icon{width:46px;height:46px;background:var(--navy);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.login-brand-icon{width:46px;height:46px;background:var(--navy);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;user-select:none}
 .login-brand-name{font-size:22px;font-weight:800;color:var(--navy)}
 .login-brand-name span{color:var(--gold)}
+.login-title{font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.login-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
 .role-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
-.role-btn{padding:14px 10px;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);box-shadow:var(--shadow)}
+.role-btn{padding:14px 10px;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.role-btn:hover{border-color:var(--blue)}
 .role-btn.active{border-color:var(--navy);background:#f0f3fa}
 .role-btn-icon{font-size:24px;margin-bottom:6px}
 .role-btn-label{font-size:13px;font-weight:700;color:var(--navy)}
@@ -61,219 +60,246 @@ input,select,button{font-family:var(--font)}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
 .field input,.field select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s}
-.field input:focus{border-color:var(--blue)}
+.field input:focus,.field select:focus{border-color:var(--blue)}
 .field input::placeholder{color:var(--muted)}
-.login-toggle{text-align:center;font-size:13px;color:var(--muted);margin-top:18px}
+.btn-primary{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;margin-top:8px;box-shadow:0 4px 0 var(--navy3)}
+.btn-primary:hover{background:var(--navy3)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.login-toggle{text-align:center;font-size:13px;color:var(--muted);margin-top:20px}
 .login-toggle span{color:var(--blue);cursor:pointer;font-weight:600}
 .auth-error{background:var(--danger-bg);color:var(--danger);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
 .auth-error.show{display:block}
 
-/* PENDING */
+/* ══ PENDING SCREEN ════════════════════════════════════════ */
 #pending-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%);padding:24px}
-.pending-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.3)}
-.pending-negocio{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:24px}
+.pending-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,.3);text-align:center}
+.pending-icon{font-size:52px;margin-bottom:20px}
+.pending-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.pending-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px}
+.pending-badge{background:var(--warn-bg);color:var(--warn);border:1px solid #fcd34d;border-radius:var(--radius);padding:10px 16px;font-size:13px;font-weight:600;margin-bottom:20px}
 
-/* EMPLEADO */
-#app-employee{min-height:100vh;background:var(--bg);display:flex;flex-direction:column;max-width:480px;margin:0 auto}
-.emp-topbar{background:var(--navy);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.emp-brand{display:flex;align-items:center;gap:10px}
-.emp-brand-icon{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.emp-brand-name{font-size:16px;font-weight:800;color:#fff}
-.emp-brand-name span{color:var(--gold)}
-.emp-negocio-tag{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px}
-.btn-exit{background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-sm);color:rgba(255,255,255,.5);font-size:12px;padding:5px 10px;cursor:pointer;transition:all .2s}
-.btn-exit:hover{color:#fff;border-color:rgba(255,255,255,.4)}
-.carga-section{padding:20px;background:var(--surface);margin:16px;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
-.carga-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px}
-.importe-box{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px;transition:border-color .2s}
-.importe-box:focus-within{border-color:var(--navy)}
-.importe-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
-.importe-input{font-size:36px;font-weight:800;color:var(--navy);border:none;background:transparent;text-align:center;width:100%;outline:none}
-.importe-input::placeholder{color:var(--border)}
-.medio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.medio-btn{padding:14px 8px;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);box-shadow:var(--shadow)}
-.medio-btn.sel-efectivo{border-color:var(--ok);background:var(--ok-bg)}
-.medio-btn.sel-mp{border-color:var(--mp);background:var(--mp-bg)}
-.medio-btn.sel-debito{border-color:var(--blue);background:#dbeafe}
-.medio-btn-icon{font-size:22px;margin-bottom:4px}
-.medio-btn-label{font-size:12px;font-weight:700;color:var(--navy)}
-.desc-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s;margin-bottom:16px}
-.desc-input:focus{border-color:var(--blue)}
-.desc-input::placeholder{color:var(--muted)}
-.btn-gasto{width:100%;margin-top:10px;padding:11px;background:transparent;border:1.5px solid #fca5a5;border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--danger);cursor:pointer;transition:all .2s}
-.btn-gasto:hover{background:var(--danger-bg)}
-.historial-section{padding:0 16px 20px}
-.historial-header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 12px}
-.historial-title{font-size:15px;font-weight:700;color:var(--navy)}
-.historial-total{font-size:13px;color:var(--muted)}
-.historial-total strong{color:var(--navy);font-weight:700}
-
-/* DUEÑO */
+/* ══ APP LAYOUT ════════════════════════════════════════════ */
 #app-owner{display:flex;min-height:100vh}
-.sidebar{width:230px;min-width:230px;background:var(--navy);display:flex;flex-direction:column;padding:24px 14px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar{width:230px;min-width:230px;background:var(--navy);display:flex;flex-direction:column;padding:24px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;transition:background .2s}
+[data-theme="dark"] .sidebar{background:#080f1e}
 .sidebar-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 28px}
-.sidebar-brand-icon{width:36px;height:36px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.sidebar-brand-name{font-size:17px;font-weight:800;color:#fff}
+.sidebar-brand-icon{width:36px;height:36px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;user-select:none}
+.sidebar-brand-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .sidebar-brand-name span{color:var(--gold)}
 .sidebar-section{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;padding:16px 10px 6px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;margin-bottom:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:background .15s,color .15s;user-select:none;margin-bottom:2px}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .nav-item.active{background:rgba(240,184,74,.15);color:var(--gold);font-weight:700}
 .nav-icon{font-size:17px;width:22px;text-align:center}
-.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;min-width:20px;text-align:center}
 .sidebar-bottom{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
 .user-chip{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm)}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--navy);flex-shrink:0}
 .user-name{font-size:13px;font-weight:600;color:#fff}
-.user-role{font-size:11px;color:rgba(255,255,255,.4)}
+.user-role{font-size:11px;color:rgba(255,255,255,.45)}
 .btn-logout{width:100%;margin-top:8px;padding:9px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
 .btn-logout:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.btn-theme-sidebar{width:100%;margin-top:6px;padding:9px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-theme-sidebar:hover{border-color:rgba(255,255,255,.3);color:#fff}
+
+/* ══ MAIN ══════════════════════════════════════════════════ */
 .main{flex:1;overflow-y:auto;min-width:0}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
-.topbar-title{font-size:19px;font-weight:800;color:var(--navy)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10;transition:background .2s}
+.topbar-title{font-size:19px;font-weight:800;color:var(--text)}
 .topbar-right{display:flex;align-items:center;gap:10px}
-.topbar-badge{background:var(--warn-bg);color:var(--warn);font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px}
+.topbar-badge{font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:99px}
 .page{padding:24px 28px;animation:fadeUp .3s ease both}
 
-/* KPI */
+/* ══ KPI ═══════════════════════════════════════════════════ */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
 .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .kpi-icon{font-size:22px}
 .kpi-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
-.kpi-badge.ok{background:var(--ok-bg);color:var(--ok)}
-.kpi-badge.info{background:#dbeafe;color:var(--blue)}
+.kpi-badge.ok{background:var(--green-bg);color:var(--green)}
 .kpi-badge.mp{background:var(--mp-bg);color:var(--mp)}
-.kpi-value{font-size:28px;font-weight:800;color:var(--navy);line-height:1;margin-bottom:4px}
+.kpi-badge.info{background:#dbeafe;color:var(--blue)}
+.kpi-value{font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
 .kpi-label{font-size:12px;color:var(--muted);font-weight:500}
+
+/* ══ BOTONES ═══════════════════════════════════════════════ */
 .sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.sec-title{font-size:15px;font-weight:700;color:var(--navy)}
+.sec-title{font-size:15px;font-weight:700;color:var(--text)}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap}
+.btn-sm:hover{background:var(--surface2);border-color:var(--blue)}
+.btn-sm.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700;box-shadow:0 3px 0 var(--gold2)}
+.btn-sm.gold:hover{background:var(--gold2)}
+.btn-sm.danger{background:var(--danger-bg);color:var(--danger);border-color:#fca5a5}
+.btn-sm.danger:hover{background:#fecaca}
+.btn-sm.success{background:var(--green-bg);color:var(--green);border-color:#86efac}
 
-/* CHARTS */
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
-.chart-card-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:16px}
-.chart-wrap{position:relative;height:200px}
+/* ══ NEGOCIOS ══════════════════════════════════════════════ */
+.negocios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.negocio-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .2s,transform .15s}
+.negocio-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.negocio-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.negocio-icon{font-size:32px}
+.negocio-live{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--green)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.negocio-nombre{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px}
+.negocio-tipo{font-size:12px;color:var(--muted);margin-bottom:14px}
+.negocio-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.negocio-stat{background:var(--bg);border-radius:var(--radius-sm);padding:10px}
+.negocio-stat-val{font-size:16px;font-weight:800;color:var(--text)}
+.negocio-stat-lbl{font-size:11px;color:var(--muted)}
+.negocio-code{background:var(--bg);border-radius:var(--radius-sm);padding:8px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between}
+.negocio-code-label{font-size:11px;color:var(--muted);font-weight:600}
+.negocio-code-val{font-family:monospace;font-size:14px;font-weight:800;color:var(--blue);letter-spacing:2px}
 
-/* VENTAS */
+/* ══ VENTAS ════════════════════════════════════════════════ */
 .ventas-list{display:flex;flex-direction:column;gap:8px}
-.venta-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
-.venta-medio{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.venta-medio.efectivo{background:var(--ok-bg)}
+.venta-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow)}
+.venta-medio{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.venta-medio.efectivo{background:var(--green-bg)}
 .venta-medio.mp{background:var(--mp-bg)}
 .venta-medio.debito{background:#dbeafe}
-.venta-info{flex:1;min-width:0}
-.venta-desc{font-size:14px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.venta-info{flex:1}
+.venta-desc{font-size:14px;font-weight:600;color:var(--text)}
 .venta-meta{font-size:12px;color:var(--muted);margin-top:2px}
-.venta-importe{font-size:17px;font-weight:800;color:var(--navy);text-align:right;flex-shrink:0}
-.venta-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block}
-.tag-efectivo{background:var(--ok-bg);color:var(--ok)}
+.venta-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;margin-top:4px;display:inline-block}
+.tag-efectivo{background:var(--green-bg);color:var(--green)}
 .tag-mp{background:var(--mp-bg);color:var(--mp)}
 .tag-debito{background:#dbeafe;color:var(--blue)}
+.venta-importe{font-size:17px;font-weight:800;color:var(--text);white-space:nowrap}
 
-/* NEGOCIOS */
-.negocios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px}
-.negocio-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s}
-.negocio-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.negocio-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
-.negocio-icon{font-size:28px}
-.negocio-live{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ok)}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
-.negocio-nombre{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px}
-.negocio-tipo{font-size:12px;color:var(--muted);margin-bottom:16px}
-.negocio-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.negocio-stat{background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px}
-.negocio-stat-val{font-size:16px;font-weight:800;color:var(--navy)}
-.negocio-stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-
-/* DETALLE */
-.detalle-header{display:flex;align-items:center;gap:16px;background:var(--navy);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;color:#fff}
-.detalle-icon{font-size:36px}
-.detalle-nombre{font-size:22px;font-weight:800}
-.detalle-tipo{font-size:13px;color:rgba(255,255,255,.55);margin-top:2px}
-
-/* FILTROS */
-.filtros-bar{display:flex;gap:10px;align-items:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow);flex-wrap:wrap}
-.filtro-field{display:flex;flex-direction:column;gap:5px}
-.filtro-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
-.filtro-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;min-width:130px;font-family:var(--font)}
-.filtro-input:focus{border-color:var(--blue)}
-.filtro-actions{display:flex;gap:8px;align-items:flex-end;margin-left:auto}
-
-/* EMPLEADOS */
+/* ══ EMPLEADOS ═════════════════════════════════════════════ */
 .empleados-list{display:flex;flex-direction:column;gap:8px}
-.empleado-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
-.emp-avatar-sm{width:38px;height:38px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--navy);flex-shrink:0}
+.empleado-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.emp-avatar{width:40px;height:40px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--navy);flex-shrink:0}
 .emp-info{flex:1}
-.emp-nombre{font-size:14px;font-weight:700;color:var(--navy)}
-.emp-email{font-size:12px;color:var(--muted)}
-.emp-estado{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px}
-.estado-aprobado{background:var(--ok-bg);color:var(--ok)}
+.emp-nombre{font-size:15px;font-weight:700;color:var(--text)}
+.emp-email{font-size:12px;color:var(--muted);margin-top:2px}
+.emp-estado{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.estado-aprobado{background:var(--green-bg);color:var(--green)}
 .estado-pendiente{background:var(--warn-bg);color:var(--warn)}
+.emp-actions{display:flex;gap:6px}
 
-/* CIERRE */
-.cierre-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:16px}
-.cierre-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px}
-.cierre-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
-.cierre-row:last-child{border-bottom:none}
-.cierre-label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.cierre-val{font-size:16px;font-weight:700;color:var(--navy)}
-.cierre-neto .cierre-label{font-size:16px;font-weight:700;color:var(--navy)}
-.cierre-neto .cierre-val{font-size:22px;font-weight:800;color:var(--ok)}
+/* ══ CIERRE ════════════════════════════════════════════════ */
+.cierre-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.cierre-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:16px}
+.cierre-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.cierre-row:last-of-type{border-bottom:none}
+.cierre-label{font-size:14px;color:var(--muted)}
+.cierre-val{font-size:16px;font-weight:700;color:var(--text)}
+.cierre-total .cierre-label{font-size:15px;font-weight:800;color:var(--text)}
+.cierre-total .cierre-val{font-size:20px;font-weight:800;color:var(--navy)}
+[data-theme="dark"] .cierre-total .cierre-val{color:var(--gold)}
 
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(15,30,61,.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
-.modal{background:var(--surface);border-radius:20px;padding:32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:slideUp .25s ease;box-shadow:0 24px 60px rgba(15,30,61,.25)}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.modal-title{font-size:18px;font-weight:800;color:var(--navy)}
-.modal-close{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted)}
-.modal-close:hover{background:var(--bg);color:var(--navy)}
-.modal-footer{display:flex;gap:10px;margin-top:24px}
-.btn-cancel{flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer}
-.btn-save{flex:2;padding:12px;background:var(--navy);border:none;border-radius:var(--radius-sm);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-navy)}
+/* ══ EMPLOYEE APP ══════════════════════════════════════════ */
+#app-employee{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+.emp-header{background:var(--navy);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+[data-theme="dark"] .emp-header{background:#080f1e}
+.emp-header-brand{font-size:18px;font-weight:800;color:#fff}
+.emp-header-brand span{color:var(--gold)}
+.emp-header-right{display:flex;align-items:center;gap:8px}
+.emp-negocio-tag{font-size:11px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;padding:4px 10px;border-radius:99px}
+.emp-btn-logout{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:20px;padding:4px}
+.emp-btn-theme{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:18px;padding:4px}
+.emp-content{flex:1;padding:16px;max-width:480px;margin:0 auto;width:100%;padding-bottom:20px}
+.emp-total-card{background:var(--navy);border-radius:14px;padding:20px;margin-bottom:20px;text-align:center}
+[data-theme="dark"] .emp-total-card{background:#080f1e}
+.emp-total-label{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px}
+.emp-total-val{font-size:36px;font-weight:800;color:#fff}
+.emp-form-card{background:var(--surface);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.emp-form-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px}
+.medios-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.medio-btn{padding:14px 8px;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.medio-btn:hover{border-color:var(--blue)}
+.medio-btn-icon{font-size:22px;margin-bottom:4px}
+.medio-btn-label{font-size:12px;font-weight:700;color:var(--text)}
+.medio-btn.selected-efectivo{border-color:var(--green);background:var(--green-bg)}
+.medio-btn.selected-mp{border-color:var(--mp);background:var(--mp-bg)}
+.medio-btn.selected-debito{border-color:var(--blue);background:#dbeafe}
+.emp-importe-row{display:flex;gap:10px;margin-bottom:12px}
+.emp-importe-row input{flex:1;padding:14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:20px;font-weight:700;color:var(--text);background:var(--surface2);outline:none}
+.emp-importe-row input:focus{border-color:var(--blue)}
+.btn-venta{width:100%;padding:14px;background:var(--gold);color:var(--navy);border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 var(--gold2);transition:transform .1s,box-shadow .1s}
+.btn-venta:active{transform:translateY(2px);box-shadow:0 2px 0 var(--gold2)}
+
+/* ══ EMPTY / LOADING ════════════════════════════════════════ */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-msg{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:14px}
+.loading-wrap{display:flex;justify-content:center;padding:40px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+
+/* ══ MODAL ═════════════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;transition:background .2s}
+@media(min-width:600px){.modal{border-radius:20px;padding:32px 28px}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:17px;font-weight:800;color:var(--text)}
+.modal-close{width:32px;height:32px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.btn-cancel{padding:10px 18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.btn-save{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 var(--navy3)}
 .btn-save:disabled{opacity:.5;cursor:default}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;z-index:200;background:var(--navy);color:#fff;border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:10px;animation:slideUp .3s ease;font-size:14px;font-weight:600;box-shadow:0 8px 32px rgba(15,30,61,.3)}
+/* ══ ADMIN PANEL ═══════════════════════════════════════════ */
+#admin-screen{display:none;min-height:100vh}
+.admin-header{background:#7c3aed;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.admin-header-title{font-size:18px;font-weight:800;color:#fff}
+.admin-badge-pill{background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px}
+.btn-admin-exit{background:none;border:2px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.admin-tabs{background:#6d28d9;display:flex}
+.admin-tab{flex:1;padding:12px 4px;text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.admin-tab.active{color:#fff;border-bottom-color:var(--gold)}
+.admin-content{padding:16px;padding-bottom:40px}
+.admin-card{background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.admin-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.admin-card-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+.admin-card-actions{display:flex;gap:8px}
+.btn-adel{flex:1;padding:8px;background:var(--danger-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-aban{flex:1;padding:8px;background:var(--danger-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-aunban{flex:1;padding:8px;background:var(--green-bg);border:1.5px solid #86efac;border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.admin-section-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
+.ban-badge{font-size:10px;font-weight:700;background:var(--danger);color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px}
+
+/* ══ PIN MODAL ═════════════════════════════════════════════ */
+.pin-display{display:flex;gap:10px;justify-content:center;margin:20px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--border);transition:background .2s}
+.pin-dot.filled{background:var(--blue)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pin-btn{padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;font-size:20px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);transition:all .2s}
+.pin-btn:active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pin-error{color:var(--danger);font-size:13px;font-weight:600;text-align:center;margin-top:8px;display:none}
+
+/* ══ TOAST ═════════════════════════════════════════════════ */
+#toast-container{position:fixed;bottom:24px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:500}
+.toast{background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-md);animation:fadeUp .3s ease both}
+[data-theme="dark"] .toast{background:#1e293b;border:1px solid var(--border)}
 .toast.error{background:var(--danger)}
-.toast.ok-green{background:var(--ok)}
+.toast.ok-green{background:var(--green)}
 
-/* EMPTY */
-.empty{text-align:center;padding:48px 20px;color:var(--muted)}
-.empty-icon{font-size:44px;margin-bottom:12px;opacity:.4}
-.empty-msg{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
-.empty-sub{font-size:13px}
-
-/* SUMMARY BAR */
-.summary-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px;display:flex;gap:24px;align-items:center;box-shadow:var(--shadow)}
-.summary-stat{text-align:center}
-.summary-stat-val{font-size:28px;font-weight:800;line-height:1}
-.summary-stat-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.summary-divider{width:1px;background:var(--border);align-self:stretch}
-
-/* NAV MÓVIL */
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy);z-index:50;padding:8px 0 max(8px,env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1)}
-.mob-nav-items{display:flex;justify-content:space-around}
-.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;color:rgba(255,255,255,.5);cursor:pointer;font-size:10px;font-weight:600;min-width:52px;border-radius:8px;transition:color .15s}
+/* ══ MOBILE ════════════════════════════════════════════════ */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy);border-top:1px solid rgba(255,255,255,.1);z-index:100}
+[data-theme="dark"] .mob-nav{background:#080f1e}
+.mob-nav-items{display:flex}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;font-size:10px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer;gap:3px;position:relative}
 .mob-nav-item.active{color:var(--gold)}
-.mob-nav-item .mob-icon{font-size:20px}
-.mob-badge{background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:2px}
-
-@media(max-width:900px){
-  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+.mob-icon{font-size:20px}
+.mob-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px}
+@media(max-width:768px){
   .sidebar{display:none}
-  .filtros-bar{flex-direction:column}
-  .dash-two-col{grid-template-columns:1fr!important}
   .mob-nav{display:block}
   .main{padding-bottom:70px}
-}
-@media(max-width:600px){
-  .page{padding:14px}
-  .topbar{padding:12px 14px}
-  .kpi-grid{grid-template-columns:1fr 1fr}
-  .modal{padding:20px}
+  .page{padding:16px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .negocios-grid{grid-template-columns:1fr}
   .field-row{grid-template-columns:1fr}
+  .topbar{padding:14px 16px}
 }
+@media(min-width:769px){.mob-nav{display:none!important}}
 </style>
 </head>
 <body>
@@ -282,925 +308,719 @@ input,select,button{font-family:var(--font)}
 <div id="login-screen">
   <div class="login-card">
     <div class="login-brand">
-      <div class="login-brand-icon">🏪</div>
+      <div class="login-brand-icon" id="login-logo">🛒</div>
       <div class="login-brand-name">Punto<span>Venta</span></div>
     </div>
-    <div class="login-title" style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">Bienvenido</div>
-    <div class="login-sub" style="font-size:14px;color:var(--muted);margin-bottom:28px">¿Cómo vas a ingresar?</div>
+    <div class="login-title" id="login-title">Bienvenido</div>
+    <div class="login-sub" id="login-sub">Gestioná tus negocios y ventas en tiempo real</div>
+
     <div class="role-selector">
-      <div class="role-btn active" id="role-owner" onclick="selectRole('owner')">
+      <div class="role-btn active" id="role-owner">
         <div class="role-btn-icon">👔</div>
-        <div class="role-btn-label">Soy el dueño</div>
-        <div class="role-btn-sub">Ver mis negocios</div>
+        <div class="role-btn-label">Dueño</div>
+        <div class="role-btn-sub">Administro negocios</div>
       </div>
-      <div class="role-btn" id="role-employee" onclick="selectRole('employee')">
-        <div class="role-btn-icon">🧑‍💼</div>
-        <div class="role-btn-label">Soy empleado</div>
-        <div class="role-btn-sub">Cargar ventas</div>
+      <div class="role-btn" id="role-employee">
+        <div class="role-btn-icon">👤</div>
+        <div class="role-btn-label">Empleado</div>
+        <div class="role-btn-sub">Registro ventas</div>
       </div>
     </div>
-    <div id="campo-negocio" class="field hidden">
-      <label>Nombre del negocio</label>
-      <input id="input-negocio" placeholder="Ej: Kiosco Don Luis"/>
-    </div>
-    <div class="field"><label>Email</label><input id="login-email" type="email" placeholder="tu@correo.com"/></div>
+
+    <div class="auth-error" id="auth-error"></div>
+    <div class="field"><label>Email</label><input id="login-email" type="email" placeholder="tu@email.com"/></div>
     <div class="field"><label>Contraseña</label><input id="login-pass" type="password" placeholder="••••••••"/></div>
-    <div id="auth-error" class="auth-error"></div>
+    <div class="field hidden" id="field-owner-email">
+      <label>Email del dueño</label>
+      <input id="input-owner-email" type="email" placeholder="email del dueño del negocio"/>
+    </div>
     <button class="btn-primary" id="btn-login">Ingresar →</button>
-    <div class="login-toggle">¿No tenés cuenta? <span id="toggle-auth" onclick="toggleRegister()">Registrarse</span></div>
+    <div class="login-toggle"><span id="toggle-auth">Registrarse</span></div>
   </div>
 </div>
 
-<!-- PENDIENTE -->
+<!-- PENDING -->
 <div id="pending-screen" class="hidden">
   <div class="pending-card">
-    <div style="font-size:56px;margin-bottom:20px">⏳</div>
-    <div style="font-size:22px;font-weight:800;color:var(--navy);margin-bottom:10px">Solicitud enviada</div>
-    <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px">El dueño tiene que aprobarte para que puedas empezar a operar.</div>
-    <div class="pending-negocio" id="pending-negocio-name">—</div>
-    <button class="btn-primary" onclick="doLogout()">Cerrar sesión</button>
+    <div class="pending-icon">⏳</div>
+    <div class="pending-title">Solicitud enviada</div>
+    <div class="pending-sub">Tu solicitud fue enviada al dueño del negocio. Vas a poder operar una vez que sea aprobada.</div>
+    <div class="pending-badge">Esperando aprobación del dueño</div>
+    <button class="btn-primary" id="btn-pending-logout">Cerrar sesión</button>
   </div>
 </div>
 
-<!-- EMPLEADO -->
-<div id="app-employee" class="hidden">
-  <div class="emp-topbar">
-    <div class="emp-brand">
-      <div class="emp-brand-icon">🏪</div>
-      <div class="emp-brand-name">Punto<span>Venta</span></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="emp-negocio-tag" id="emp-negocio-tag">—</span>
-      <button class="btn-exit" onclick="doLogout()">Salir</button>
-    </div>
-  </div>
-  <div class="carga-section fade">
-    <div class="carga-title">Nueva venta</div>
-    <div class="importe-box">
-      <div class="importe-label">Importe</div>
-      <input class="importe-input" id="emp-importe" type="number" placeholder="0" min="0"/>
-    </div>
-    <div class="medio-grid">
-      <div class="medio-btn" id="medio-efectivo" onclick="selectMedio('efectivo')">
-        <div class="medio-btn-icon">💵</div><div class="medio-btn-label">Efectivo</div>
-      </div>
-      <div class="medio-btn" id="medio-mp" onclick="selectMedio('mp')">
-        <div class="medio-btn-icon">📱</div><div class="medio-btn-label">Mercado Pago</div>
-      </div>
-      <div class="medio-btn" id="medio-debito" onclick="selectMedio('debito')">
-        <div class="medio-btn-icon">💳</div><div class="medio-btn-label">Débito</div>
-      </div>
-    </div>
-    <input class="desc-input" id="emp-desc" placeholder="Descripción (opcional)"/>
-    <button class="btn-cargar" id="btn-cargar" onclick="cargarVenta()">Registrar venta</button>
-    <button class="btn-gasto" onclick="abrirModalGasto()">📤 Registrar gasto</button>
-  </div>
-  <div class="historial-section">
-    <div class="historial-header">
-      <span class="historial-title">Mis ventas de hoy</span>
-      <span class="historial-total">Total: <strong id="emp-total-dia">$0</strong></span>
-    </div>
-    <div id="emp-ventas-list">
-      <div class="empty"><div class="empty-icon">🧾</div><div class="empty-msg">Sin ventas todavía</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- DUEÑO -->
+<!-- APP DUEÑO -->
 <div id="app-owner" class="hidden">
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <div class="sidebar-brand-icon">🏪</div>
+      <div class="sidebar-brand-icon" id="sidebar-logo">🛒</div>
       <div class="sidebar-brand-name">Punto<span>Venta</span></div>
     </div>
     <div class="sidebar-section">Principal</div>
-    <div class="nav-item active" data-page="dashboard" onclick="navTo('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
-    <div class="nav-item" data-page="negocios" onclick="navTo('negocios')"><span class="nav-icon">🏪</span>Mis negocios</div>
-    <div class="nav-item" data-page="historial" onclick="navTo('historial')"><span class="nav-icon">🧾</span>Historial</div>
-    <div class="nav-item" data-page="empleados" onclick="navTo('empleados')">
-      <span class="nav-icon">👥</span>Empleados
-      <span class="nav-badge hidden" id="pending-badge">0</span>
-    </div>
-    <div class="nav-item" data-page="cierre" onclick="navTo('cierre')"><span class="nav-icon">🔒</span>Cierre de caja</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" data-page="negocios"><span class="nav-icon">🏪</span>Mis negocios</div>
+    <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
+    <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge hidden" id="pending-badge">0</span></div>
+    <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
     <div class="sidebar-bottom">
       <div class="user-chip">
         <div class="avatar" id="owner-avatar">D</div>
-        <div>
-          <div class="user-name" id="owner-name">Dueño</div>
-          <div class="user-role">Administrador</div>
-        </div>
+        <div><div class="user-name" id="owner-name">Dueño</div><div class="user-role">Administrador</div></div>
       </div>
-      <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+      <button id="btn-theme-sidebar" class="btn-theme-sidebar">🌙 Modo oscuro</button>
+      <button class="btn-logout" id="btn-logout-owner">Cerrar sesión</button>
     </div>
   </nav>
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="owner-page-title">Dashboard</span>
+      <span class="topbar-title" id="owner-topbar-title">Dashboard</span>
       <div class="topbar-right">
-        <span class="topbar-badge hidden" id="topbar-pending"></span>
-        <div class="avatar" id="owner-avatar-top">D</div>
+        <span class="topbar-badge hidden" id="topbar-pending">⏳ Pendientes</span>
+        <div class="avatar" id="owner-topbar-avatar">D</div>
       </div>
     </div>
     <div id="page-dashboard" class="page"></div>
     <div id="page-negocios" class="page hidden"></div>
-    <div id="page-detalle" class="page hidden"></div>
-    <div id="page-historial" class="page hidden"></div>
+    <div id="page-ventas" class="page hidden"></div>
     <div id="page-empleados" class="page hidden"></div>
     <div id="page-cierre" class="page hidden"></div>
   </div>
+  <div class="mob-nav">
+    <div class="mob-nav-items">
+      <div class="mob-nav-item active" data-page="dashboard"><span class="mob-icon">📊</span>Dashboard</div>
+      <div class="mob-nav-item" data-page="negocios"><span class="mob-icon">🏪</span>Negocios</div>
+      <div class="mob-nav-item" data-page="ventas"><span class="mob-icon">🧾</span>Ventas</div>
+      <div class="mob-nav-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge hidden" id="mob-pending-badge">0</span></div>
+      <div class="mob-nav-item" data-page="cierre"><span class="mob-icon">🔒</span>Cierre</div>
+    </div>
+  </div>
 </div>
 
-<!-- NAV MÓVIL DUEÑO -->
-<div class="mob-nav hidden" id="mob-nav">
-  <div class="mob-nav-items">
-    <div class="mob-nav-item active" data-page="dashboard" onclick="navTo('dashboard')"><span class="mob-icon">📊</span>Dashboard</div>
-    <div class="mob-nav-item" data-page="negocios" onclick="navTo('negocios')"><span class="mob-icon">🏪</span>Negocios</div>
-    <div class="mob-nav-item" data-page="historial" onclick="navTo('historial')"><span class="mob-icon">🧾</span>Historial</div>
-    <div class="mob-nav-item" data-page="empleados" onclick="navTo('empleados')"><span class="mob-icon">👥</span>Empleados</div>
-    <div class="mob-nav-item" data-page="cierre" onclick="navTo('cierre')"><span class="mob-icon">🔒</span>Cierre</div>
+<!-- APP EMPLEADO -->
+<div id="app-employee" class="hidden">
+  <div class="emp-header">
+    <div class="emp-header-brand">Punto<span>Venta</span></div>
+    <div class="emp-header-right">
+      <span class="emp-negocio-tag" id="emp-negocio-tag">—</span>
+      <button class="emp-btn-theme" id="btn-theme-emp" title="Cambiar tema">🌙</button>
+      <button class="emp-btn-logout" id="btn-logout-emp" title="Salir">⏻</button>
+    </div>
+  </div>
+  <div class="emp-content">
+    <div class="emp-total-card">
+      <div class="emp-total-label">Total vendido hoy</div>
+      <div class="emp-total-val" id="emp-total-dia">$0</div>
+    </div>
+    <div class="emp-form-card">
+      <div class="emp-form-title">Registrar venta</div>
+      <div class="medios-grid">
+        <div class="medio-btn" id="medio-efectivo">
+          <div class="medio-btn-icon">💵</div>
+          <div class="medio-btn-label">Efectivo</div>
+        </div>
+        <div class="medio-btn" id="medio-mp">
+          <div class="medio-btn-icon">📱</div>
+          <div class="medio-btn-label">Mercado Pago</div>
+        </div>
+        <div class="medio-btn" id="medio-debito">
+          <div class="medio-btn-icon">💳</div>
+          <div class="medio-btn-label">Débito</div>
+        </div>
+      </div>
+      <div class="emp-importe-row">
+        <input type="number" id="emp-importe" placeholder="$ 0" min="0"/>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <input type="text" id="emp-desc" placeholder="Descripción (opcional)" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--surface2);outline:none"/>
+      </div>
+      <button class="btn-venta" id="btn-cargar-venta">✓ Registrar venta</button>
+    </div>
+    <div class="sec-title" style="margin-bottom:12px">Mis ventas de hoy</div>
+    <div id="emp-ventas-list"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <div class="admin-header-title">⚡ Panel Admin</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="admin-badge-pill">SUPER USUARIO</span>
+      <button class="btn-admin-exit" id="btn-admin-exit">Salir</button>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <div class="admin-tab active" id="atab-negocios">🏪 Negocios</div>
+    <div class="admin-tab" id="atab-users">👥 Usuarios</div>
+  </div>
+  <div class="admin-content">
+    <div id="admin-view-negocios"><p class="admin-section-title">Todos los negocios</p><div id="admin-negocios-list"><div class="loading-wrap"><div class="spinner"></div></div></div></div>
+    <div id="admin-view-users" style="display:none"><p class="admin-section-title">Todos los usuarios</p><div id="admin-users-list"><div class="loading-wrap"><div class="spinner"></div></div></div></div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="modal-overlay hidden" id="modal-pin-overlay">
+  <div class="modal" style="max-height:420px">
+    <div class="modal-header">
+      <span class="modal-title">🔐 Acceso admin</span>
+      <div class="modal-close" id="btn-close-pin">✕</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px">Ingresá el PIN de administrador</p>
+    <div class="pin-display">
+      <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" data-n="1">1</button><button class="pin-btn" data-n="2">2</button><button class="pin-btn" data-n="3">3</button>
+      <button class="pin-btn" data-n="4">4</button><button class="pin-btn" data-n="5">5</button><button class="pin-btn" data-n="6">6</button>
+      <button class="pin-btn" data-n="7">7</button><button class="pin-btn" data-n="8">8</button><button class="pin-btn" data-n="9">9</button>
+      <button class="pin-btn" data-n="del" style="font-size:16px">⌫</button>
+      <button class="pin-btn" data-n="0">0</button>
+      <button class="pin-btn" data-n="ok" style="font-size:14px;background:var(--blue);color:#fff;border-color:var(--blue)">OK</button>
+    </div>
+    <p class="pin-error" id="pin-error">PIN incorrecto</p>
   </div>
 </div>
 
 <div id="modal-container"></div>
 <div id="toast-container"></div>
 
-<!-- FIREBASE + APP -->
 <script type="module">
-import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut,
-         signInWithEmailAndPassword,
-         createUserWithEmailAndPassword }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc,
-         addDoc, setDoc, deleteDoc, updateDoc,
-         onSnapshot, query, where, orderBy,
-         serverTimestamp, getDocs }                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,doc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── CONFIG ─────────────────────────────────────────────
-const app  = initializeApp({
-  apiKey: "AIzaSyAP9PEuKM9ck-a9ltWorlFunxPYXw7trtE",
-  authDomain: "puntoventa-f316c.firebaseapp.com",
-  projectId: "puntoventa-f316c",
-  storageBucket: "puntoventa-f316c.firebasestorage.app",
-  messagingSenderId: "229168693051",
-  appId: "1:229168693051:web:9dcb7d95f39edc4c17011e"
-});
-const auth = getAuth(app);
-const db   = getFirestore(app);
+// 🔧 FIREBASE CONFIG
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyAP9PEuKM9ck-a9ltWorlFunxPYXw7trtE",
+  authDomain:"puntoventa-f316c.firebaseapp.com",
+  projectId:"puntoventa-f316c",
+  storageBucket:"puntoventa-f316c.firebasestorage.app",
+  messagingSenderId:"229168693051",
+  appId:"1:229168693051:web:9dcb7d95f39edc4c17011e"
+};
+// 🔐 PIN ADMIN
+const ADMIN_PIN="1990";
 
-// ── ESTADO ─────────────────────────────────────────────
-let currentUser  = null;
-let currentPerfil = null;
-let currentPage  = "dashboard";
-let negocioDetalle = null;
-let selectedMedio  = null;
-let empNegocioId   = null;
-let empDuenoUid    = null;
-let isRegister     = false;
-let currentRole    = "owner";
-let chartInstances = {};
+const app=initializeApp(FIREBASE_CONFIG);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-// ── HELPERS ────────────────────────────────────────────
-const fmtARS = n => "$" + (n||0).toLocaleString("es-AR");
-const hoy = () => new Date().toISOString().split("T")[0];
-const fmtHora = () => new Date().toTimeString().slice(0,5);
-function initials(email){ return (email||"?").substring(0,2).toUpperCase() }
+// ── ESTADO ────────────────────────────────────────────────
+let currentUser=null,userDoc=null,currentRole=null;
+let negocios=[],ventas=[],empleados=[];
+let currentPage="dashboard",selectedMedio=null;
+let logoTapCount=0,logoTapTimer=null,pinBuffer="";
+let isRegister=false,roleSelected="owner";
+let unsubVentas=null,unsubEmpleados=null;
 
-function showToast(msg, type=""){
-  const el = document.createElement("div");
-  el.className = "toast" + (type ? " "+type : "");
-  el.textContent = (type==="error" ? "❌ " : "✅ ") + msg;
+// ── HELPERS ───────────────────────────────────────────────
+function hoy(){return new Date().toISOString().split("T")[0];}
+function fmtARS(n){return"$"+(n||0).toLocaleString("es-AR");}
+function fmtHora(){return new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});}
+function show(id){document.getElementById(id)?.classList.remove("hidden");}
+function hide(id){document.getElementById(id)?.classList.add("hidden");}
+function showToast(msg,type=""){
+  const el=document.createElement("div");
+  el.className=`toast${type?" "+type:""}`;
+  el.textContent=(type==="error"?"❌ ":type==="ok-green"?"✅ ":"✅ ")+msg;
   document.getElementById("toast-container").appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(()=>el.remove(),3000);
 }
-function show(id){ document.getElementById(id)?.classList.remove("hidden") }
-function hide(id){ document.getElementById(id)?.classList.add("hidden") }
-function closeModal(){ document.getElementById("modal-container").innerHTML = "" }
+function spinnerHTML(){return'<div class="loading-wrap"><div class="spinner"></div></div>';}
+function ventaRowHTML(v){
+  const medioClass=v.medio==="efectivo"?"efectivo":v.medio==="mp"?"mp":"debito";
+  const medioIcon=v.medio==="efectivo"?"💵":v.medio==="mp"?"📱":"💳";
+  const tagClass=`tag-${v.medio==="mp"?"mp":v.medio}`;
+  const tagLabel=v.medio==="efectivo"?"Efectivo":v.medio==="mp"?"Mercado Pago":"Débito";
+  return`<div class="venta-row"><div class="venta-medio ${medioClass}">${medioIcon}</div><div class="venta-info"><div class="venta-desc">${v.descripcion||"Venta sin descripción"}</div><div class="venta-meta">${v.hora||""} · ${v.empleadoNombre||""}</div><span class="venta-tag ${tagClass}">${tagLabel}</span></div><div class="venta-importe">${fmtARS(v.importe)}</div></div>`;
+}
 
-function destroyCharts(){
-  Object.values(chartInstances).forEach(c => { try{ c.destroy() }catch(e){} });
-  chartInstances = {};
+// ── TEMA ──────────────────────────────────────────────────
+function initTheme(){applyTheme(localStorage.getItem('pv-theme')||'light');}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const isDark=t==='dark';
+  const sb=document.getElementById('btn-theme-sidebar');
+  const eb=document.getElementById('btn-theme-emp');
+  if(sb)sb.textContent=isDark?'🌞 Modo claro':'🌙 Modo oscuro';
+  if(eb)eb.textContent=isDark?'🌞':'🌙';
+  localStorage.setItem('pv-theme',t);
 }
-function crearBarras(canvasId, labels, datasets, opts={}){
-  const ctx = document.getElementById(canvasId);
-  if(!ctx) return;
-  // Destruir chart existente en este canvas si lo hay
-  if(chartInstances[canvasId]){ try{ chartInstances[canvasId].destroy() }catch(e){} delete chartInstances[canvasId]; }
-  chartInstances[canvasId] = new Chart(ctx, {
-    type: "bar",
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: opts.legend||false, labels:{ font:{family:"Inter",size:11}, color:"#6b7a99" } },
-                 tooltip: { callbacks: { label: c => fmtARS(c.raw) } } },
-      scales: {
-        x: { grid:{display:false}, ticks:{font:{family:"Inter",size:11},color:"#6b7a99"} },
-        y: { grid:{color:"#eef0f6"}, ticks:{font:{family:"Inter",size:11},color:"#6b7a99",callback:v=>fmtARS(v)}, border:{display:false} }
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme')||'light';applyTheme(c==='dark'?'light':'dark');}
+initTheme();
+
+// ── GESTO LOGO → PIN ──────────────────────────────────────
+['login-logo','sidebar-logo'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',()=>{
+    logoTapCount++;clearTimeout(logoTapTimer);
+    if(logoTapCount>=5){logoTapCount=0;openPinModal();return;}
+    logoTapTimer=setTimeout(()=>logoTapCount=0,2000);
+  });
+});
+
+// ── PIN MODAL ─────────────────────────────────────────────
+function openPinModal(){pinBuffer="";updatePinDots();document.getElementById('pin-error').style.display='none';document.getElementById('modal-pin-overlay').classList.remove('hidden');}
+function closePinModal(){document.getElementById('modal-pin-overlay').classList.add('hidden');}
+function updatePinDots(){for(let i=0;i<4;i++)document.getElementById(`dot-${i}`).classList.toggle('filled',i<pinBuffer.length);}
+
+document.querySelector('.pin-pad').addEventListener('click',(e)=>{
+  const btn=e.target.closest('.pin-btn');if(!btn)return;
+  const n=btn.dataset.n;
+  if(n==='del'){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();return;}
+  if(n==='ok'){checkPin();return;}
+  if(pinBuffer.length<4){pinBuffer+=n;updatePinDots();}
+  if(pinBuffer.length===4)checkPin();
+});
+function checkPin(){
+  if(pinBuffer===ADMIN_PIN){closePinModal();openAdminPanel();}
+  else{document.getElementById('pin-error').style.display='block';pinBuffer="";updatePinDots();setTimeout(()=>document.getElementById('pin-error').style.display='none',1500);}
+}
+document.getElementById('btn-close-pin').addEventListener('click',closePinModal);
+document.getElementById('modal-pin-overlay').addEventListener('click',e=>{if(e.target.id==='modal-pin-overlay')closePinModal();});
+
+// ── ADMIN PANEL ───────────────────────────────────────────
+async function openAdminPanel(){
+  hide('app-owner');hide('app-employee');
+  show('admin-screen');
+  await loadAdminNegocios();
+}
+function closeAdminPanel(){
+  hide('admin-screen');
+  if(currentRole==='owner')show('app-owner');
+  else if(currentRole==='employee')show('app-employee');
+}
+async function loadAdminNegocios(){
+  const c=document.getElementById('admin-negocios-list');c.innerHTML=spinnerHTML();
+  const snap=await getDocs(collection(db,'negocios'));
+  if(snap.empty){c.innerHTML='<div class="empty"><div class="empty-msg">Sin negocios</div></div>';return;}
+  c.innerHTML=snap.docs.map(d=>{const n=d.data();return`<div class="admin-card"><div class="admin-card-title">${n.icon||'🏪'} ${n.nombre}</div><div class="admin-card-sub">${n.tipo||'—'} · Dueño: ${n.ownerEmail||'—'}</div><div class="admin-card-actions"><button class="btn-adel" data-id="${d.id}">🗑️ Eliminar</button></div></div>`;}).join('');
+}
+async function loadAdminUsers(){
+  const c=document.getElementById('admin-users-list');c.innerHTML=spinnerHTML();
+  const snap=await getDocs(collection(db,'usuarios'));
+  if(snap.empty){c.innerHTML='<div class="empty"><div class="empty-msg">Sin usuarios</div></div>';return;}
+  c.innerHTML=snap.docs.map(d=>{const u=d.data();const banned=u.banned===true;return`<div class="admin-card"><div class="admin-card-title">${u.email||'—'}${banned?'<span class="ban-badge">BANEADO</span>':''}</div><div class="admin-card-sub">${u.rol||'—'}</div><div class="admin-card-actions">${banned?`<button class="btn-aunban" data-uid="${d.id}">✅ Desbanear</button>`:`<button class="btn-aban" data-uid="${d.id}">🚫 Banear</button>`}</div></div>`;}).join('');
+}
+
+document.getElementById('admin-negocios-list').addEventListener('click',async(e)=>{
+  const del=e.target.closest('.btn-adel');
+  if(del){if(!confirm('¿Eliminar este negocio?'))return;await deleteDoc(doc(db,'negocios',del.dataset.id));showToast('Negocio eliminado');await loadAdminNegocios();}
+});
+document.getElementById('admin-users-list').addEventListener('click',async(e)=>{
+  const ban=e.target.closest('.btn-aban');const unban=e.target.closest('.btn-aunban');
+  if(ban){if(!confirm('¿Banear este usuario?'))return;await updateDoc(doc(db,'usuarios',ban.dataset.uid),{banned:true});showToast('Usuario baneado');await loadAdminUsers();}
+  if(unban){await updateDoc(doc(db,'usuarios',unban.dataset.uid),{banned:false});showToast('Usuario desbaneado');await loadAdminUsers();}
+});
+document.getElementById('atab-negocios').addEventListener('click',()=>{
+  show('admin-view-negocios');hide('admin-view-users');
+  document.getElementById('atab-negocios').classList.add('active');document.getElementById('atab-users').classList.remove('active');
+  loadAdminNegocios();
+});
+document.getElementById('atab-users').addEventListener('click',()=>{
+  hide('admin-view-negocios');show('admin-view-users');
+  document.getElementById('atab-users').classList.add('active');document.getElementById('atab-negocios').classList.remove('active');
+  loadAdminUsers();
+});
+document.getElementById('btn-admin-exit').addEventListener('click',closeAdminPanel);
+
+// ── AUTH STATE ────────────────────────────────────────────
+onAuthStateChanged(auth,async(user)=>{
+  if(user){
+    currentUser=user;
+    const snap=await getDoc(doc(db,'usuarios',user.uid));
+    if(!snap.exists()){await signOut(auth);return;}
+    userDoc=snap.data();
+    currentRole=userDoc.rol;
+
+    hide('login-screen');hide('pending-screen');
+
+    if(currentRole==='owner'){
+      show('app-owner');
+      document.getElementById('owner-avatar').textContent=user.email.substring(0,2).toUpperCase();
+      document.getElementById('owner-topbar-avatar').textContent=user.email.substring(0,2).toUpperCase();
+      document.getElementById('owner-name').textContent=user.email.split('@')[0];
+      await loadOwnerData();
+      navigateTo('dashboard');
+    } else if(currentRole==='employee'){
+      if(userDoc.estado==='pendiente'){
+        show('pending-screen');
+      } else if(userDoc.estado==='aprobado'){
+        show('app-employee');
+        const negSnap=await getDoc(doc(db,'negocios',userDoc.negocioId));
+        document.getElementById('emp-negocio-tag').textContent=negSnap.exists()?negSnap.data().nombre:'Mi negocio';
+        startEmpListener();
+        renderEmpVentas();
       }
     }
-  });
-}
+  } else {
+    currentUser=null;userDoc=null;currentRole=null;
+    hide('app-owner');hide('app-employee');hide('pending-screen');hide('admin-screen');
+    show('login-screen');
+    if(unsubVentas)unsubVentas();
+    if(unsubEmpleados)unsubEmpleados();
+  }
+});
 
-// ── LOGIN UI ────────────────────────────────────────────
-window.selectRole = function(role){
-  currentRole = role;
-  document.getElementById("role-owner").classList.toggle("active", role==="owner");
-  document.getElementById("role-employee").classList.toggle("active", role==="employee");
-  document.getElementById("campo-negocio").classList.toggle("hidden", role!=="employee");
-};
-window.toggleRegister = function(){
-  isRegister = !isRegister;
-  document.getElementById("btn-login").textContent = isRegister ? "Crear cuenta →" : "Ingresar →";
-  document.getElementById("toggle-auth").textContent = isRegister ? "Ya tengo cuenta" : "Registrarse";
-};
+// ── LOGIN ─────────────────────────────────────────────────
+document.getElementById('role-owner').addEventListener('click',()=>{
+  roleSelected='owner';
+  document.getElementById('role-owner').classList.add('active');
+  document.getElementById('role-employee').classList.remove('active');
+  hide('field-owner-email');
+});
+document.getElementById('role-employee').addEventListener('click',()=>{
+  roleSelected='employee';
+  document.getElementById('role-employee').classList.add('active');
+  document.getElementById('role-owner').classList.remove('active');
+  show('field-owner-email');
+});
+document.getElementById('toggle-auth').addEventListener('click',()=>{
+  isRegister=!isRegister;
+  document.getElementById('btn-login').textContent=isRegister?'Crear cuenta →':'Ingresar →';
+  document.getElementById('toggle-auth').textContent=isRegister?'Ya tengo cuenta':'Registrarse';
+});
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
 
-async function doAuth(){
-  const email  = document.getElementById("login-email").value.trim();
-  const pass   = document.getElementById("login-pass").value;
-  const errEl  = document.getElementById("auth-error");
-  const btn    = document.getElementById("btn-login");
-  errEl.classList.remove("show");
-  if(!email || !pass){ errEl.textContent="Completá todos los campos."; errEl.classList.add("show"); return; }
-  btn.disabled = true;
-  btn.textContent = isRegister ? "Creando cuenta..." : "Ingresando...";
-  try {
+document.getElementById('btn-login').addEventListener('click',async()=>{
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('auth-error');
+  err.style.display='none';err.classList.remove('show');
+  if(!email||!pass){err.textContent='Completá todos los campos';err.classList.add('show');return;}
+
+  const btn=document.getElementById('btn-login');
+  btn.disabled=true;btn.textContent=isRegister?'Creando...':'Ingresando...';
+
+  try{
     if(isRegister){
-      window._registrando = true; // bloquear onAuthStateChanged durante el registro
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      const uid  = cred.user.uid;
-      if(currentRole === "owner"){
-        await setDoc(doc(db,"usuarios",uid),{ uid, email, rol:"dueno", creadoEn:serverTimestamp() });
+      const cred=await createUserWithEmailAndPassword(auth,email,pass);
+      if(roleSelected==='owner'){
+        await addDoc(collection(db,'usuarios'),{uid:cred.user.uid,email,rol:'owner',banned:false,createdAt:serverTimestamp()});
       } else {
-        const negNombre = document.getElementById("input-negocio").value.trim();
-        if(!negNombre){ errEl.textContent="Escribí el nombre del negocio."; errEl.classList.add("show"); btn.disabled=false; btn.textContent="Crear cuenta →"; window._registrando=false; return; }
-        const snap = await getDocs(query(collection(db,"negocios"), where("nombre","==",negNombre)));
-        if(snap.empty){ errEl.textContent="No se encontró ese negocio. Verificá el nombre exacto."; errEl.classList.add("show"); btn.disabled=false; btn.textContent="Crear cuenta →"; window._registrando=false; return; }
-        const negDoc = snap.docs[0];
-        await setDoc(doc(db,"usuarios",uid),{ uid, email, rol:"empleado", negocioId:negDoc.id, negocioNombre:negDoc.data().nombre, duenoUid:negDoc.data().duenoUid, estado:"pendiente", creadoEn:serverTimestamp() });
+        const ownerEmail=document.getElementById('input-owner-email').value.trim();
+        if(!ownerEmail){err.textContent='Ingresá el email del dueño';err.classList.add('show');btn.disabled=false;btn.textContent='Crear cuenta →';return;}
+        // Buscar dueño por email
+        const ownerSnap=await getDocs(query(collection(db,'usuarios'),where('email','==',ownerEmail),where('rol','==','owner')));
+        if(ownerSnap.empty){err.textContent='No se encontró un dueño con ese email';err.classList.add('show');btn.disabled=false;btn.textContent='Crear cuenta →';await signOut(auth);return;}
+        const ownerData=ownerSnap.docs[0].data();
+        // Buscar negocio del dueño
+        const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',ownerData.uid)));
+        const negocioId=negSnap.empty?null:negSnap.docs[0].id;
+        await addDoc(collection(db,'usuarios'),{uid:cred.user.uid,email,rol:'employee',ownerUid:ownerData.uid,negocioId,estado:'pendiente',banned:false,createdAt:serverTimestamp()});
       }
-      window._registrando = false; // perfil guardado, ahora sí puede actuar onAuthStateChanged
-      // Forzar re-evaluación del estado
-      const user = auth.currentUser;
-      if(user) {
-        const snap2 = await getDocs(query(collection(db,"usuarios"), where("uid","==",user.uid)));
-        if(!snap2.empty){
-          const perfil = snap2.docs[0].data();
-          currentPerfil = perfil;
-          hide("login-screen");
-          if(perfil.rol==="dueno"){ iniciarDueno(user); }
-          else if(perfil.estado==="pendiente"){ document.getElementById("pending-negocio-name").textContent=perfil.negocioNombre||"Tu negocio"; show("pending-screen"); }
-          else { empNegocioId=perfil.negocioId; empDuenoUid=perfil.duenoUid; document.getElementById("emp-negocio-tag").textContent=perfil.negocioNombre||"Mi negocio"; iniciarEmpleado(user,perfil); show("app-employee"); }
-        }
-      }
-      return;
     } else {
-      await signInWithEmailAndPassword(auth, email, pass);
+      await signInWithEmailAndPassword(auth,email,pass);
     }
   } catch(e){
-    const msgs = {
-      "auth/user-not-found":"Email no registrado.",
-      "auth/wrong-password":"Contraseña incorrecta.",
-      "auth/invalid-email":"Email no válido.",
-      "auth/email-already-in-use":"Ese email ya está registrado.",
-      "auth/weak-password":"La contraseña debe tener al menos 6 caracteres.",
-      "auth/invalid-credential":"Email o contraseña incorrectos.",
-    };
-    errEl.textContent = msgs[e.code] || "Error: " + e.message;
-    errEl.classList.add("show");
-    btn.disabled = false;
-    btn.textContent = isRegister ? "Crear cuenta →" : "Ingresar →";
-  }
-}
-
-document.getElementById("btn-login").addEventListener("click", doAuth);
-document.getElementById("login-pass").addEventListener("keydown", e => { if(e.key==="Enter") doAuth(); });
-
-// ── AUTH STATE ──────────────────────────────────────────
-onAuthStateChanged(auth, async user => {
-  if(window._registrando) return; // esperar a que el registro termine de guardar el perfil
-  hide("login-screen"); hide("pending-screen"); hide("app-employee"); hide("app-owner"); hide("mob-nav");
-
-  if(!user){
-    show("login-screen");
-    document.getElementById("btn-login").disabled = false;
-    document.getElementById("btn-login").textContent = "Ingresar →";
-    return;
-  }
-
-  currentUser = user;
-
-  // Buscar o crear perfil
-  const snap = await getDocs(query(collection(db,"usuarios"), where("uid","==",user.uid)));
-  let perfil;
-  if(snap.empty){
-    // Sin perfil - volver al login
-    show("login-screen");
-    return;
-  } else {
-    perfil = snap.docs[0].data();
-  }
-  currentPerfil = perfil;
-  console.log("PERFIL:", perfil.rol, perfil.estado, perfil.negocioNombre);
-
-  if(perfil.rol === "dueno"){
-    iniciarDueno(user);
-  } else if(perfil.rol === "empleado"){
-    empNegocioId = perfil.negocioId;
-    empDuenoUid  = perfil.duenoUid;
-    if(perfil.estado === "pendiente"){
-      document.getElementById("pending-negocio-name").textContent = perfil.negocioNombre || "Tu negocio";
-      show("pending-screen");
-    } else {
-      document.getElementById("emp-negocio-tag").textContent = perfil.negocioNombre || "Mi negocio";
-      iniciarEmpleado(user, perfil);
-      show("app-employee");
-    }
-  } else {
-    console.log("ROL DESCONOCIDO:", perfil.rol);
-    show("login-screen");
+    const msgs={"auth/user-not-found":"No existe una cuenta con ese email.","auth/wrong-password":"Contraseña incorrecta.","auth/email-already-in-use":"Ya existe una cuenta con ese email.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-credential":"Email o contraseña incorrectos."};
+    err.textContent=msgs[e.code]||"Error al ingresar. Intentá de nuevo.";
+    err.classList.add('show');
+    btn.disabled=false;btn.textContent=isRegister?'Crear cuenta →':'Ingresar →';
   }
 });
 
-// ── LOGOUT ─────────────────────────────────────────────
-window.doLogout = () => signOut(auth);
+document.getElementById('btn-pending-logout').addEventListener('click',()=>signOut(auth));
 
-// ════════════════════════════════════════════════════════
-// DUEÑO
-// ════════════════════════════════════════════════════════
-let negocios=[], ventas=[], gastos=[], empleados=[];
-let unsubNegocios, unsubVentas, unsubGastos, unsubEmpleados;
+// ── OWNER: CARGAR DATOS ───────────────────────────────────
+async function loadOwnerData(){
+  const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',currentUser.uid)));
+  negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-function iniciarDueno(user){
-  show("app-owner"); show("mob-nav");
-  const ini = initials(user.email);
-  document.getElementById("owner-avatar").textContent = ini;
-  document.getElementById("owner-avatar-top").textContent = ini;
-  document.getElementById("owner-name").textContent = user.email.split("@")[0];
+  const negIds=negocios.map(n=>n.id);
+  if(negIds.length===0){ventas=[];empleados=[];return;}
 
-  // Negocios
-  if(unsubNegocios) unsubNegocios();
-  unsubNegocios = onSnapshot(query(collection(db,"negocios"), where("duenoUid","==",user.uid)), snap => {
-    negocios = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    renderPaginaActual();
-  });
+  // Ventas de hoy
+  const hoyStart=new Date();hoyStart.setHours(0,0,0,0);
+  const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',currentUser.uid),where('fecha','==',hoy()),orderBy('createdAt','desc')));
+  ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-  // Ventas
-  if(unsubVentas) unsubVentas();
-  unsubVentas = onSnapshot(query(collection(db,"ventas"), where("duenoUid","==",user.uid)), snap => {
-    ventas = snap.docs.map(d => {
-      const v = {id:d.id, ...d.data()};
-      if(v.ts?.toDate){ const dt=v.ts.toDate(); v.fecha=dt.toISOString().split("T")[0]; v.hora=dt.toTimeString().slice(0,5); v.ts=dt.getTime(); }
-      return v;
-    });
-    renderPaginaActual();
-  });
+  // Empleados
+  const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',currentUser.uid)));
+  empleados=empSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-  // Gastos
-  if(unsubGastos) unsubGastos();
-  unsubGastos = onSnapshot(query(collection(db,"gastos"), where("duenoUid","==",user.uid)), snap => {
-    gastos = snap.docs.map(d => {
-      const g = {id:d.id, ...d.data()};
-      if(g.ts?.toDate){ const dt=g.ts.toDate(); g.fecha=dt.toISOString().split("T")[0]; g.hora=dt.toTimeString().slice(0,5); g.ts=dt.getTime(); }
-      return g;
-    });
-    renderPaginaActual();
-  });
-
-  // Empleados — escuchar todos los empleados, filtrar por negocios del dueño en el cliente
-  if(unsubEmpleados) unsubEmpleados();
-  unsubEmpleados = onSnapshot(query(collection(db,"usuarios"), where("rol","==","empleado")), snap => {
-    // Filtrar solo empleados de negocios de este dueño
-    empleados = snap.docs.map(d => ({id:d.id, ...d.data()}))
-      .filter(e => negocios.some(n => n.id === e.negocioId) || e.duenoUid === user.uid);
-    actualizarBadge();
-    renderPaginaActual();
-  });
-
-  navTo("dashboard");
+  updatePendingBadge();
 }
 
-function actualizarBadge(){
-  const p = empleados.filter(e=>e.estado==="pendiente").length;
-  const b = document.getElementById("pending-badge");
-  const t = document.getElementById("topbar-pending");
-  if(p > 0){
-    b.textContent = p; b.classList.remove("hidden");
-    t.textContent = `⏳ ${p} pendiente${p>1?"s":""}`; t.classList.remove("hidden");
+function updatePendingBadge(){
+  const n=empleados.filter(e=>e.estado==='pendiente').length;
+  const badge=document.getElementById('pending-badge');
+  const mob=document.getElementById('mob-pending-badge');
+  const topbar=document.getElementById('topbar-pending');
+  if(n>0){
+    badge.textContent=n;badge.classList.remove('hidden');
+    if(mob){mob.textContent=n;mob.classList.remove('hidden');}
+    topbar.textContent=`⏳ ${n} empleado${n>1?"s":""} pendiente${n>1?"s":""}`;topbar.classList.remove('hidden');
   } else {
-    b.classList.add("hidden"); t.classList.add("hidden");
+    badge.classList.add('hidden');if(mob)mob.classList.add('hidden');topbar.classList.add('hidden');
   }
 }
 
-const PAGE_TITLES = {dashboard:"Dashboard",negocios:"Mis negocios",detalle:"",historial:"Historial",empleados:"Empleados",cierre:"Cierre de caja"};
+// ── OWNER: NAVEGACIÓN ─────────────────────────────────────
+const PAGE_TITLES={dashboard:"Dashboard",negocios:"Mis negocios",ventas:"Ventas del día",empleados:"Empleados",cierre:"Cierre de caja"};
 
-window.navTo = function(page, extra){
-  if(extra !== undefined) negocioDetalle = extra;
-  currentPage = page;
-  destroyCharts();
-  document.querySelectorAll(".nav-item[data-page], .mob-nav-item[data-page]").forEach(el => {
-    el.classList.toggle("active", el.dataset.page === page || (page==="detalle" && el.dataset.page==="negocios"));
-  });
-  document.querySelectorAll(".page[id^='page-']").forEach(p => p.classList.add("hidden"));
-  const pageEl = document.getElementById("page-"+page);
-  if(pageEl) pageEl.classList.remove("hidden");
-  const neg = negocios.find(n=>n.id===negocioDetalle);
-  document.getElementById("owner-page-title").textContent = page==="detalle" && neg ? neg.nombre : PAGE_TITLES[page]||"";
-  renderPaginaActual();
-};
-
-function renderPaginaActual(){
-  if(currentPage==="dashboard") renderDashboard();
-  else if(currentPage==="negocios") renderNegocios();
-  else if(currentPage==="detalle") renderDetalle();
-  else if(currentPage==="historial") renderHistorial();
-  else if(currentPage==="empleados") renderEmpleados();
-  else if(currentPage==="cierre") renderCierre();
+function navigateTo(page){
+  currentPage=page;
+  document.querySelectorAll(".nav-item[data-page]").forEach(el=>el.classList.toggle("active",el.dataset.page===page));
+  document.querySelectorAll(".mob-nav-item[data-page]").forEach(el=>el.classList.toggle("active",el.dataset.page===page));
+  document.querySelectorAll(".page[id^='page-']").forEach(p=>p.classList.add("hidden"));
+  const pageEl=document.getElementById(`page-${page}`);if(pageEl)pageEl.classList.remove("hidden");
+  document.getElementById("owner-topbar-title").textContent=PAGE_TITLES[page]||"";
+  if(page==="dashboard")renderDashboard();
+  else if(page==="negocios")renderNegocios();
+  else if(page==="ventas")renderVentas();
+  else if(page==="empleados")renderEmpleados();
+  else if(page==="cierre")renderCierre();
 }
 
-// ── HELPERS DATOS ───────────────────────────────────────
-function ventasHoy(negId){ return ventas.filter(v=>v.negocioId===negId && v.fecha===hoy()) }
-function gastosHoy(negId){ return gastos.filter(g=>g.negocioId===negId && g.fecha===hoy()) }
-function totalVentas(lista){ return lista.reduce((a,v)=>a+v.importe,0) }
-function totalGastos(lista){ return lista.reduce((a,g)=>a+g.importe,0) }
+document.querySelectorAll(".nav-item[data-page]").forEach(el=>el.addEventListener("click",()=>navigateTo(el.dataset.page)));
+document.querySelectorAll(".mob-nav-item[data-page]").forEach(el=>el.addEventListener("click",()=>navigateTo(el.dataset.page)));
 
-function ventaRowHTML(v, showNeg=false){
-  const icons={efectivo:"💵",mp:"📱",debito:"💳"};
-  const tags={efectivo:"tag-efectivo",mp:"tag-mp",debito:"tag-debito"};
-  const labels={efectivo:"Efectivo",mp:"Mercado Pago",debito:"Débito"};
-  const neg = showNeg ? negocios.find(n=>n.id===v.negocioId) : null;
-  return `<div class="venta-row">
-    <div class="venta-medio ${v.medio}">${icons[v.medio]||"💰"}</div>
-    <div class="venta-info">
-      <div class="venta-desc">${v.desc||"Venta sin descripción"}</div>
-      <div class="venta-meta">${v.hora||""} · ${v.empleado||""}${neg?" · "+neg.nombre:""}</div>
-      <span class="venta-tag ${tags[v.medio]||""}">${labels[v.medio]||v.medio}</span>
-    </div>
-    <div class="venta-importe">${fmtARS(v.importe)}</div>
-  </div>`;
-}
-
-// ── DASHBOARD ───────────────────────────────────────────
+// ── OWNER: DASHBOARD ──────────────────────────────────────
 function renderDashboard(){
-  const el = document.getElementById("page-dashboard");
-  const vh  = ventas.filter(v=>v.fecha===hoy());
-  const tot = totalVentas(vh);
-  const ef  = totalVentas(vh.filter(v=>v.medio==="efectivo"));
-  const mp  = totalVentas(vh.filter(v=>v.medio==="mp"));
-  const deb = totalVentas(vh.filter(v=>v.medio==="debito"));
-
-  const dias=[]; const labels7=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date(); d.setDate(d.getDate()-i);
-    labels7.push(i===0?"Hoy":d.toLocaleDateString("es-AR",{weekday:"short"}));
-    dias.push(d.toISOString().split("T")[0]);
-  }
-
-  el.innerHTML = `
+  const el=document.getElementById("page-dashboard");
+  const ventasHoy=ventas.filter(v=>v.fecha===hoy());
+  const total=ventasHoy.reduce((a,v)=>a+v.importe,0);
+  const efectivo=ventasHoy.filter(v=>v.medio==="efectivo").reduce((a,v)=>a+v.importe,0);
+  const mp=ventasHoy.filter(v=>v.medio==="mp").reduce((a,v)=>a+v.importe,0);
+  const debito=ventasHoy.filter(v=>v.medio==="debito").reduce((a,v)=>a+v.importe,0);
+  el.innerHTML=`
     <div class="kpi-grid fade">
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(tot)}</div><div class="kpi-label">Total del día</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(ef)}</div><div class="kpi-label">En caja</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(total)}</div><div class="kpi-label">Total del día</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(efectivo)}</div><div class="kpi-label">En caja</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">📱</span><span class="kpi-badge mp">MP</span></div><div class="kpi-value" style="font-size:22px;color:var(--mp)">${fmtARS(mp)}</div><div class="kpi-label">Mercado Pago</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(deb)}</div><div class="kpi-label">Débito</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(debito)}</div><div class="kpi-label">Tarjeta débito</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="fade dash-two-col">
-      <div class="chart-card"><div class="chart-card-title">📈 Ventas por negocio — últimos 7 días</div><div class="chart-wrap"><canvas id="chart-dash-negocios"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">💳 Medios de pago hoy</div><div class="chart-wrap"><canvas id="chart-dash-medios"></canvas></div></div>
-    </div>
-    <div class="fade">
-      <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" onclick="navTo('negocios')">Ver todo →</button></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-        ${negocios.length===0 ? `<div class="empty"><div class="empty-icon">🏪</div><div class="empty-msg">Sin negocios</div><div class="empty-sub">Creá el primero desde "Mis negocios"</div></div>` :
-          negocios.map(n => {
-            const vn=ventasHoy(n.id); const tn=totalVentas(vn);
-            const gn=gastosHoy(n.id); const tg=totalGastos(gn);
-            return `<div class="negocio-card" style="padding:14px 16px" onclick="navTo('detalle','${n.id}')">
-              <div style="display:flex;align-items:center;gap:12px">
-                <span style="font-size:24px">${n.icon||"🏪"}</span>
-                <div style="flex:1"><div style="font-size:12px;color:var(--muted)">${n.tipo||""}</div><div style="font-size:15px;font-weight:800;color:var(--navy)">${n.nombre}</div></div>
-                <div style="text-align:right">
-                  <div style="font-size:16px;font-weight:800;color:var(--navy)">${fmtARS(tn)}</div>
-                  <div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div>
-                  ${tg>0?`<div style="font-size:12px;font-weight:700;color:var(--danger);margin-top:2px">Gastos: ${fmtARS(tg)}</div>`:""}
-                </div>
-              </div>
-            </div>`;
-          }).join("")}
-      </div>
-    </div>`;
-
-  setTimeout(()=>{
-    if(negocios.length > 0){
-      const datasets = negocios.map((n,i)=>({
-        label: n.nombre,
-        data: dias.map(f=>totalVentas(ventas.filter(v=>v.negocioId===n.id&&v.fecha===f))),
-        backgroundColor: i===0?"rgba(15,30,61,.7)":"rgba(240,184,74,.8)",
-        borderRadius:6, borderSkipped:false
-      }));
-      crearBarras("chart-dash-negocios", labels7, datasets, {legend:true});
-    }
-    crearBarras("chart-dash-medios", ["Efectivo","Mercado Pago","Débito"], [{
-      data:[ef,mp,deb],
-      backgroundColor:["rgba(22,163,74,.7)","rgba(0,158,227,.7)","rgba(29,78,216,.7)"],
-      borderRadius:6, borderSkipped:false
-    }]);
-  },100);
-}
-
-// ── NEGOCIOS ────────────────────────────────────────────
-function renderNegocios(){
-  const el = document.getElementById("page-negocios");
-  el.innerHTML = `
-    <div class="sec-header fade"><span class="sec-title" style="font-size:17px">Mis negocios</span><button class="btn-sm gold" onclick="abrirModalNegocio()">＋ Agregar negocio</button></div>
-    <div class="negocios-grid fade">
-      ${negocios.map(n=>{
-        const vn=ventasHoy(n.id); const tot=totalVentas(vn);
-        const ef=totalVentas(vn.filter(v=>v.medio==="efectivo"));
-        const emp=empleados.filter(e=>e.negocioId===n.id&&e.estado==="aprobado").length;
-        const gn=gastosHoy(n.id); const tg=totalGastos(gn);
-        return `<div class="negocio-card" onclick="navTo('detalle','${n.id}')">
-          <div class="negocio-header"><span class="negocio-icon">${n.icon||"🏪"}</span><div class="negocio-live"><div class="live-dot"></div>En vivo</div></div>
-          <div class="negocio-nombre">${n.nombre}</div>
-          <div class="negocio-tipo">${n.tipo||""} · ${emp} empleado${emp!==1?"s":""}</div>
-          <div class="negocio-stats">
-            <div class="negocio-stat"><div class="negocio-stat-val">${fmtARS(tot)}</div><div class="negocio-stat-lbl">Total hoy</div></div>
-            <div class="negocio-stat"><div class="negocio-stat-val">${fmtARS(ef)}</div><div class="negocio-stat-lbl">Efectivo</div></div>
-            <div class="negocio-stat"><div class="negocio-stat-val">${vn.length}</div><div class="negocio-stat-lbl">Ventas hoy</div></div>
-            <div class="negocio-stat"><div class="negocio-stat-val" style="color:var(--danger)">${fmtARS(tg)}</div><div class="negocio-stat-lbl">Gastos hoy</div></div>
-          </div>
-        </div>`;
-      }).join("")}
-    </div>`;
-}
-
-// ── DETALLE ─────────────────────────────────────────────
-function renderDetalle(){
-  const el = document.getElementById("page-detalle");
-  const n = negocios.find(x=>x.id===negocioDetalle);
-  if(!n){ el.innerHTML=""; return; }
-  const vh=ventasHoy(n.id); const tot=totalVentas(vh);
-  const ef=totalVentas(vh.filter(v=>v.medio==="efectivo"));
-  const mp=totalVentas(vh.filter(v=>v.medio==="mp"));
-  const deb=totalVentas(vh.filter(v=>v.medio==="debito"));
-  const dias=[]; const labels7=[];
-  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); labels7.push(i===0?"Hoy":d.toLocaleDateString("es-AR",{weekday:"short"})); dias.push(d.toISOString().split("T")[0]); }
-
-  el.innerHTML = `
-    <div style="margin-bottom:16px" class="fade"><button class="btn-sm" onclick="navTo('negocios')">← Volver</button></div>
-    <div class="detalle-header fade"><span class="detalle-icon">${n.icon||"🏪"}</span><div><div class="detalle-nombre">${n.nombre}</div><div class="detalle-tipo">${n.tipo||""}</div></div></div>
-    <div class="kpi-grid fade" style="grid-template-columns:repeat(4,1fr)">
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(tot)}</div><div class="kpi-label">Total</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(ef)}</div><div class="kpi-label">En caja</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">📱</span><span class="kpi-badge mp">MP</span></div><div class="kpi-value" style="font-size:22px;color:var(--mp)">${fmtARS(mp)}</div><div class="kpi-label">Mercado Pago</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(deb)}</div><div class="kpi-label">Débito</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="fade dash-two-col">
-      <div class="chart-card"><div class="chart-card-title">📈 Ventas últimos 7 días</div><div class="chart-wrap"><canvas id="chart-det-dias"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">💳 Medios de pago hoy</div><div class="chart-wrap"><canvas id="chart-det-medios"></canvas></div></div>
-    </div>
-    <div class="fade">
-      <div class="sec-header"><span class="sec-title">Ventas de hoy</span><span style="font-size:13px;color:var(--muted)">${vh.length} operaciones</span></div>
-      <div class="ventas-list">${vh.length===0?`<div class="empty"><div class="empty-icon">🧾</div><div class="empty-msg">Sin ventas hoy</div></div>`:vh.map(v=>ventaRowHTML(v)).join("")}</div>
-    </div>`;
-
-  setTimeout(()=>{
-    crearBarras("chart-det-dias", labels7, [{
-      data: dias.map(f=>totalVentas(ventas.filter(v=>v.negocioId===n.id&&v.fecha===f))),
-      backgroundColor:"rgba(15,30,61,.75)", borderRadius:6, borderSkipped:false
-    }]);
-    crearBarras("chart-det-medios", ["Efectivo","Mercado Pago","Débito"], [{
-      data:[ef,mp,deb],
-      backgroundColor:["rgba(22,163,74,.7)","rgba(0,158,227,.7)","rgba(29,78,216,.7)"],
-      borderRadius:6, borderSkipped:false
-    }]);
-  },100);
-}
-
-// ── HISTORIAL ───────────────────────────────────────────
-function renderHistorial(){
-  const el = document.getElementById("page-historial");
-  const desde7 = new Date(); desde7.setDate(desde7.getDate()-6);
-  el.innerHTML = `
-    <div class="filtros-bar fade">
-      <div class="filtro-field"><span class="filtro-label">Negocio</span>
-        <select class="filtro-input" id="f-neg">
-          <option value="">Todos</option>
-          ${negocios.map(n=>`<option value="${n.id}">${n.nombre}</option>`).join("")}
-        </select>
-      </div>
-      <div class="filtro-field"><span class="filtro-label">Desde</span><input class="filtro-input" id="f-desde" type="date" value="${desde7.toISOString().split("T")[0]}"/></div>
-      <div class="filtro-field"><span class="filtro-label">Hasta</span><input class="filtro-input" id="f-hasta" type="date" value="${hoy()}"/></div>
-      <div class="filtro-field"><span class="filtro-label">Hora desde</span><input class="filtro-input" id="f-hora-d" type="time" style="min-width:100px"/></div>
-      <div class="filtro-field"><span class="filtro-label">Hora hasta</span><input class="filtro-input" id="f-hora-h" type="time" style="min-width:100px"/></div>
-      <div class="filtro-actions">
-        <button class="btn-sm navy" onclick="aplicarFiltros()">Buscar</button>
-        <button class="btn-sm gold" onclick="exportarCSV()">⬇ CSV</button>
-      </div>
-    </div>
-    <div id="historial-resultado"></div>`;
-  aplicarFiltros();
-}
-
-window.aplicarFiltros = function(){
-  const negId  = document.getElementById("f-neg")?.value||"";
-  const desde  = document.getElementById("f-desde")?.value||"";
-  const hasta  = document.getElementById("f-hasta")?.value||"";
-  const horaD  = document.getElementById("f-hora-d")?.value||"";
-  const horaH  = document.getElementById("f-hora-h")?.value||"";
-  const lista  = ventas.filter(v=>{
-    if(negId && v.negocioId!==negId) return false;
-    if(desde && v.fecha<desde) return false;
-    if(hasta && v.fecha>hasta) return false;
-    if(horaD && v.hora<horaD) return false;
-    if(horaH && v.hora>horaH) return false;
-    return true;
-  }).sort((a,b)=>b.ts-a.ts);
-  const tot = totalVentas(lista);
-  const el  = document.getElementById("historial-resultado");
-  if(!el) return;
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:14px;color:var(--muted)">${lista.length} resultado${lista.length!==1?"s":""} · Total: <strong style="color:var(--navy)">${fmtARS(tot)}</strong></div>
-    </div>
-    <div class="ventas-list fade">
-      ${lista.length===0?`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">Sin resultados</div><div class="empty-sub">Probá cambiando los filtros</div></div>`:lista.map(v=>ventaRowHTML(v,true)).join("")}
-    </div>`;
-};
-
-window.exportarCSV = function(){
-  const negId = document.getElementById("f-neg")?.value||"";
-  const desde = document.getElementById("f-desde")?.value||"";
-  const hasta = document.getElementById("f-hasta")?.value||"";
-  const lista = ventas.filter(v=>{
-    if(negId && v.negocioId!==negId) return false;
-    if(desde && v.fecha<desde) return false;
-    if(hasta && v.fecha>hasta) return false;
-    return true;
-  }).sort((a,b)=>b.ts-a.ts);
-  if(!lista.length){ showToast("No hay datos para exportar","error"); return; }
-  const header = "Fecha,Hora,Negocio,Importe,Medio,Descripcion,Empleado\n";
-  const rows   = lista.map(v=>{
-    const neg = negocios.find(n=>n.id===v.negocioId)?.nombre||"";
-    const med = v.medio==="mp"?"Mercado Pago":v.medio==="debito"?"Débito":"Efectivo";
-    return `${v.fecha},${v.hora||""},"${neg}",${v.importe},"${med}","${v.desc||""}","${v.empleado||""}"`;
-  }).join("\n");
-  const blob = new Blob([header+rows],{type:"text/csv;charset=utf-8;"});
-  const a    = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="puntoventa.csv"; a.click();
-  showToast("CSV exportado ✓");
-};
-
-// ── EMPLEADOS ───────────────────────────────────────────
-function renderEmpleados(){
-  const el   = document.getElementById("page-empleados");
-  const pend = empleados.filter(e=>e.estado==="pendiente");
-  const apro = empleados.filter(e=>e.estado==="aprobado");
-
-  function sec(title,color,items,actions){
-    if(!items.length) return "";
-    return `<div style="font-size:12px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:20px">${title}</div>
-    <div class="empleados-list">${items.map(e=>`
-      <div class="empleado-row">
-        <div class="emp-avatar-sm">${initials(e.email)}</div>
-        <div class="emp-info">
-          <div class="emp-nombre">${e.email?.split("@")[0]||"Empleado"}</div>
-          <div class="emp-email">${e.email||""} · ${negocios.find(n=>n.id===e.negocioId)?.nombre||""}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="fade">
+      <div>
+        <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="dash-ver-negocios">Ver todo →</button></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${negocios.length===0?'<div class="empty"><div class="empty-msg">Sin negocios</div><div class="empty-sub">Agregá tu primer negocio</div></div>':negocios.map(n=>{const vn=ventasHoy.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div class="negocio-card" style="padding:14px 16px" id="dash-neg-${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${n.icon||'🏪'}</span><div style="flex:1"><div style="font-size:13px;color:var(--muted)">${n.tipo}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${n.nombre}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
         </div>
-        <div class="emp-estado ${e.estado==="aprobado"?"estado-aprobado":"estado-pendiente"}">${e.estado==="aprobado"?"✓ Aprobado":"⏳ Pendiente"}</div>
-        ${actions?`<button class="btn-sm gold" style="margin-left:8px" onclick="aprobarEmpleado('${e.id}')">Aprobar</button><button class="btn-sm danger" style="margin-left:4px" onclick="rechazarEmpleado('${e.id}')">Rechazar</button>`:""}
-      </div>`).join("")}
+      </div>
+      <div>
+        <div class="sec-header"><span class="sec-title">Últimas ventas</span><button class="btn-sm" id="dash-ver-ventas">Ver todas →</button></div>
+        <div class="ventas-list">${ventasHoy.slice(0,4).map(v=>ventaRowHTML(v)).join('')}</div>
+      </div>
     </div>`;
-  }
-
-  el.innerHTML = `<div class="fade">
-    ${pend.length?`<div style="background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:20px">⏳</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--warn)">${pend.length} solicitud${pend.length>1?"es":""} pendiente${pend.length>1?"s":""}</div>
-      <div style="font-size:12px;color:var(--warn)">Aprobá o rechazá para que puedan operar</div></div></div>`:""}
-    ${sec("⏳ Esperando aprobación","var(--warn)",pend,true)}
-    ${sec("✅ Empleados activos","var(--ok)",apro,false)}
-    ${pend.length===0&&apro.length===0?`<div class="empty"><div class="empty-icon">👥</div><div class="empty-msg">Sin empleados aún</div><div class="empty-sub">Cuando alguien se registre como empleado aparecerá acá</div></div>`:""}
-  </div>`;
+  el.querySelector('#dash-ver-negocios')?.addEventListener('click',()=>navigateTo('negocios'));
+  el.querySelector('#dash-ver-ventas')?.addEventListener('click',()=>navigateTo('ventas'));
+  negocios.forEach(n=>{el.querySelector(`#dash-neg-${n.id}`)?.addEventListener('click',()=>navigateTo('ventas'));});
 }
 
-window.aprobarEmpleado = async function(id){
-  try {
-    await updateDoc(doc(db,"usuarios",id),{estado:"aprobado"});
-    showToast("✅ Empleado aprobado correctamente");
-  } catch(e) {
-    showToast("Error al aprobar: " + e.message, "error");
-  }
-};
-window.rechazarEmpleado = async function(id){
-  try {
-    await deleteDoc(doc(db,"usuarios",id));
-    showToast("Empleado rechazado","error");
-  } catch(e) {
-    showToast("Error al rechazar: " + e.message, "error");
-  }
-};
+// ── OWNER: NEGOCIOS ───────────────────────────────────────
+function renderNegocios(){
+  const el=document.getElementById("page-negocios");
+  el.innerHTML=`
+    <div class="sec-header fade"><span class="sec-title" style="font-size:17px">Mis negocios</span><button class="btn-sm gold" id="btn-add-negocio">＋ Agregar negocio</button></div>
+    <div class="negocios-grid fade">
+      ${negocios.length===0?'<div class="empty"><div class="empty-icon">🏪</div><div class="empty-msg">Sin negocios</div><div class="empty-sub">Creá tu primer negocio</div></div>':negocios.map(n=>{
+        const vn=ventas.filter(v=>v.negocioId===n.id&&v.fecha===hoy());
+        const total=vn.reduce((a,v)=>a+v.importe,0);
+        const ef=vn.filter(v=>v.medio==='efectivo').reduce((a,v)=>a+v.importe,0);
+        const emps=empleados.filter(e=>e.negocioId===n.id&&e.estado==='aprobado').length;
+        return`<div class="negocio-card"><div class="negocio-header"><span class="negocio-icon">${n.icon||'🏪'}</span><div class="negocio-live"><div class="live-dot"></div>En vivo</div></div><div class="negocio-nombre">${n.nombre}</div><div class="negocio-tipo">${n.tipo} · ${emps} empleado${emps!==1?"s":""}</div><div class="negocio-stats"><div class="negocio-stat"><div class="negocio-stat-val">${fmtARS(total)}</div><div class="negocio-stat-lbl">Total hoy</div></div><div class="negocio-stat"><div class="negocio-stat-val">${fmtARS(ef)}</div><div class="negocio-stat-lbl">Efectivo</div></div><div class="negocio-stat"><div class="negocio-stat-val">${vn.length}</div><div class="negocio-stat-lbl">Ventas</div></div><div class="negocio-stat"><div class="negocio-stat-val">${emps}</div><div class="negocio-stat-lbl">Activos</div></div></div></div>`;
+      }).join('')}
+    </div>`;
+  el.querySelector('#btn-add-negocio')?.addEventListener('click',openAddNegocioModal);
+}
 
-// ── CIERRE ──────────────────────────────────────────────
+// ── OWNER: VENTAS ─────────────────────────────────────────
+function renderVentas(){
+  const el=document.getElementById("page-ventas");
+  const ventasHoy=ventas.filter(v=>v.fecha===hoy());
+  el.innerHTML=`
+    <div class="sec-header fade"><span class="sec-title" style="font-size:17px">Ventas del día — ${new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long'})}</span></div>
+    <div class="fade">${ventasHoy.length===0?'<div class="empty"><div class="empty-icon">🧾</div><div class="empty-msg">Sin ventas hoy</div><div class="empty-sub">Las ventas de tus empleados aparecen acá</div></div>':`<div class="ventas-list">${ventasHoy.map(v=>ventaRowHTML(v)).join('')}</div>`}</div>`;
+}
+
+// ── OWNER: EMPLEADOS ──────────────────────────────────────
+function renderEmpleados(){
+  const el=document.getElementById("page-empleados");
+  const pendientes=empleados.filter(e=>e.estado==='pendiente');
+  const aprobados=empleados.filter(e=>e.estado==='aprobado');
+  function seccion(title,color,items,actions){
+    if(!items.length)return"";
+    return`<div style="font-size:12px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:20px">${title}</div>
+    <div class="empleados-list">${items.map(e=>`<div class="empleado-row">
+      <div class="emp-avatar">${(e.email||'?').substring(0,2).toUpperCase()}</div>
+      <div class="emp-info"><div class="emp-nombre">${e.email||'—'}</div><div class="emp-email">${negocios.find(n=>n.id===e.negocioId)?.nombre||'—'}</div></div>
+      <div class="emp-estado ${e.estado==='aprobado'?'estado-aprobado':'estado-pendiente'}">${e.estado==='aprobado'?'✓ Aprobado':'⏳ Pendiente'}</div>
+      ${actions?`<div class="emp-actions"><button class="btn-sm success" data-emp-aprobar="${e.id}">Aprobar</button><button class="btn-sm danger" data-emp-rechazar="${e.id}">Rechazar</button></div>`:''}
+    </div>`).join('')}</div>`;
+  }
+  el.innerHTML=`<div class="fade">
+    ${pendientes.length>0?`<div style="background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">⏳</span><div><div style="font-size:14px;font-weight:700;color:var(--warn)">Tenés ${pendientes.length} solicitud${pendientes.length>1?"es":""} pendiente${pendientes.length>1?"s":""}</div><div style="font-size:12px;color:var(--warn)">Aprobá o rechazá para que puedan operar</div></div></div>`:''}
+    ${seccion('⏳ Esperando aprobación','var(--warn)',pendientes,true)}
+    ${seccion('✅ Empleados activos','var(--green)',aprobados,false)}
+    ${pendientes.length===0&&aprobados.length===0?'<div class="empty"><div class="empty-icon">👥</div><div class="empty-msg">Sin empleados</div><div class="empty-sub">Cuando un empleado se registre con tu email aparece acá</div></div>':''}
+  </div>`;
+  el.querySelectorAll('[data-emp-aprobar]').forEach(btn=>{btn.addEventListener('click',()=>aprobarEmpleado(btn.dataset.empAprobar));});
+  el.querySelectorAll('[data-emp-rechazar]').forEach(btn=>{btn.addEventListener('click',()=>rechazarEmpleado(btn.dataset.empRechazar));});
+}
+
+async function aprobarEmpleado(id){
+  const emp=empleados.find(e=>e.id===id);if(!emp)return;
+  await updateDoc(doc(db,'empleados',id),{estado:'aprobado'});
+  // actualizar doc usuario también
+  const uSnap=await getDocs(query(collection(db,'usuarios'),where('uid','==',emp.uid)));
+  if(!uSnap.empty)await updateDoc(uSnap.docs[0].ref,{estado:'aprobado'});
+  emp.estado='aprobado';
+  showToast(`Empleado aprobado`);renderEmpleados();updatePendingBadge();
+}
+async function rechazarEmpleado(id){
+  const idx=empleados.findIndex(e=>e.id===id);if(idx<0)return;
+  await deleteDoc(doc(db,'empleados',id));
+  empleados.splice(idx,1);
+  showToast('Empleado rechazado','error');renderEmpleados();updatePendingBadge();
+}
+
+// ── OWNER: CIERRE ─────────────────────────────────────────
 function renderCierre(){
-  const el = document.getElementById("page-cierre");
-  el.innerHTML = `<div class="fade">${negocios.map(n=>{
-    const v=ventasHoy(n.id);
-    const ef=totalVentas(v.filter(x=>x.medio==="efectivo"));
-    const mp=totalVentas(v.filter(x=>x.medio==="mp"));
-    const deb=totalVentas(v.filter(x=>x.medio==="debito"));
-    const totV=ef+mp+deb;
-    const gn=gastosHoy(n.id);
-    const gEf=totalGastos(gn.filter(g=>g.medio==="efectivo"));
-    const gTr=totalGastos(gn.filter(g=>g.medio==="transferencia"));
-    const totG=gEf+gTr;
-    const neto=totV-totG;
-    return `<div class="cierre-card">
-      <div class="cierre-title">${n.icon||"🏪"} ${n.nombre} — Resumen del día</div>
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Ingresos</div>
+  const el=document.getElementById("page-cierre");
+  el.innerHTML=`<div class="fade">${negocios.length===0?'<div class="empty"><div class="empty-icon">🔒</div><div class="empty-msg">Sin negocios</div></div>':negocios.map(n=>{
+    const vn=ventas.filter(v=>v.negocioId===n.id&&v.fecha===hoy());
+    const ef=vn.filter(v=>v.medio==='efectivo').reduce((a,v)=>a+v.importe,0);
+    const mp=vn.filter(v=>v.medio==='mp').reduce((a,v)=>a+v.importe,0);
+    const deb=vn.filter(v=>v.medio==='debito').reduce((a,v)=>a+v.importe,0);
+    return`<div class="cierre-card"><div class="cierre-title">${n.icon||'🏪'} ${n.nombre} — Resumen del día</div>
       <div class="cierre-row"><span class="cierre-label">💵 Efectivo</span><span class="cierre-val">${fmtARS(ef)}</span></div>
       <div class="cierre-row"><span class="cierre-label">📱 Mercado Pago</span><span class="cierre-val" style="color:var(--mp)">${fmtARS(mp)}</span></div>
       <div class="cierre-row"><span class="cierre-label">💳 Débito</span><span class="cierre-val" style="color:var(--blue)">${fmtARS(deb)}</span></div>
-      <div class="cierre-row"><span class="cierre-label" style="font-weight:700;color:var(--navy)">Subtotal ventas</span><span class="cierre-val">${fmtARS(totV)}</span></div>
-      ${totG>0?`
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px">Gastos</div>
-      ${gEf>0?`<div class="cierre-row"><span class="cierre-label" style="color:var(--danger)">💵 Efectivo</span><span class="cierre-val" style="color:var(--danger)">- ${fmtARS(gEf)}</span></div>`:""}
-      ${gTr>0?`<div class="cierre-row"><span class="cierre-label" style="color:var(--danger)">🏦 Transferencia</span><span class="cierre-val" style="color:var(--danger)">- ${fmtARS(gTr)}</span></div>`:""}
-      <div class="cierre-row"><span class="cierre-label" style="font-weight:700;color:var(--danger)">Total gastos</span><span class="cierre-val" style="color:var(--danger)">- ${fmtARS(totG)}</span></div>`:""}
-      <div class="cierre-row cierre-neto" style="margin-top:8px"><span class="cierre-label">Neto del día</span><span class="cierre-val" style="color:${neto>=0?"var(--ok)":"var(--danger)"};">${fmtARS(neto)}</span></div>
-      <button class="btn-sm gold" style="width:100%;justify-content:center;margin-top:16px;padding:12px" onclick="showToast('Caja cerrada · ${n.nombre}')">🔒 Cerrar caja del día</button>
+      <div class="cierre-row cierre-total"><span class="cierre-label">Total del día</span><span class="cierre-val">${fmtARS(ef+mp+deb)}</span></div>
+      <button class="btn-sm gold" style="width:100%;justify-content:center;margin-top:16px;padding:12px" data-cierre="${n.id}">🔒 Cerrar caja del día</button>
     </div>`;
-  }).join("")}
-  ${negocios.length===0?`<div class="empty"><div class="empty-icon">🔒</div><div class="empty-msg">Sin negocios</div></div>`:""}
-  </div>`;
+  }).join('')}</div>`;
+  el.querySelectorAll('[data-cierre]').forEach(btn=>{btn.addEventListener('click',()=>showToast('Cierre registrado'));});
 }
 
-// ── MODAL NEGOCIO ───────────────────────────────────────
-window.abrirModalNegocio = function(){
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `<div class="modal-overlay" id="m-ov"><div class="modal">
-    <div class="modal-header"><span class="modal-title">🏪 Nuevo negocio</span><div class="modal-close" onclick="closeModal()">✕</div></div>
-    <div class="field"><label>Nombre *</label><input id="m-nombre" placeholder="Kiosco Don Luis"/></div>
-    <div class="field"><label>Tipo</label>
-      <select id="m-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;font-family:var(--font)">
-        <option>Kiosco</option><option>Ferretería</option><option>Almacén</option><option>Verdulería</option><option>Panadería</option><option>Farmacia</option><option>Otro</option>
-      </select>
+// ── OWNER: MODAL NEGOCIO ──────────────────────────────────
+function openAddNegocioModal(){
+  const wrap=document.createElement("div");
+  wrap.innerHTML=`<div class="modal-overlay" id="m-overlay"><div class="modal">
+    <div class="modal-header"><span class="modal-title">🏪 Nuevo negocio</span><div class="modal-close" id="m-close">✕</div></div>
+    <div class="field"><label>Nombre del negocio *</label><input id="m-nombre" placeholder="Kiosco Don Luis"/></div>
+    <div class="field"><label>Tipo de negocio</label>
+      <select id="m-tipo"><option>Kiosco</option><option>Ferretería</option><option>Almacén</option><option>Verdulería</option><option>Panadería</option><option>Farmacia</option><option>Otro</option></select>
     </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-save" id="btn-save-neg" onclick="guardarNegocio()">Agregar</button>
-    </div>
+    <div class="modal-footer"><button class="btn-cancel" id="m-cancel">Cancelar</button><button class="btn-save" id="m-save">Agregar negocio</button></div>
   </div></div>`;
   document.getElementById("modal-container").appendChild(wrap);
-  wrap.querySelector("#m-ov").addEventListener("click", e => { if(e.target===e.currentTarget) closeModal(); });
-};
-
-window.guardarNegocio = async function(){
-  const nombre = document.getElementById("m-nombre")?.value.trim();
-  if(!nombre){ showToast("El nombre es obligatorio","error"); return; }
-  const tipo   = document.getElementById("m-tipo")?.value;
-  const icons  = {Kiosco:"🏪",Ferretería:"🔧",Almacén:"🛒",Verdulería:"🥦",Panadería:"🥖",Farmacia:"💊",Otro:"🏬"};
-  const btn    = document.getElementById("btn-save-neg");
-  btn.disabled = true; btn.textContent = "Guardando...";
-  try {
-    await addDoc(collection(db,"negocios"),{
-      nombre, tipo, icon:icons[tipo]||"🏬",
-      duenoUid: currentUser.uid, creadoEn:serverTimestamp()
-    });
-    closeModal();
-    showToast(`${nombre} agregado`);
-  } catch(e){
-    showToast("Error al guardar","error");
-    btn.disabled=false; btn.textContent="Agregar";
-  }
-};
-
-// ── MODAL GASTO (DUEÑO) ─────────────────────────────────
-window.abrirModalGastoDueno = function(negId){
-  const n = negocios.find(x=>x.id===negId);
-  if(!n) return;
-  abrirModalGastoComun(negId, n.nombre, currentUser.uid);
-};
-
-function abrirModalGastoComun(negocioId, negocioNombre, duenoUid){
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `<div class="modal-overlay" id="m-ov"><div class="modal">
-    <div class="modal-header"><span class="modal-title">📤 Registrar gasto</span><div class="modal-close" onclick="closeModal()">✕</div></div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:700;color:var(--navy)">🏪 ${negocioNombre}</div>
-    <div class="field"><label>Importe *</label><input id="g-importe" type="number" placeholder="0" min="0" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;font-family:var(--font)"/></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div class="medio-btn" id="gm-efectivo" onclick="selGastoMedio('efectivo')"><div class="medio-btn-icon">💵</div><div class="medio-btn-label">Efectivo</div></div>
-      <div class="medio-btn" id="gm-transferencia" onclick="selGastoMedio('transferencia')"><div class="medio-btn-icon">🏦</div><div class="medio-btn-label">Transferencia</div></div>
-    </div>
-    <div class="field"><label>Descripción</label><input id="g-desc" placeholder="Mercadería, alquiler, limpieza..." style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;font-family:var(--font)"/></div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-save" style="background:var(--danger)" id="btn-save-gasto" onclick="guardarGasto('${negocioId}','${duenoUid}')">Registrar gasto</button>
-    </div>
-  </div></div>`;
-  document.getElementById("modal-container").appendChild(wrap);
-  wrap.querySelector("#m-ov").addEventListener("click", e => { if(e.target===e.currentTarget) closeModal(); });
-  window._gastoMedio = null;
-}
-
-window.selGastoMedio = function(m){
-  window._gastoMedio = m;
-  ["efectivo","transferencia"].forEach(x=>{
-    const el = document.getElementById("gm-"+x);
-    if(el) el.className = "medio-btn" + (x===m ? (m==="efectivo"?" sel-efectivo":" sel-debito") : "");
+  wrap.querySelector("#m-close").addEventListener("click",closeModal);
+  wrap.querySelector("#m-cancel").addEventListener("click",closeModal);
+  wrap.querySelector("#m-overlay").addEventListener("click",e=>{if(e.target.id==="m-overlay")closeModal();});
+  wrap.querySelector("#m-save").addEventListener("click",async()=>{
+    const nombre=wrap.querySelector("#m-nombre").value.trim();
+    if(!nombre){showToast("El nombre es obligatorio","error");return;}
+    const tipo=wrap.querySelector("#m-tipo").value;
+    const icons={"Kiosco":"🏪","Ferretería":"🔧","Almacén":"🛒","Verdulería":"🥦","Panadería":"🥖","Farmacia":"💊","Otro":"🏬"};
+    const btn=wrap.querySelector("#m-save");btn.disabled=true;btn.textContent="Guardando...";
+    try{
+      const ref=await addDoc(collection(db,"negocios"),{nombre,tipo,icon:icons[tipo]||"🏬",ownerUid:currentUser.uid,ownerEmail:currentUser.email,createdAt:serverTimestamp()});
+      negocios.push({id:ref.id,nombre,tipo,icon:icons[tipo]||"🏬",ownerUid:currentUser.uid});
+      closeModal();showToast(`${nombre} agregado`);renderNegocios();
+    }catch(e){showToast("Error al guardar","error");btn.disabled=false;btn.textContent="Agregar negocio";}
   });
-};
-
-window.guardarGasto = async function(negocioId, duenoUid){
-  const importe = parseFloat(document.getElementById("g-importe")?.value);
-  const desc    = document.getElementById("g-desc")?.value.trim()||"";
-  if(!importe||importe<=0){ showToast("Ingresá un importe válido","error"); return; }
-  if(!window._gastoMedio){ showToast("Elegí el medio de pago","error"); return; }
-  const btn = document.getElementById("btn-save-gasto");
-  btn.disabled=true; btn.textContent="Guardando...";
-  try {
-    await addDoc(collection(db,"gastos"),{
-      negocioId, duenoUid, importe,
-      medio: window._gastoMedio, desc,
-      empleadoUid: currentUser?.uid||"",
-      empleado: currentUser?.email?.split("@")[0]||"",
-      fecha: hoy(), ts: serverTimestamp()
-    });
-    closeModal();
-    showToast("Gasto registrado","ok-green");
-  } catch(e){
-    showToast("Error al guardar","error");
-    btn.disabled=false; btn.textContent="Registrar gasto";
-  }
-};
-
-// ════════════════════════════════════════════════════════
-// EMPLEADO
-// ════════════════════════════════════════════════════════
-let empVentas = [];
-let unsubEmpVentas;
-
-function iniciarEmpleado(user, perfil){
-  empVentas = [];
-  if(unsubEmpVentas) unsubEmpVentas();
-  unsubEmpVentas = onSnapshot(
-    query(collection(db,"ventas"), where("empleadoUid","==",user.uid), where("fecha","==",hoy())),
-    snap => {
-      empVentas = snap.docs.map(d=>{
-        const v={id:d.id,...d.data()};
-        if(v.ts?.toDate){ v.hora=v.ts.toDate().toTimeString().slice(0,5); }
-        return v;
-      });
-      renderEmpVentas();
-    }
-  );
 }
+function closeModal(){document.getElementById("modal-container").innerHTML="";}
 
-window.selectMedio = function(m){
-  selectedMedio = m;
-  ["efectivo","mp","debito"].forEach(x=>{
-    document.getElementById("medio-"+x).className = "medio-btn" + (x===m?" sel-"+m:"");
-  });
-};
-
-window.cargarVenta = async function(){
-  const imp  = parseFloat(document.getElementById("emp-importe").value);
-  const desc = document.getElementById("emp-desc").value.trim();
-  if(!imp||imp<=0){ showToast("Ingresá un importe válido","error"); return; }
-  if(!selectedMedio){ showToast("Elegí el medio de pago","error"); return; }
-  const btn = document.getElementById("btn-cargar");
-  btn.disabled=true; btn.textContent="Guardando...";
-  try {
-    await addDoc(collection(db,"ventas"),{
-      negocioId: empNegocioId,
-      duenoUid:  empDuenoUid,
-      empleadoUid: currentUser.uid,
-      empleado: currentUser.email?.split("@")[0]||"Empleado",
-      importe: imp, medio: selectedMedio, desc,
-      fecha: hoy(), ts: serverTimestamp()
-    });
-    document.getElementById("emp-importe").value="";
-    document.getElementById("emp-desc").value="";
-    selectedMedio=null;
-    ["efectivo","mp","debito"].forEach(x=>{ document.getElementById("medio-"+x).className="medio-btn"; });
-    showToast("Venta registrada ✓","ok-green");
-  } catch(e){ showToast("Error al guardar","error"); }
-  btn.disabled=false; btn.textContent="Registrar venta";
-};
-
-window.abrirModalGasto = function(){
-  abrirModalGastoComun(empNegocioId, currentPerfil?.negocioNombre||"Mi negocio", empDuenoUid);
-};
+// ── EMPLOYEE: LISTENER VENTAS ─────────────────────────────
+let empVentas=[];
+function startEmpListener(){
+  if(!userDoc?.negocioId)return;
+  const q=query(collection(db,'ventas'),where('empleadoUid','==',currentUser.uid),where('fecha','==',hoy()),orderBy('createdAt','desc'));
+  unsubVentas=onSnapshot(q,snap=>{empVentas=snap.docs.map(d=>({id:d.id,...d.data()}));renderEmpVentas();});
+}
 
 function renderEmpVentas(){
-  const list  = document.getElementById("emp-ventas-list");
-  const total = empVentas.reduce((a,v)=>a+v.importe,0);
-  document.getElementById("emp-total-dia").textContent = fmtARS(total);
-  if(!empVentas.length){
-    list.innerHTML=`<div class="empty"><div class="empty-icon">🧾</div><div class="empty-msg">Sin ventas todavía</div><div class="empty-sub">Las ventas que registres aparecen acá</div></div>`;
-    return;
-  }
-  list.innerHTML=`<div class="ventas-list">${empVentas.map(v=>ventaRowHTML(v)).join("")}</div>`;
+  const total=empVentas.reduce((a,v)=>a+v.importe,0);
+  document.getElementById("emp-total-dia").textContent=fmtARS(total);
+  const list=document.getElementById("emp-ventas-list");
+  list.innerHTML=empVentas.length===0?'<div class="empty"><div class="empty-icon">🧾</div><div class="empty-msg">Sin ventas todavía</div><div class="empty-sub">Registrá tu primera venta arriba</div></div>':`<div class="ventas-list">${empVentas.map(v=>ventaRowHTML(v)).join('')}</div>`;
 }
 
-window.closeModal = closeModal;
-window.showToast  = showToast;
+// ── EMPLOYEE: REGISTRAR VENTA ─────────────────────────────
+['efectivo','mp','debito'].forEach(m=>{
+  document.getElementById(`medio-${m}`).addEventListener('click',()=>{
+    selectedMedio=m;
+    ['efectivo','mp','debito'].forEach(x=>document.getElementById(`medio-${x}`).className='medio-btn');
+    document.getElementById(`medio-${m}`).className=`medio-btn selected-${m}`;
+  });
+});
+
+document.getElementById('btn-cargar-venta').addEventListener('click',async()=>{
+  const importe=parseFloat(document.getElementById('emp-importe').value);
+  const desc=document.getElementById('emp-desc').value.trim();
+  if(!importe||importe<=0){showToast('Ingresá un importe válido','error');return;}
+  if(!selectedMedio){showToast('Elegí el medio de pago','error');return;}
+  try{
+    await addDoc(collection(db,'ventas'),{
+      negocioId:userDoc.negocioId,
+      ownerUid:userDoc.ownerUid,
+      empleadoUid:currentUser.uid,
+      empleadoNombre:currentUser.email.split('@')[0],
+      importe,medio:selectedMedio,
+      descripcion:desc||'',
+      fecha:hoy(),hora:fmtHora(),
+      createdAt:serverTimestamp()
+    });
+    document.getElementById('emp-importe').value='';
+    document.getElementById('emp-desc').value='';
+    selectedMedio=null;
+    ['efectivo','mp','debito'].forEach(m=>document.getElementById(`medio-${m}`).className='medio-btn');
+    showToast('Venta registrada ✓','ok-green');
+  }catch(e){showToast('Error al registrar','error');}
+});
+
+// ── LOGOUT ────────────────────────────────────────────────
+document.getElementById('btn-logout-owner').addEventListener('click',()=>signOut(auth));
+document.getElementById('btn-logout-emp').addEventListener('click',()=>signOut(auth));
+document.getElementById('btn-theme-sidebar').addEventListener('click',toggleTheme);
+document.getElementById('btn-theme-emp').addEventListener('click',toggleTheme);
 </script>
+
+<!--
+FIRESTORE SECURITY RULES — Firebase Console > Firestore > Reglas
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /usuarios/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /negocios/{negocioId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /ventas/{ventaId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.empleadoUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /empleados/{empId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+  }
+}
+
+ÍNDICES COMPUESTOS — Firebase Console > Firestore > Índices > Compuestos
+1. negocios | ownerUid ASC, createdAt DESC
+2. ventas | ownerUid ASC, fecha ASC, createdAt DESC
+3. ventas | empleadoUid ASC, fecha ASC, createdAt DESC
+4. empleados | ownerUid ASC, estado ASC
+5. usuarios | email ASC, rol ASC
+-->
 </body>
 </html>
