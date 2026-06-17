@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Sistema de punto de venta para negocios y empleados.">
+<meta name="theme-color" content="#0f1e3d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PuntoVenta">
 <title>PuntoVenta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -319,6 +325,25 @@ input,select,button,textarea{font-family:var(--font)}
 .demo-badge.activa{background:var(--warn-bg);color:var(--warn)}
 .demo-badge.vencida{background:var(--red-bg);color:var(--red)}
 .demo-badge.completa{background:var(--green-bg);color:var(--green)}
+/* INVITE */
+#screen-invite.active{align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy),#1a3060);padding:24px}
+.invite-card{background:var(--surface);border-radius:20px;padding:40px 32px;width:100%;max-width:380px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.4)}
+.invite-card-icon{font-size:52px;margin-bottom:12px}
+.invite-card-negocio{font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px}
+.invite-card-sub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.invite-card-badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);border:1px solid #86efac;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;margin-bottom:20px}
+.invite-expired{background:var(--red-bg);border:1px solid #fca5a5;border-radius:var(--radius);padding:14px;color:var(--red);font-size:14px;font-weight:600;margin-bottom:16px}
+.invite-section{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+.invite-section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.invite-banner-box{background:linear-gradient(135deg,#0f1e3d,#1d4ed8);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.invite-banner-icon{font-size:26px;flex-shrink:0}
+.invite-banner-title{font-size:14px;font-weight:800;color:#fff}
+.invite-banner-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.invite-row{display:flex;gap:8px;margin-bottom:8px}
+.invite-link-box{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--muted);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-copy-link{background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.btn-wa-invite{background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.invite-expiry{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
 </style>
 </head>
 <body>
@@ -352,12 +377,30 @@ input,select,button,textarea{font-family:var(--font)}
     <div class="auth-err" id="auth-err"></div>
     <div class="field"><label>Email</label><input id="f-email" type="email" placeholder="tu@email.com"/></div>
     <div class="field"><label>Contraseña</label><input id="f-pass" type="password" placeholder="••••••••"/></div>
-    <div class="field hidden-field" id="field-owner-email">
+    <div class="field hidden-field" id="field-owner-email" style="display:none">
       <label>Email del dueño</label>
       <input id="f-owner-email" type="email" placeholder="email del dueño del negocio"/>
     </div>
     <button class="btn-primary" id="btn-auth">Ingresar →</button>
     <div class="auth-toggle"><span id="toggle-mode">Registrarse</span></div>
+  </div>
+</div>
+
+<!-- INVITE -->
+<div id="screen-invite" class="screen">
+  <div class="invite-card">
+    <div class="invite-card-icon" id="invite-neg-icon">🏪</div>
+    <div class="invite-card-negocio" id="invite-neg-nombre">Cargando...</div>
+    <div class="invite-card-sub" id="invite-neg-sub">Fuiste invitado a unirte como empleado</div>
+    <div id="invite-expired-msg" style="display:none" class="invite-expired">⏰ Este link ya expiró. Pedile al dueño que genere uno nuevo.</div>
+    <div id="invite-valid-wrap">
+      <div class="invite-card-badge">✅ Invitación válida</div>
+      <div class="field" style="text-align:left"><label>Email</label><input id="inv-email" type="email" placeholder="tu@email.com"/></div>
+      <div class="field" style="text-align:left"><label>Contraseña</label><input id="inv-pass" type="password" placeholder="Mínimo 6 caracteres"/></div>
+      <div class="auth-err" id="inv-err"></div>
+      <button class="btn-primary" id="btn-inv-register">Unirme al negocio →</button>
+    </div>
+    <button class="btn-demo-logout" style="margin-top:14px" id="btn-inv-cancel">Cancelar</button>
   </div>
 </div>
 
@@ -525,7 +568,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div class="demo-icon">⏳</div>
     <div class="demo-title">Tu demo de 24hs terminó</div>
     <div class="demo-sub">Gracias por probar PuntoVenta. Para continuar gestionando tus ventas, contactanos y te activamos tu cuenta.</div>
-    <a href="mailto:raventechs@gmail.com?subject=Quiero activar PuntoVenta&body=Hola, probé la demo y me interesa continuar." class="btn-demo-email">✉️ Contactar por email</a>
+    <a href="mailto:ventas@raventechsapp.com?subject=Quiero activar PuntoVenta&body=Hola, probé la demo y me interesa continuar." class="btn-demo-email">✉️ Contactar por email</a>
     <button class="btn-demo-logout" id="btn-demo-logout">Cerrar sesión</button>
   </div>
 </div>
@@ -553,6 +596,12 @@ const fbApp=initializeApp(FB);
 const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
 
+function sanitizeHTML(str){const d=document.createElement('div');d.textContent=str??"";return d.innerHTML;}
+
+// Detección sincrónica de invite para que onAuthStateChanged la respete
+const _inviteCode=new URLSearchParams(window.location.search).get('invite');
+let activeInvite=_inviteCode?{code:_inviteCode,negocioId:null,ownerUid:null,loading:true}:null;
+
 // ── ESTADO ────────────────────────────────────────────────
 let me=null, myDoc=null, myRole=null;
 let negocios=[], ventas=[], empleados=[], empVentas=[];
@@ -574,6 +623,65 @@ function applyTheme(t){
 }
 function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
 initTheme();
+
+// ── DETECCIÓN DE INVITE ───────────────────────────────
+if(_inviteCode){
+  showScreen('screen-invite');
+  (async()=>{
+    try{
+      const invSnap=await getDoc(doc(db,'invitaciones',_inviteCode));
+      if(!invSnap.exists()){
+        document.getElementById('invite-neg-nombre').textContent='Link inválido';
+        document.getElementById('invite-expired-msg').style.display='block';
+        document.getElementById('invite-valid-wrap').style.display='none';
+        activeInvite=null;return;
+      }
+      const inv=invSnap.data();
+      const expirado=inv.expiry?.toMillis?.()<Date.now()||inv.usado===true;
+      const negSnap=await getDoc(doc(db,'negocios',inv.negocioId));
+      const neg=negSnap.exists()?negSnap.data():{nombre:'Negocio',icon:'🏪',tipo:''};
+      document.getElementById('invite-neg-icon').textContent=neg.icon||'🏪';
+      document.getElementById('invite-neg-nombre').textContent=neg.nombre;
+      document.getElementById('invite-neg-sub').textContent=neg.tipo?`Negocio: ${neg.tipo}`:'Fuiste invitado a unirte como empleado';
+      activeInvite={code:_inviteCode,negocioId:inv.negocioId,ownerUid:inv.ownerUid};
+      if(expirado){
+        document.getElementById('invite-expired-msg').style.display='block';
+        document.getElementById('invite-valid-wrap').style.display='none';
+        activeInvite=null;
+      }
+    }catch(e){
+      document.getElementById('invite-neg-nombre').textContent='Error al cargar';
+      document.getElementById('invite-expired-msg').style.display='block';
+      document.getElementById('invite-valid-wrap').style.display='none';
+      activeInvite=null;
+    }
+  })();
+}
+
+// ── LISTENERS INVITE ──────────────────────────────────
+document.getElementById('btn-inv-cancel').addEventListener('click',()=>{
+  activeInvite=null;window.history.replaceState({},'',window.location.pathname);showScreen('screen-login');
+});
+document.getElementById('btn-inv-register').addEventListener('click',async()=>{
+  if(!activeInvite)return;
+  const email=document.getElementById('inv-email').value.trim();
+  const pass=document.getElementById('inv-pass').value;
+  const errEl=document.getElementById('inv-err');errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='Completá todos los campos';errEl.style.display='block';return;}
+  const btn=document.getElementById('btn-inv-register');btn.disabled=true;btn.textContent='Registrando...';
+  try{
+    await updateDoc(doc(db,'invitaciones',activeInvite.code),{usado:true,usadoPor:email,usadoAt:serverTimestamp()});
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,'usuarios',cred.user.uid),{uid:cred.user.uid,email,rol:'employee',ownerUid:activeInvite.ownerUid,negocioId:activeInvite.negocioId,estado:'pendiente',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+    await addDoc(collection(db,'empleados'),{uid:cred.user.uid,email,ownerUid:activeInvite.ownerUid,negocioId:activeInvite.negocioId,estado:'pendiente',inviteCode:activeInvite.code,createdAt:serverTimestamp()});
+    window.history.replaceState({},'',window.location.pathname);
+    activeInvite=null;
+  }catch(e){
+    const msgs={'auth/email-already-in-use':'Ya existe cuenta con ese email.','auth/weak-password':'Mínimo 6 caracteres.'};
+    errEl.textContent=msgs[e.code]||'Error al registrarse.';errEl.style.display='block';
+    btn.disabled=false;btn.textContent='Unirme al negocio →';
+  }
+});
 
 // ── PANTALLAS ─────────────────────────────────────────────
 function showScreen(id){
@@ -598,7 +706,7 @@ function ventaHTML(v){
   const mc=v.medio==='efectivo'?'efectivo':v.medio==='mp'?'mp':'debito';
   const mi=v.medio==='efectivo'?'💵':v.medio==='mp'?'📱':'💳';
   const tl=v.medio==='efectivo'?'Efectivo':v.medio==='mp'?'Mercado Pago':'Débito';
-  return`<div class="venta-row"><div class="venta-medio-icon ${mc}">${mi}</div><div class="venta-info"><div class="venta-desc">${v.descripcion||'Venta sin descripción'}</div><div class="venta-meta">${v.hora||''} · ${v.empleadoNombre||''}</div><span class="venta-tag tag-${mc==='mp'?'mp':mc}">${tl}</span></div><div class="venta-importe">${fmtARS(v.importe)}</div></div>`;
+  return`<div class="venta-row"><div class="venta-medio-icon ${mc}">${mi}</div><div class="venta-info"><div class="venta-desc">${sanitizeHTML(v.descripcion||'Venta sin descripción')}</div><div class="venta-meta">${sanitizeHTML(v.hora||'')} · ${sanitizeHTML(v.empleadoNombre||'')}</div><span class="venta-tag tag-${mc==='mp'?'mp':mc}">${tl}</span></div><div class="venta-importe">${fmtARS(v.importe)}</div></div>`;
 }
 
 // ── LOGO TAPS → PIN ───────────────────────────────────────
@@ -638,7 +746,7 @@ async function loadAdminNegocios(){
   const c=document.getElementById('admin-negocios-list');c.innerHTML=spinnerHTML();
   const snap=await getDocs(collection(db,'negocios'));
   if(snap.empty){c.innerHTML=emptyHTML('🏪','Sin negocios');return;}
-  c.innerHTML=snap.docs.map(d=>{const n=d.data();return`<div class="admin-card"><div class="admin-card-title">${n.icon||'🏪'} ${n.nombre}</div><div class="admin-card-sub">${n.tipo||'—'} · ${n.ownerEmail||'—'}</div><div class="admin-card-actions"><button class="btn-adel" data-id="${d.id}">🗑️ Eliminar</button></div></div>`;}).join('');
+  c.innerHTML=snap.docs.map(d=>{const n=d.data();return`<div class="admin-card"><div class="admin-card-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)}</div><div class="admin-card-sub">${sanitizeHTML(n.tipo||'—')} · ${sanitizeHTML(n.ownerEmail||'—')}</div><div class="admin-card-actions"><button class="btn-adel" data-id="${d.id}">🗑️ Eliminar</button></div></div>`;}).join('');
 }
 async function loadAdminUsers(){
   const c=document.getElementById('admin-users-list');c.innerHTML=spinnerHTML();
@@ -669,7 +777,7 @@ async function loadAdminUsers(){
       </div>`;
     }
     return`<div class="admin-card">
-      <div class="admin-card-title">${u.email||d.id}${ban?'<span class="ban-badge">BANEADO</span>':''} ${demoBadge}</div>
+      <div class="admin-card-title">${sanitizeHTML(u.email||d.id)}${ban?'<span class="ban-badge">BANEADO</span>':''} ${demoBadge}</div>
       <div class="admin-card-sub">${u.rol||'—'}</div>
       ${demoInfo}
       <div class="admin-card-actions" style="margin-top:8px">
@@ -753,24 +861,17 @@ document.getElementById('btn-demo-logout').addEventListener('click',()=>signOut(
 
 // ── AUTH STATE ────────────────────────────────────────────
 onAuthStateChanged(auth,async user=>{
+  if(activeInvite&&!user)return; // No pisar la pantalla de invitación
   if(user){
     me=user;
     const userRef=doc(db,'usuarios',user.uid);
     let snap=await getDoc(userRef);
-
-    // Nuevo usuario Google sin documento — crear como owner con demo
     if(!snap.exists()){
-      await setDoc(userRef,{
-        uid:user.uid,email:user.email,rol:'owner',banned:false,
-        status:'demo',demoStart:serverTimestamp(),
-        createdAt:serverTimestamp()
-      });
+      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
       snap=await getDoc(userRef);
     }
-
     myDoc=snap.data();myRole=myDoc.rol;
     if(myDoc.banned){toast('Cuenta suspendida','err');await signOut(auth);return;}
-
     if(myRole==='owner'){
       document.getElementById('owner-av').textContent=user.email.substring(0,2).toUpperCase();
       document.getElementById('owner-av2').textContent=user.email.substring(0,2).toUpperCase();
@@ -780,9 +881,8 @@ onAuthStateChanged(auth,async user=>{
       renderPage('dashboard');
       checkDemo();
     } else if(myRole==='employee'){
-      if(myDoc.estado==='pendiente'){
-        showScreen('screen-pending');
-      } else {
+      if(myDoc.estado==='pendiente'){showScreen('screen-pending');}
+      else{
         const negSnap=await getDoc(doc(db,'negocios',myDoc.negocioId));
         document.getElementById('emp-neg-name').textContent=negSnap.exists()?negSnap.data().nombre:'Negocio';
         showScreen('screen-employee');
@@ -794,7 +894,7 @@ onAuthStateChanged(auth,async user=>{
     me=null;myDoc=null;myRole=null;
     if(unsubEmpVentas){unsubEmpVentas();unsubEmpVentas=null;}
     document.getElementById('demo-wall').classList.remove('open');
-    showScreen('screen-login');
+    if(!activeInvite)showScreen('screen-login');
   }
 });
 
@@ -918,7 +1018,7 @@ function renderDashboard(){
       <div>
         <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${n.icon||'🏪'}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${n.tipo}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${n.nombre}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
+          ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo)}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
         </div>
       </div>
       <div>
@@ -941,7 +1041,7 @@ function renderNegocios(){
         const vn=ventas.filter(v=>v.negocioId===n.id&&v.fecha===hoy());
         const tn=vn.reduce((a,v)=>a+v.importe,0);
         const emps=empleados.filter(e=>e.negocioId===n.id&&e.estado==='aprobado').length;
-        return`<div class="negocio-card"><div class="neg-header"><span class="neg-icon">${n.icon||'🏪'}</span><div class="live-dot-wrap"><div class="live-dot"></div>En vivo</div></div><div class="neg-nombre">${n.nombre}</div><div class="neg-tipo">${n.tipo} · ${emps} empleado${emps!==1?'s':''}</div><div class="neg-stats"><div class="neg-stat"><div class="neg-stat-val">${fmtARS(tn)}</div><div class="neg-stat-lbl">Total hoy</div></div><div class="neg-stat"><div class="neg-stat-val">${vn.length}</div><div class="neg-stat-lbl">Ventas</div></div></div></div>`;
+        return`<div class="negocio-card"><div class="neg-header"><span class="neg-icon">${sanitizeHTML(n.icon||'🏪')}</span><div class="live-dot-wrap"><div class="live-dot"></div>En vivo</div></div><div class="neg-nombre">${sanitizeHTML(n.nombre)}</div><div class="neg-tipo">${sanitizeHTML(n.tipo)} · ${emps} empleado${emps!==1?'s':''}</div><div class="neg-stats"><div class="neg-stat"><div class="neg-stat-val">${fmtARS(tn)}</div><div class="neg-stat-lbl">Total hoy</div></div><div class="neg-stat"><div class="neg-stat-val">${vn.length}</div><div class="neg-stat-lbl">Ventas</div></div></div></div>`;
       }).join('')}
     </div>`;
   el.querySelector('#btn-add-neg')?.addEventListener('click',()=>document.getElementById('modal-negocio').classList.add('open'));
@@ -961,23 +1061,73 @@ function renderEmpleados(){
   const el=document.getElementById('page-empleados');
   const pend=empleados.filter(e=>e.estado==='pendiente');
   const apro=empleados.filter(e=>e.estado==='aprobado');
+
+  const inviteSections=negocios.map(n=>`
+    <div class="invite-section">
+      <div class="invite-section-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)}</div>
+      <div class="invite-banner-box">
+        <div class="invite-banner-icon">🔗</div>
+        <div><div class="invite-banner-title">Invitar empleado</div><div class="invite-banner-sub">Generá un link válido por 24hs</div></div>
+      </div>
+      <div id="invite-wrap-${n.id}">
+        <button class="btn-primary" style="margin-bottom:0;font-size:14px" data-gen-invite="${n.id}">Generar link de invitación</button>
+      </div>
+    </div>`).join('');
+
   function sec(title,color,items,withActions){
     if(!items.length)return'';
     return`<div style="font-size:12px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:20px">${title}</div>
     <div class="empleados-list">${items.map(e=>`<div class="emp-row">
-      <div class="emp-avatar">${(e.email||'?').substring(0,2).toUpperCase()}</div>
-      <div class="emp-info"><div class="emp-nombre">${e.email||'—'}</div><div class="emp-sub">${negocios.find(n=>n.id===e.negocioId)?.nombre||'—'}</div></div>
+      <div class="emp-avatar">${sanitizeHTML((e.email||'?').substring(0,2).toUpperCase())}</div>
+      <div class="emp-info"><div class="emp-nombre">${sanitizeHTML(e.email||'—')}</div><div class="emp-sub">${sanitizeHTML(negocios.find(n=>n.id===e.negocioId)?.nombre||'—')}</div></div>
       <div class="emp-estado ${e.estado==='aprobado'?'estado-ok':'estado-pend'}">${e.estado==='aprobado'?'✓ Aprobado':'⏳ Pendiente'}</div>
       ${withActions?`<div class="emp-actions"><button class="btn-sm success" data-aprobar="${e.id}">Aprobar</button><button class="btn-sm danger" data-rechazar="${e.id}">Rechazar</button></div>`:''}
     </div>`).join('')}</div>`;
   }
+
   el.innerHTML=`
+    ${inviteSections}
     ${pend.length?`<div style="background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">⏳</span><div><div style="font-size:14px;font-weight:700;color:var(--warn)">${pend.length} solicitud${pend.length>1?'es':''} pendiente${pend.length>1?'s':''}</div><div style="font-size:12px;color:var(--warn)">Aprobá o rechazá para que puedan operar</div></div></div>`:''}
     ${sec('⏳ Esperando aprobación','var(--warn)',pend,true)}
     ${sec('✅ Activos','var(--green)',apro,false)}
-    ${!pend.length&&!apro.length?emptyHTML('👥','Sin empleados','Cuando un empleado se registre con tu email aparece acá'):''}`;
+    ${!pend.length&&!apro.length&&!negocios.length?emptyHTML('👥','Sin empleados','Primero creá un negocio'):''}`;
+
   el.querySelectorAll('[data-aprobar]').forEach(btn=>btn.addEventListener('click',()=>aprobar(btn.dataset.aprobar)));
   el.querySelectorAll('[data-rechazar]').forEach(btn=>btn.addEventListener('click',()=>rechazar(btn.dataset.rechazar)));
+
+  el.querySelectorAll('[data-gen-invite]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const negId=btn.dataset.genInvite;
+      btn.disabled=true;btn.textContent='Generando...';
+      try{
+        const expiry=new Date(Date.now()+24*60*60*1000);
+        const code=Math.random().toString(36).substring(2,10)+Date.now().toString(36);
+        await setDoc(doc(db,'invitaciones',code),{negocioId:negId,ownerUid:me.uid,expiry:Timestamp.fromDate(expiry),usado:false,createdAt:serverTimestamp()});
+        const neg=negocios.find(n=>n.id===negId);
+        const baseUrl=window.location.origin+window.location.pathname;
+        const link=`${baseUrl}?invite=${code}`;
+        const wrap=document.getElementById(`invite-wrap-${negId}`);
+        const horaExp=expiry.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+        const waText=encodeURIComponent(`¡Hola! Te invito a unirte a PuntoVenta como empleado en ${neg?.nombre||'el negocio'}. El link es válido por 24 horas:\n${link}`);
+        wrap.innerHTML=`
+          <div class="invite-row">
+            <div class="invite-link-box">${link}</div>
+            <button class="btn-copy-link" data-copy="${link}">📋 Copiar</button>
+          </div>
+          <button class="btn-wa-invite" data-wa="${waText}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.854L.055 23.454a.75.75 0 0 0 .919.919l5.6-1.469A11.951 11.951 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.951 9.951 0 0 1-5.073-1.386l-.361-.214-3.754.984.998-3.648-.235-.374A9.956 9.956 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            Compartir por WhatsApp
+          </button>
+          <div class="invite-expiry">⏰ Vence hoy a las ${horaExp}</div>
+          <div style="margin-top:10px"><button class="btn-primary" style="background:var(--surface2);color:var(--muted);border:1.5px solid var(--border);box-shadow:none;font-size:13px" data-gen-invite="${negId}">🔄 Generar nuevo link</button></div>`;
+        wrap.querySelector('[data-copy]')?.addEventListener('click',e=>{
+          navigator.clipboard.writeText(e.target.dataset.copy).then(()=>toast('Link copiado','ok')).catch(()=>{const ta=document.createElement('textarea');ta.value=e.target.dataset.copy;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Link copiado','ok');});
+        });
+        wrap.querySelector('[data-wa]')?.addEventListener('click',e=>{window.open(`https://wa.me/?text=${e.target.closest('[data-wa]').dataset.wa}`,'_blank');});
+        wrap.querySelector('[data-gen-invite]')?.addEventListener('click',()=>renderEmpleados());
+      }catch(e){toast('Error al generar el link','err');btn.disabled=false;btn.textContent='Generar link de invitación';}
+    });
+  });
 }
 
 async function aprobar(id){
@@ -1005,7 +1155,7 @@ function renderCierre(){
     const ef=vn.filter(v=>v.medio==='efectivo').reduce((a,v)=>a+v.importe,0);
     const mp=vn.filter(v=>v.medio==='mp').reduce((a,v)=>a+v.importe,0);
     const deb=vn.filter(v=>v.medio==='debito').reduce((a,v)=>a+v.importe,0);
-    return`<div class="cierre-card"><div class="cierre-title">${n.icon||'🏪'} ${n.nombre} — Resumen del día</div>
+    return`<div class="cierre-card"><div class="cierre-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)} — Resumen del día</div>
       <div class="cierre-row"><span class="cierre-label">💵 Efectivo</span><span class="cierre-val">${fmtARS(ef)}</span></div>
       <div class="cierre-row"><span class="cierre-label">📱 Mercado Pago</span><span class="cierre-val" style="color:var(--mp)">${fmtARS(mp)}</span></div>
       <div class="cierre-row"><span class="cierre-label">💳 Débito</span><span class="cierre-val" style="color:var(--blue)">${fmtARS(deb)}</span></div>
