@@ -1177,7 +1177,7 @@ function renderVentas(){
   el.innerHTML=`
     <div class="sec-header"><span class="sec-title" style="font-size:17px">Ventas del día — ${new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long'})}</span><button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button></div>
     ${vh.length===0?emptyHTML('🧾','Sin ventas hoy','Las ventas aparecen acá en tiempo real'):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`}`;
-  el.querySelector('#btn-nueva-venta')?.addEventListener('click',openModalVentaOwner);
+  el.querySelector('#btn-nueva-venta')?.addEventListener('click',()=>openModalVentaOwner());
 }
 
 // ── EMPLEADOS ─────────────────────────────────────────────
