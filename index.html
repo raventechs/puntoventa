@@ -344,9 +344,62 @@ input,select,button,textarea{font-family:var(--font)}
 .btn-copy-link{background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .btn-wa-invite{background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
 .invite-expiry{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+
+/* ══ TOPBAR ICON BUTTONS (logo admin + tema) ══════════════════ */
+.topbar-icon-btn{width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;user-select:none;transition:all .15s;flex-shrink:0}
+.topbar-icon-btn:hover{border-color:var(--blue)}
+
+/* ══ APP LOADING — caja registradora ═════════════════════════ */
+#app-loading{position:fixed;inset:0;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:99999;transition:opacity .35s ease,visibility .35s ease}
+#app-loading.hide{opacity:0;visibility:hidden;pointer-events:none}
+.till-wrap{width:88px;height:88px}
+.till-drawer{transform-origin:50% 100%;animation:tillDrawer 1.4s ease-in-out infinite}
+@keyframes tillDrawer{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.till-coin{animation:tillCoin 1.4s ease-in-out infinite}
+@keyframes tillCoin{0%,40%,100%{opacity:0;transform:translateY(0)}55%{opacity:1;transform:translateY(4px)}70%{opacity:1;transform:translateY(10px)}85%,100%{opacity:0;transform:translateY(14px)}}
+.till-label{margin-top:18px;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px}
+
+/* ══ DASHBOARD SIDE ANIM — persona entra/sale del local ═══════ */
+.dash-with-anim{display:grid;grid-template-columns:1fr 110px;gap:18px;align-items:start}
+.dash-anim-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);height:340px;overflow:hidden;position:relative}
+.dash-anim-scene{position:absolute;inset:0;overflow:hidden}
+.shop-door{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:78px;background:var(--navy3);border-radius:4px 4px 0 0;border:2px solid var(--gold2)}
+[data-theme="dark"] .shop-door{background:#1e293b}
+.shop-door::after{content:"";position:absolute;top:14px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.shop-walker{position:absolute;bottom:14px;left:50%;font-size:22px;transform:translateX(-50%);animation:walkInOut 6s ease-in-out infinite}
+@keyframes walkInOut{
+  0%{transform:translate(-50%,0) scaleX(1);opacity:0}
+  8%{opacity:1}
+  45%{transform:translate(40px,0) scaleX(1);opacity:1}
+  50%{opacity:0}
+  50.1%{transform:translate(40px,0) scaleX(-1);opacity:0}
+  58%{opacity:1}
+  92%{transform:translate(-50%,0) scaleX(-1);opacity:1}
+  100%{transform:translate(-50%,0) scaleX(-1);opacity:0}
+}
+.dash-anim-label{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+@media(max-width:1100px){.dash-with-anim{grid-template-columns:1fr}.dash-anim-card{display:none}}
 </style>
 </head>
 <body>
+
+<!-- APP LOADING -->
+<div id="app-loading">
+  <div class="till-wrap">
+    <svg viewBox="0 0 100 100" width="88" height="88">
+      <rect x="18" y="40" width="64" height="38" rx="4" fill="#f0b84a"/>
+      <rect x="18" y="40" width="64" height="38" rx="4" fill="none" stroke="#c49020" stroke-width="2"/>
+      <g class="till-drawer">
+        <rect x="12" y="70" width="76" height="16" rx="2" fill="#fff"/>
+        <rect x="12" y="70" width="76" height="16" rx="2" fill="none" stroke="#c49020" stroke-width="2"/>
+        <rect x="42" y="76" width="16" height="4" rx="1" fill="#c49020"/>
+      </g>
+      <rect x="30" y="24" width="40" height="18" rx="3" fill="#1e2f55"/>
+      <circle class="till-coin" cx="50" cy="40" r="5" fill="#f0b84a" stroke="#c49020" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="till-label">Cargando PuntoVenta…</div>
+</div>
 
 <!-- LOGIN -->
 <div id="screen-login" class="screen active">
@@ -442,6 +495,8 @@ input,select,button,textarea{font-family:var(--font)}
       <span class="topbar-title" id="owner-page-title">Dashboard</span>
       <div class="topbar-right">
         <span class="topbar-pending" id="topbar-pend">⏳ Pendientes</span>
+        <div class="topbar-icon-btn" id="topbar-logo" title="Acceso admin">🛒</div>
+        <button class="topbar-icon-btn" id="btn-theme-top" title="Cambiar tema">🌙</button>
         <div class="avatar" id="owner-av2">D</div>
       </div>
     </div>
@@ -617,8 +672,10 @@ function applyTheme(t){
   const dark=t==='dark';
   const sb=document.getElementById('btn-theme');
   const eb=document.getElementById('btn-theme-emp');
+  const tb=document.getElementById('btn-theme-top');
   if(sb)sb.textContent=dark?'🌞 Modo claro':'🌙 Modo oscuro';
   if(eb)eb.textContent=dark?'🌞':'🌙';
+  if(tb)tb.textContent=dark?'🌞':'🌙';
   localStorage.setItem('pv-theme',t);
 }
 function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
@@ -627,6 +684,7 @@ initTheme();
 // ── DETECCIÓN DE INVITE ───────────────────────────────
 if(_inviteCode){
   showScreen('screen-invite');
+  hideAppLoading();
   (async()=>{
     try{
       const invSnap=await getDoc(doc(db,'invitaciones',_inviteCode));
@@ -720,6 +778,7 @@ function bindLogoTap(id){
 bindLogoTap('login-logo');
 bindLogoTap('sidebar-logo');
 bindLogoTap('emp-logo');
+bindLogoTap('topbar-logo');
 
 // ── PIN ───────────────────────────────────────────────────
 function openPin(){pinBuf='';updDots();document.getElementById('pin-err').style.display='none';document.getElementById('pin-overlay').classList.add('open');}
@@ -861,7 +920,7 @@ document.getElementById('btn-demo-logout').addEventListener('click',()=>signOut(
 
 // ── AUTH STATE ────────────────────────────────────────────
 onAuthStateChanged(auth,async user=>{
-  if(activeInvite&&!user)return; // No pisar la pantalla de invitación
+  if(activeInvite&&!user){hideAppLoading();return;} // No pisar la pantalla de invitación
   if(user){
     me=user;
     const userRef=doc(db,'usuarios',user.uid);
@@ -896,7 +955,9 @@ onAuthStateChanged(auth,async user=>{
     document.getElementById('demo-wall').classList.remove('open');
     if(!activeInvite)showScreen('screen-login');
   }
+  hideAppLoading();
 });
+function hideAppLoading(){document.getElementById('app-loading')?.classList.add('hide');}
 
 // ── AUTH ACTIONS ──────────────────────────────────────────
 document.getElementById('role-owner').addEventListener('click',()=>{
@@ -960,6 +1021,7 @@ document.getElementById('btn-logout-owner').addEventListener('click',()=>signOut
 document.getElementById('btn-logout-emp').addEventListener('click',()=>signOut(auth));
 document.getElementById('btn-theme').addEventListener('click',toggleTheme);
 document.getElementById('btn-theme-emp').addEventListener('click',toggleTheme);
+document.getElementById('btn-theme-top').addEventListener('click',toggleTheme);
 
 // ── OWNER: CARGAR DATOS ───────────────────────────────────
 async function loadOwnerData(){
@@ -1014,16 +1076,25 @@ function renderDashboard(){
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">📱</span><span class="kpi-badge mp">MP</span></div><div class="kpi-value" style="font-size:22px;color:var(--mp)">${fmtARS(mp)}</div><div class="kpi-label">Mercado Pago</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(deb)}</div><div class="kpi-label">Tarjeta</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div>
-        <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo)}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
+    <div class="dash-with-anim">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo)}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
+          </div>
+        </div>
+        <div>
+          <div class="sec-header"><span class="sec-title">Últimas ventas</span><button class="btn-sm" id="d-ver-ven">Ver todas →</button></div>
+          <div class="ventas-list">${vh.slice(0,4).map(v=>ventaHTML(v)).join('')||emptyHTML('🧾','Sin ventas hoy')}</div>
         </div>
       </div>
-      <div>
-        <div class="sec-header"><span class="sec-title">Últimas ventas</span><button class="btn-sm" id="d-ver-ven">Ver todas →</button></div>
-        <div class="ventas-list">${vh.slice(0,4).map(v=>ventaHTML(v)).join('')||emptyHTML('🧾','Sin ventas hoy')}</div>
+      <div class="dash-anim-card">
+        <div class="dash-anim-scene">
+          <div class="shop-door"></div>
+          <div class="shop-walker">🚶</div>
+        </div>
+        <div class="dash-anim-label">Tu negocio hoy</div>
       </div>
     </div>`;
   el.querySelector('#d-ver-neg')?.addEventListener('click',()=>renderPage('negocios'));
