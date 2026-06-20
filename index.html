@@ -452,6 +452,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
     <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
     <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
+    <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
     <div class="sb-bottom">
       <div id="superuser-mode-switch" style="display:none;margin-bottom:12px;padding:10px;background:rgba(255,255,255,.06);border-radius:8px;border:1px dashed rgba(255,255,255,.2)">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔧 Modo testing</div>
@@ -495,6 +496,7 @@ input,select,button,textarea{font-family:var(--font)}
               <option value="multi">🏢 Varias sucursales</option>
             </select>
           </div>
+          <button id="btn-config-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px">⚙️ Configuración</button>
           <button id="btn-theme-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px">🌙 Modo oscuro</button>
           <button id="btn-logout-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--danger);display:flex;align-items:center;gap:8px">⏻ Cerrar sesión</button>
         </div>
@@ -505,6 +507,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div id="page-ventas" class="page" style="display:none"></div>
     <div id="page-empleados" class="page" style="display:none"></div>
     <div id="page-cierre" class="page" style="display:none"></div>
+    <div id="page-config" class="page" style="display:none"></div>
   </div>
   <div class="mob-nav">
     <div class="mob-nav-items">
@@ -961,7 +964,7 @@ onAuthStateChanged(auth,async user=>{
       document.getElementById('owner-av2').textContent=user.email.substring(0,2).toUpperCase();
       document.getElementById('owner-name').textContent=user.email.split('@')[0];
       document.getElementById('oum-email').textContent=user.email;
-      await loadOwnerData();
+      await loadOwnerData(fechaVentasSeleccionada);
       applyModoUI();
       mostrarSelectorSuperusuario(user.email);
       showScreen('screen-owner');
@@ -1014,7 +1017,7 @@ async function cambiarModoSuperusuario(nuevoModo){
     myDoc.modo=nuevoModo;
     if(nuevoModo==='single'&&negocios.length===0){
       await addDoc(collection(db,'negocios'),{nombre:'Mi negocio de prueba',tipo:'Negocio único',icon:'🏪',ownerUid:me.uid,ownerEmail:me.email,createdAt:serverTimestamp()});
-      await loadOwnerData();
+      await loadOwnerData(fechaVentasSeleccionada);
     }
     applyModoUI();
     document.getElementById('superuser-modo-select').value=nuevoModo;
@@ -1037,6 +1040,7 @@ document.addEventListener('click',e=>{
     menu.classList.add('hidden');
   }
 });
+document.getElementById('btn-config-owner-mob').addEventListener('click',()=>{document.getElementById('owner-user-menu').classList.add('hidden');renderPage('config');});
 document.getElementById('btn-theme-owner-mob').addEventListener('click',()=>{toggleTheme();document.getElementById('owner-user-menu').classList.add('hidden');});
 document.getElementById('btn-logout-owner-mob').addEventListener('click',async()=>{
   document.getElementById('owner-user-menu').classList.add('hidden');
@@ -1104,10 +1108,13 @@ document.getElementById('btn-theme').addEventListener('click',toggleTheme);
 document.getElementById('btn-theme-emp').addEventListener('click',toggleTheme);
 
 // ── OWNER: CARGAR DATOS ───────────────────────────────────
-async function loadOwnerData(){
+let fechaVentasSeleccionada=null; // null = hoy
+
+async function loadOwnerData(fecha=null){
+  const f=fecha||hoy();
   const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
   negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',hoy()),orderBy('createdAt','desc')));
+  const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
   ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
   const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
   empleados=empSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1124,9 +1131,14 @@ function updPendBadge(){
 }
 
 // ── OWNER: NAV ────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',cierre:'Cierre de caja'};
+const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',cierre:'Cierre de caja',config:'Configuración'};
 
 function renderPage(page){
+  // Si había una fecha distinta a hoy seleccionada en Ventas y se navega a otra sección, volver a hoy
+  if(page!=='ventas'&&fechaVentasSeleccionada!==null){
+    fechaVentasSeleccionada=null;
+    loadOwnerData().then(()=>{}); // recarga en segundo plano, no bloquea la navegación
+  }
   currentPage=page;
   document.querySelectorAll('.nav-item[data-page],.mob-item[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
   document.querySelectorAll('.page[id^=page-]').forEach(p=>p.style.display='none');
@@ -1138,6 +1150,7 @@ function renderPage(page){
   else if(page==='ventas')renderVentas();
   else if(page==='empleados')renderEmpleados();
   else if(page==='cierre')renderCierre();
+  else if(page==='config')renderConfig();
 }
 
 document.querySelectorAll('.nav-item[data-page],.mob-item[data-page]').forEach(el=>el.addEventListener('click',()=>renderPage(el.dataset.page)));
@@ -1195,11 +1208,32 @@ function renderNegocios(){
 // ── VENTAS ────────────────────────────────────────────────
 function renderVentas(){
   const el=document.getElementById('page-ventas');
-  const vh=ventas.filter(v=>v.fecha===hoy());
+  const fechaMostrada=fechaVentasSeleccionada||hoy();
+  const esHoy=fechaMostrada===hoy();
+  const vh=ventas; // ya viene filtrado por la fecha cargada en loadOwnerData
   el.innerHTML=`
-    <div class="sec-header"><span class="sec-title" style="font-size:17px">Ventas del día — ${new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long'})}</span><button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button></div>
-    ${vh.length===0?emptyHTML('🧾','Sin ventas hoy','Las ventas aparecen acá en tiempo real'):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`}`;
+    <div class="sec-header" style="flex-wrap:wrap;gap:10px">
+      <span class="sec-title" style="font-size:17px">Ventas — ${new Date(fechaMostrada+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}${esHoy?' (hoy)':''}</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="date" id="ventas-fecha-filtro" value="${fechaMostrada}" max="${hoy()}" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px"/>
+        ${!esHoy?`<button class="btn-sm" id="btn-ventas-hoy">Volver a hoy</button>`:''}
+        ${esHoy?`<button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button>`:''}
+      </div>
+    </div>
+    ${vh.length===0?emptyHTML('🧾',esHoy?'Sin ventas hoy':'Sin ventas ese día',esHoy?'Las ventas aparecen acá en tiempo real':''):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`}`;
   el.querySelector('#btn-nueva-venta')?.addEventListener('click',()=>openModalVentaOwner());
+  el.querySelector('#ventas-fecha-filtro')?.addEventListener('change',async e=>{
+    const nuevaFecha=e.target.value;
+    if(!nuevaFecha)return;
+    fechaVentasSeleccionada=nuevaFecha===hoy()?null:nuevaFecha;
+    await loadOwnerData(fechaVentasSeleccionada);
+    renderVentas();
+  });
+  el.querySelector('#btn-ventas-hoy')?.addEventListener('click',async()=>{
+    fechaVentasSeleccionada=null;
+    await loadOwnerData();
+    renderVentas();
+  });
 }
 
 // ── EMPLEADOS ─────────────────────────────────────────────
@@ -1313,6 +1347,46 @@ function renderCierre(){
   }).join('');
 }
 
+// ── CONFIGURACIÓN ──────────────────────────────────────────
+function renderConfig(){
+  const el=document.getElementById('page-config');
+  if(!negocios.length){el.innerHTML=emptyHTML('⚙️','Sin negocios para configurar');return;}
+  el.innerHTML=`
+    <div class="sec-header"><span class="sec-title" style="font-size:17px">Datos del negocio</span></div>
+    ${negocios.map(n=>`
+      <div class="cierre-card" style="margin-bottom:14px">
+        <div class="field"><label>Nombre del negocio</label>
+          <input class="config-nombre-input" data-neg-id="${n.id}" value="${sanitizeHTML(n.nombre)}" placeholder="Nombre del negocio" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
+        </div>
+        ${modoNegocio==='multi'?`<div class="field" style="margin-top:10px"><label>Tipo</label>
+          <select class="config-tipo-select" data-neg-id="${n.id}" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px">
+            ${['Kiosco','Ferretería','Almacén','Verdulería','Panadería','Farmacia','Negocio único','Otro'].map(t=>`<option${n.tipo===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>`:''}
+        <button class="btn-sm gold" data-save-neg="${n.id}" style="width:100%;justify-content:center;margin-top:14px;padding:11px">💾 Guardar cambios</button>
+      </div>
+    `).join('')}`;
+  el.querySelectorAll('[data-save-neg]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const negId=btn.dataset.saveNeg;
+      const nombreInput=el.querySelector(`.config-nombre-input[data-neg-id="${negId}"]`);
+      const tipoSelect=el.querySelector(`.config-tipo-select[data-neg-id="${negId}"]`);
+      const nuevoNombre=nombreInput.value.trim();
+      if(!nuevoNombre){toast('El nombre no puede estar vacío','err');return;}
+      btn.disabled=true;btn.textContent='Guardando...';
+      try{
+        const data={nombre:nuevoNombre};
+        if(tipoSelect)data.tipo=tipoSelect.value;
+        await updateDoc(doc(db,'negocios',negId),data);
+        const neg=negocios.find(n=>n.id===negId);
+        if(neg){neg.nombre=nuevoNombre;if(tipoSelect)neg.tipo=tipoSelect.value;}
+        toast('Datos guardados','green');
+      }catch(e){toast('Error al guardar','err');}
+      btn.disabled=false;btn.textContent='💾 Guardar cambios';
+    });
+  });
+}
+
 // ── MODAL NEGOCIO ─────────────────────────────────────────
 document.getElementById('btn-modal-neg-close').addEventListener('click',()=>document.getElementById('modal-negocio').classList.remove('open'));
 document.getElementById('btn-modal-neg-cancel').addEventListener('click',()=>document.getElementById('modal-negocio').classList.remove('open'));
@@ -1370,7 +1444,7 @@ document.getElementById('btn-modal-venta-save').addEventListener('click',async()
     }
     document.getElementById('modal-venta-owner').classList.remove('open');
     ventaEditando=null;
-    if(myRole==='owner'){await loadOwnerData();renderPage(currentPage);}
+    if(myRole==='owner'){await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);}
   }catch(e){
     console.error('Error al guardar venta:',e);
     toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
@@ -1383,7 +1457,7 @@ async function eliminarVenta(ventaId){
   try{
     await deleteDoc(doc(db,'ventas',ventaId));
     toast('Venta eliminada');
-    if(myRole==='owner'){await loadOwnerData();renderPage(currentPage);}
+    if(myRole==='owner'){await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);}
   }catch(e){
     console.error('Error al eliminar venta:',e);
     toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
