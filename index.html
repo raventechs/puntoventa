@@ -447,9 +447,21 @@ input,select,button,textarea{font-family:var(--font)}
   <div class="main">
     <div class="topbar">
       <span class="topbar-title" id="owner-page-title">Dashboard</span>
-      <div class="topbar-right">
+      <div class="topbar-right" style="position:relative">
         <span class="topbar-pending" id="topbar-pend">⏳ Pendientes</span>
-        <div class="avatar" id="owner-av2">D</div>
+        <div class="avatar" id="owner-av2" style="cursor:pointer">D</div>
+        <div id="owner-user-menu" class="hidden" style="position:absolute;top:48px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);min-width:220px;z-index:300;padding:10px;">
+          <div id="oum-email" style="font-size:12px;color:var(--muted);padding:6px 8px 10px;border-bottom:1px solid var(--border);margin-bottom:6px;word-break:break-all">—</div>
+          <div id="superuser-mode-switch-mob" style="display:none;margin-bottom:8px;padding:8px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔧 Modo testing</div>
+            <select id="superuser-modo-select-mob" style="width:100%;font-size:12px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+              <option value="single">🏪 Negocio único</option>
+              <option value="multi">🏢 Varias sucursales</option>
+            </select>
+          </div>
+          <button id="btn-theme-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px">🌙 Modo oscuro</button>
+          <button id="btn-logout-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--danger);display:flex;align-items:center;gap:8px">⏻ Cerrar sesión</button>
+        </div>
       </div>
     </div>
     <div id="page-dashboard" class="page"></div>
@@ -649,8 +661,10 @@ function applyTheme(t){
   const dark=t==='dark';
   const sb=document.getElementById('btn-theme');
   const eb=document.getElementById('btn-theme-emp');
+  const mb=document.getElementById('btn-theme-owner-mob');
   if(sb)sb.textContent=dark?'🌞 Modo claro':'🌙 Modo oscuro';
   if(eb)eb.textContent=dark?'🌞':'🌙';
+  if(mb)mb.textContent=dark?'🌞 Modo claro':'🌙 Modo oscuro';
   localStorage.setItem('pv-theme',t);
 }
 function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
@@ -909,6 +923,7 @@ onAuthStateChanged(auth,async user=>{
       document.getElementById('owner-av').textContent=user.email.substring(0,2).toUpperCase();
       document.getElementById('owner-av2').textContent=user.email.substring(0,2).toUpperCase();
       document.getElementById('owner-name').textContent=user.email.split('@')[0];
+      document.getElementById('oum-email').textContent=user.email;
       await loadOwnerData();
       applyModoUI();
       mostrarSelectorSuperusuario(user.email);
@@ -944,27 +959,51 @@ function applyModoUI(){
 // ── SUPERUSUARIO (testing interno) ────────────────────────
 const SUPERUSER_EMAILS=['rgaraventa@gmail.com'];
 function mostrarSelectorSuperusuario(email){
+  const esSuper=SUPERUSER_EMAILS.includes(email);
   const wrap=document.getElementById('superuser-mode-switch');
-  if(!SUPERUSER_EMAILS.includes(email)){wrap.style.display='none';return;}
-  wrap.style.display='block';
-  document.getElementById('superuser-modo-select').value=modoNegocio;
+  const wrapMob=document.getElementById('superuser-mode-switch-mob');
+  wrap.style.display=esSuper?'block':'none';
+  wrapMob.style.display=esSuper?'block':'none';
+  if(esSuper){
+    document.getElementById('superuser-modo-select').value=modoNegocio;
+    document.getElementById('superuser-modo-select-mob').value=modoNegocio;
+  }
 }
-document.getElementById('superuser-modo-select').addEventListener('change',async e=>{
-  const nuevoModo=e.target.value;
+async function cambiarModoSuperusuario(nuevoModo){
   if(nuevoModo===modoNegocio)return;
   try{
     await updateDoc(doc(db,'usuarios',me.uid),{modo:nuevoModo});
     modoNegocio=nuevoModo;
     myDoc.modo=nuevoModo;
-    // Si pasa a negocio único y todavía no tiene ningún negocio, crear uno para poder probar el flujo completo
     if(nuevoModo==='single'&&negocios.length===0){
       await addDoc(collection(db,'negocios'),{nombre:'Mi negocio de prueba',tipo:'Negocio único',icon:'🏪',ownerUid:me.uid,ownerEmail:me.email,createdAt:serverTimestamp()});
       await loadOwnerData();
     }
     applyModoUI();
+    document.getElementById('superuser-modo-select').value=nuevoModo;
+    document.getElementById('superuser-modo-select-mob').value=nuevoModo;
     toast(`Modo cambiado a: ${nuevoModo==='single'?'Negocio único':'Varias sucursales'}`,'green');
     renderPage('dashboard');
   }catch(err){toast('Error al cambiar de modo','err');}
+}
+document.getElementById('superuser-modo-select').addEventListener('change',e=>cambiarModoSuperusuario(e.target.value));
+document.getElementById('superuser-modo-select-mob').addEventListener('change',e=>cambiarModoSuperusuario(e.target.value));
+
+// ── MENÚ DEL AVATAR (siempre visible, incluido mobile) ────
+document.getElementById('owner-av2').addEventListener('click',e=>{
+  e.stopPropagation();
+  document.getElementById('owner-user-menu').classList.toggle('hidden');
+});
+document.addEventListener('click',e=>{
+  const menu=document.getElementById('owner-user-menu');
+  if(menu&&!menu.classList.contains('hidden')&&!menu.contains(e.target)&&e.target.id!=='owner-av2'){
+    menu.classList.add('hidden');
+  }
+});
+document.getElementById('btn-theme-owner-mob').addEventListener('click',()=>{toggleTheme();document.getElementById('owner-user-menu').classList.add('hidden');});
+document.getElementById('btn-logout-owner-mob').addEventListener('click',async()=>{
+  document.getElementById('owner-user-menu').classList.add('hidden');
+  await signOut(auth);
 });
 
 // ── AUTH ACTIONS ──────────────────────────────────────────
@@ -1272,6 +1311,7 @@ document.getElementById('btn-modal-venta-save').addEventListener('click',async()
   const desc=document.getElementById('mv-desc').value.trim();
   if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
   if(!selectedMedioOwner){toast('Elegí el medio de pago','err');return;}
+  if(!ventaEditando&&negocios.length===0){toast('No se encontró tu negocio. Recargá la página e intentá de nuevo.','err');return;}
   const btn=document.getElementById('btn-modal-venta-save');btn.disabled=true;btn.textContent='Guardando...';
   try{
     if(ventaEditando){
@@ -1293,7 +1333,10 @@ document.getElementById('btn-modal-venta-save').addEventListener('click',async()
     document.getElementById('modal-venta-owner').classList.remove('open');
     ventaEditando=null;
     if(myRole==='owner'){await loadOwnerData();renderPage(currentPage);}
-  }catch(e){toast('Error al guardar','err');}
+  }catch(e){
+    console.error('Error al guardar venta:',e);
+    toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
+  }
   btn.disabled=false;btn.textContent=ventaEditando?'Guardar cambios':'Registrar venta';
 });
 
@@ -1303,7 +1346,10 @@ async function eliminarVenta(ventaId){
     await deleteDoc(doc(db,'ventas',ventaId));
     toast('Venta eliminada');
     if(myRole==='owner'){await loadOwnerData();renderPage(currentPage);}
-  }catch(e){toast('Error al eliminar','err');}
+  }catch(e){
+    console.error('Error al eliminar venta:',e);
+    toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
+  }
 }
 
 // Listener delegado para los botones de editar/borrar de cada venta (funciona en cualquier lista que use withActions=true)
@@ -1412,7 +1458,10 @@ service cloud.firestore {
     match /ventas/{ventaId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.resource.data.empleadoUid == request.auth.uid;
-      allow update, delete: if false;
+      allow update, delete: if request.auth != null && (
+        resource.data.ownerUid == request.auth.uid ||
+        resource.data.empleadoUid == request.auth.uid
+      );
     }
     match /empleados/{empId} {
       allow read: if request.auth != null;
