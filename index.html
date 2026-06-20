@@ -40,6 +40,7 @@ input,select,button,textarea{font-family:var(--font)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes moneyBounce{0%{left:0;transform:scaleX(1) translateY(0)}10%{transform:scaleX(1) translateY(-14px)}20%{left:46px;transform:scaleX(1) translateY(0)}22%{transform:scaleX(-1) translateY(0)}30%{transform:scaleX(-1) translateY(-14px)}40%{left:0;transform:scaleX(-1) translateY(0)}42%{transform:scaleX(1) translateY(0)}100%{left:0;transform:scaleX(1) translateY(0)}}
 
 /* ══ SCREENS — cada pantalla ocupa todo el viewport ════════ */
 .screen{display:none;min-height:100vh}
@@ -298,6 +299,7 @@ input,select,button,textarea{font-family:var(--font)}
 .mob-icon{font-size:20px}
 .mob-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;display:none}
 .mob-badge.show{display:block}
+.hidden{display:none!important;pointer-events:none!important}
 
 @media(max-width:768px){
   #screen-owner.active{flex-direction:column}
@@ -352,6 +354,19 @@ input,select,button,textarea{font-family:var(--font)}
 <body>
 
 <!-- LOGIN -->
+<!-- LOADING -->
+<div id="loading-screen" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%);z-index:9999">
+  <div style="text-align:center">
+    <div style="width:90px;height:60px;overflow:hidden;position:relative;margin:0 auto 14px">
+      <span style="position:absolute;animation:moneyBounce 1.6s ease-in-out infinite">
+        <svg width="42" height="42" viewBox="0 0 48 48"><path d="M24 6c-3 0-5.5 2-6.3 4.8L16 16h16l-1.7-5.2C29.5 8 27 6 24 6z" fill="#f0b84a"/><path d="M14 16c-2.2 0-4 1.8-4 4v14c0 4.4 3.6 8 8 8h12c4.4 0 8-3.6 8-8V20c0-2.2-1.8-4-4-4H14z" fill="#f0b84a" stroke="#c49020" stroke-width="1.5"/><circle cx="24" cy="28" r="6" fill="#fff"/><text x="24" y="32" font-size="9" font-weight="800" text-anchor="middle" fill="#c49020">$</text></svg>
+      </span>
+    </div>
+    <div style="font-size:22px;font-weight:800;color:#ffffff;margin-bottom:4px;letter-spacing:.3px">Punto<span style="color:#f0b84a;font-weight:900">Venta</span></div>
+    <div style="font-size:13px;color:rgba(255,255,255,.75)">Cargando tu negocio...</div>
+  </div>
+</div>
+
 <div id="screen-login" class="screen active">
   <div class="auth-card">
     <div class="brand-row">
@@ -407,7 +422,7 @@ input,select,button,textarea{font-family:var(--font)}
 <!-- PENDING -->
 <div id="screen-pending" class="screen">
   <div class="pending-card">
-    <div class="pending-icon">⏳</div>
+    <div class="pending-icon" style="animation:pulse 1.6s ease-in-out infinite">⏳</div>
     <div class="pending-title">Solicitud enviada</div>
     <div class="pending-sub">Tu solicitud fue enviada al dueño. Podrás operar una vez que sea aprobada.</div>
     <div class="pending-badge">Esperando aprobación del dueño</div>
@@ -908,6 +923,7 @@ document.getElementById('btn-demo-logout').addEventListener('click',()=>signOut(
 // ── AUTH STATE ────────────────────────────────────────────
 onAuthStateChanged(auth,async user=>{
   if(activeInvite&&!user)return; // No pisar la pantalla de invitación
+  document.getElementById('loading-screen').style.display='none';
   if(user){
     me=user;
     const userRef=doc(db,'usuarios',user.uid);
