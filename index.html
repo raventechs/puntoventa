@@ -1006,11 +1006,13 @@ function mostrarSelectorSuperusuario(email){
   const esSuper=SUPERUSER_EMAILS.includes(email);
   const wrap=document.getElementById('superuser-mode-switch');
   const wrapMob=document.getElementById('superuser-mode-switch-mob');
-  wrap.style.display=esSuper?'block':'none';
-  wrapMob.style.display=esSuper?'block':'none';
+  if(wrap)wrap.style.display=esSuper?'block':'none';
+  if(wrapMob)wrapMob.style.display=esSuper?'block':'none';
   if(esSuper){
-    document.getElementById('superuser-modo-select').value=modoNegocio;
-    document.getElementById('superuser-modo-select-mob').value=modoNegocio;
+    const sel=document.getElementById('superuser-modo-select');
+    const selMob=document.getElementById('superuser-modo-select-mob');
+    if(sel)sel.value=modoNegocio;
+    if(selMob)selMob.value=modoNegocio;
   }
 }
 async function cambiarModoSuperusuario(nuevoModo){
@@ -1492,8 +1494,4 @@ document.getElementById('btn-modal-neg-save').addEventListener('click',async()=>
     document.getElementById('modal-negocio').classList.remove('open');
     document.getElementById('neg-nombre').value='';
     toast(`${nombre} agregado`,'green');renderNegocios();
-  }catch(e){toast('Error al guardar','err');}
-  btn.disabled=false;btn.textContent='Agregar negocio';
-});
-
-// ─
+  }catch(e){toast('Error al gua
