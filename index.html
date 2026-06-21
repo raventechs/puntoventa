@@ -952,6 +952,11 @@ document.getElementById('btn-demo-logout').addEventListener('click',()=>signOut(
 // ── AUTH STATE ────────────────────────────────────────────
 onAuthStateChanged(auth,async user=>{
   if(activeInvite&&!user)return; // No pisar la pantalla de invitación
+  const timeoutAviso=setTimeout(()=>{
+    document.getElementById('loading-text').textContent='Esto está tardando más de lo normal...';
+    document.getElementById('loading-error-box').style.display='block';
+    document.getElementById('loading-error-text').textContent='La conexión con la base de datos no responde. Puede ser un problema de internet, o un índice de Firestore que falta crear. Probá cerrar sesión y volver a entrar.';
+  },10000);
   try{
     if(user){
       me=user;
@@ -1000,7 +1005,9 @@ onAuthStateChanged(auth,async user=>{
       document.getElementById('loading-screen').style.display='none';
       if(!activeInvite)showScreen('screen-login');
     }
+    clearTimeout(timeoutAviso);
   }catch(err){
+    clearTimeout(timeoutAviso);
     console.error('Error en onAuthStateChanged:',err);
     document.getElementById('loading-text').textContent='Ocurrió un problema al cargar';
     document.getElementById('loading-error-box').style.display='block';
@@ -1140,12 +1147,31 @@ let fechaVentasSeleccionada=null; // null = hoy
 
 async function loadOwnerData(fecha=null){
   const f=fecha||hoy();
-  const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
+
+  async function safeLoad(nombre,q1,fallbackQ){
+    try{
+      return await getDocs(q1);
+    }catch(e){
+      console.error(`Error cargando ${nombre} (probablemente falta índice compuesto):`,e);
+      if(fallbackQ){
+        try{return await getDocs(fallbackQ);}
+        catch(e2){console.error(`Fallback de ${nombre} también falló:`,e2);return{forEach:()=>{},docs:[]};}
+      }
+      return{forEach:()=>{},docs:[]};
+    }
+  }
+
+  const negSnap=await safeLoad('negocios',query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
   negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
+
+  const ventasSnap=await safeLoad('ventas',
+    query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')),
+    query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f)));
   ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
+
+  const empSnap=await safeLoad('empleados',query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
   empleados=empSnap.docs.map(d=>({id:d.id,...d.data()}));
+
   updPendBadge();
 }
 
@@ -1461,27 +1487,4 @@ document.getElementById('btn-modal-venta-save').addEventListener('click',async()
       });
       toast('Venta actualizada','green');
     } else {
-      const negocioActivo=negocios[0]; // en modo único hay uno solo; en multi, el primero hasta que se agregue selector
-      await addDoc(collection(db,'ventas'),{
-        negocioId:negocioActivo.id,ownerUid:me.uid,
-        empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
-        importe,medio:selectedMedioOwner,descripcion:desc,
-        fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
-      });
-      toast('Venta registrada','green');
-    }
-    document.getElementById('modal-venta-owner').classList.remove('open');
-    ventaEditando=null;
-    if(myRole==='owner'){await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);}
-  }catch(e){
-    console.error('Error al guardar venta:',e);
-    toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
-  }
-  btn.disabled=false;btn.textContent=ventaEditando?'Guardar cambios':'Registrar venta';
-});
-
-async function eliminarVenta(ventaId){
-  if(!confirm('¿Eliminar esta venta? Esta acción no se puede deshacer.'))return;
-  try{
-    await deleteDoc(doc(db,'ventas',ventaId));
-    toast('V
+      
