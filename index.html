@@ -953,7 +953,11 @@ onAuthStateChanged(auth,async user=>{
     const userRef=doc(db,'usuarios',user.uid);
     let snap=await getDoc(userRef);
     if(!snap.exists()){
-      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:'multi',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:modoSelected,banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+      if(modoSelected==='single'){
+        const nombreNegPorDefecto=user.displayName?`Negocio de ${user.displayName}`:'Mi negocio';
+        await addDoc(collection(db,'negocios'),{nombre:nombreNegPorDefecto,tipo:'Negocio único',icon:'🏪',ownerUid:user.uid,ownerEmail:user.email,createdAt:serverTimestamp()});
+      }
       snap=await getDoc(userRef);
     }
     myDoc=snap.data();myRole=myDoc.rol;
@@ -1492,108 +1496,4 @@ document.getElementById('btn-modal-neg-save').addEventListener('click',async()=>
   btn.disabled=false;btn.textContent='Agregar negocio';
 });
 
-// ── EMPLOYEE: VENTAS ──────────────────────────────────────
-function startEmpVentasListener(){
-  if(!myDoc?.negocioId)return;
-  const q=query(collection(db,'ventas'),where('empleadoUid','==',me.uid),where('fecha','==',hoy()),orderBy('createdAt','desc'));
-  unsubEmpVentas=onSnapshot(q,snap=>{
-    empVentas=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const total=empVentas.reduce((a,v)=>a+v.importe,0);
-    document.getElementById('emp-total').textContent=fmtARS(total);
-    const list=document.getElementById('emp-ventas');
-    list.innerHTML=empVentas.length===0?emptyHTML('🧾','Sin ventas todavía','Registrá tu primera venta arriba'):`<div class="ventas-list">${empVentas.map(v=>ventaHTML(v,true)).join('')}</div>`;
-  });
-}
-
-['efectivo','mp','debito','credito'].forEach(m=>{
-  document.getElementById(`m-${m}`).addEventListener('click',()=>{
-    selectedMedio=m;
-    ['efectivo','mp','debito','credito'].forEach(x=>{document.getElementById(`m-${x}`).className='medio-opt';});
-    document.getElementById(`m-${m}`).className=`medio-opt sel-${m}`;
-  });
-});
-
-document.getElementById('btn-venta').addEventListener('click',async()=>{
-  const importe=parseFloat(document.getElementById('emp-importe').value);
-  const desc=document.getElementById('emp-desc').value.trim();
-  if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
-  if(!selectedMedio){toast('Elegí el medio de pago','err');return;}
-  try{
-    await addDoc(collection(db,'ventas'),{
-      negocioId:myDoc.negocioId,ownerUid:myDoc.ownerUid,
-      empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
-      importe,medio:selectedMedio,descripcion:desc,
-      fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
-    });
-    document.getElementById('emp-importe').value='';
-    document.getElementById('emp-desc').value='';
-    selectedMedio=null;
-    ['efectivo','mp','debito','credito'].forEach(m=>document.getElementById(`m-${m}`).className='medio-opt');
-    toast('Venta registrada','green');
-  }catch(e){toast('Error al registrar','err');}
-});
-
-// ── GOOGLE LOGIN ──────────────────────────────────────────
-document.getElementById("btn-google").addEventListener("click",async()=>{
-  const btn=document.getElementById("btn-google");
-  btn.disabled=true;btn.textContent="Conectando...";
-  try{
-    const provider=new GoogleAuthProvider();
-    await signInWithPopup(auth,provider);
-  }catch(e){
-    console.error(e);
-    const errEl=document.getElementById("auth-err");
-    if(errEl){errEl.textContent="Error al iniciar con Google. Intentá de nuevo.";errEl.style.display="block";errEl.classList.add("show");}
-  }
-  btn.disabled=false;
-});
-</script>
-
-<!--
-FIRESTORE SECURITY RULES
-
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /usuarios/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if false;
-    }
-    match /negocios/{negocioId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid;
-      allow delete: if request.auth != null;
-    }
-    match /invitaciones/{code} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if request.auth != null;
-    }
-    match /ventas/{ventaId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.empleadoUid == request.auth.uid;
-      allow update, delete: if request.auth != null && (
-        resource.data.ownerUid == request.auth.uid ||
-        resource.data.empleadoUid == request.auth.uid
-      );
-    }
-    match /empleados/{empId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
-    }
-  }
-}
-
-ÍNDICES COMPUESTOS
-1. negocios | ownerUid ASC, createdAt DESC
-2. ventas | ownerUid ASC, fecha ASC, createdAt DESC
-3. ventas | empleadoUid ASC, fecha ASC, createdAt DESC
-4. empleados | ownerUid ASC, estado ASC
-5. usuarios | email ASC, rol ASC
--->
-</body>
-</html>
+// ─
