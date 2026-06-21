@@ -372,12 +372,7 @@ input,select,button,textarea{font-family:var(--font)}
       </span>
     </div>
     <div style="font-size:22px;font-weight:800;color:#ffffff;margin-bottom:4px;letter-spacing:.3px">Punto<span style="color:#f0b84a;font-weight:900">Venta</span></div>
-    <div style="font-size:13px;color:rgba(255,255,255,.75)" id="loading-text">Cargando tu negocio...</div>
-    <div id="loading-error-box" style="display:none;margin-top:16px;background:rgba(220,38,38,.15);border:1px solid rgba(252,165,165,.4);border-radius:8px;padding:12px 16px;max-width:320px;text-align:left">
-      <div style="font-size:12px;font-weight:700;color:#fca5a5;margin-bottom:6px">⚠️ Se encontró un error:</div>
-      <div id="loading-error-text" style="font-size:11px;color:#fff;font-family:monospace;word-break:break-word;line-height:1.5"></div>
-      <button id="btn-loading-error-logout" style="margin-top:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer">Cerrar sesión y reintentar</button>
-    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.75)">Cargando tu negocio...</div>
   </div>
 </div>
 
@@ -952,73 +947,45 @@ document.getElementById('btn-demo-logout').addEventListener('click',()=>signOut(
 // ── AUTH STATE ────────────────────────────────────────────
 onAuthStateChanged(auth,async user=>{
   if(activeInvite&&!user)return; // No pisar la pantalla de invitación
-  const timeoutAviso=setTimeout(()=>{
-    document.getElementById('loading-text').textContent='Esto está tardando más de lo normal...';
-    document.getElementById('loading-error-box').style.display='block';
-    document.getElementById('loading-error-text').textContent='La conexión con la base de datos no responde. Puede ser un problema de internet, o un índice de Firestore que falta crear. Probá cerrar sesión y volver a entrar.';
-  },10000);
-  try{
-    if(user){
-      me=user;
-      const userRef=doc(db,'usuarios',user.uid);
-      let snap=await getDoc(userRef);
-      if(!snap.exists()){
-        await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:modoSelected,banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
-        if(modoSelected==='single'){
-          const nombreNegPorDefecto=user.displayName?`Negocio de ${user.displayName}`:'Mi negocio';
-          await addDoc(collection(db,'negocios'),{nombre:nombreNegPorDefecto,tipo:'Negocio único',icon:'🏪',ownerUid:user.uid,ownerEmail:user.email,createdAt:serverTimestamp()});
-        }
-        snap=await getDoc(userRef);
-      }
-      myDoc=snap.data();myRole=myDoc.rol;
-      if(myDoc.banned){toast('Cuenta suspendida','err');await signOut(auth);document.getElementById('loading-screen').style.display='none';return;}
-      if(myRole==='owner'){
-        modoNegocio=myDoc.modo||'multi';
-        document.getElementById('owner-av').textContent=user.email.substring(0,2).toUpperCase();
-        document.getElementById('owner-av2').textContent=user.email.substring(0,2).toUpperCase();
-        document.getElementById('owner-name').textContent=user.email.split('@')[0];
-        document.getElementById('oum-email').textContent=user.email;
-        await loadOwnerData(fechaVentasSeleccionada);
-        applyModoUI();
-        mostrarSelectorSuperusuario(user.email);
-        document.getElementById('loading-screen').style.display='none';
-        showScreen('screen-owner');
-        renderPage('dashboard');
-        checkDemo();
-      } else if(myRole==='employee'){
-        if(myDoc.estado==='pendiente'){
-          document.getElementById('loading-screen').style.display='none';
-          showScreen('screen-pending');
-        } else {
-          const negSnap=await getDoc(doc(db,'negocios',myDoc.negocioId));
-          document.getElementById('emp-neg-name').textContent=negSnap.exists()?negSnap.data().nombre:'Negocio';
-          document.getElementById('loading-screen').style.display='none';
-          showScreen('screen-employee');
-          startEmpVentasListener();
-          checkDemo();
-        }
-      }
-    } else {
-      me=null;myDoc=null;myRole=null;
-      if(unsubEmpVentas){unsubEmpVentas();unsubEmpVentas=null;}
-      document.getElementById('demo-wall').classList.remove('open');
-      document.getElementById('loading-screen').style.display='none';
-      if(!activeInvite)showScreen('screen-login');
+  document.getElementById('loading-screen').style.display='none';
+  if(user){
+    me=user;
+    const userRef=doc(db,'usuarios',user.uid);
+    let snap=await getDoc(userRef);
+    if(!snap.exists()){
+      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:'multi',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+      snap=await getDoc(userRef);
     }
-    clearTimeout(timeoutAviso);
-  }catch(err){
-    clearTimeout(timeoutAviso);
-    console.error('Error en onAuthStateChanged:',err);
-    document.getElementById('loading-text').textContent='Ocurrió un problema al cargar';
-    document.getElementById('loading-error-box').style.display='block';
-    document.getElementById('loading-error-text').textContent=(err.message||err.code||String(err));
+    myDoc=snap.data();myRole=myDoc.rol;
+    if(myDoc.banned){toast('Cuenta suspendida','err');await signOut(auth);return;}
+    if(myRole==='owner'){
+      modoNegocio=myDoc.modo||'multi';
+      document.getElementById('owner-av').textContent=user.email.substring(0,2).toUpperCase();
+      document.getElementById('owner-av2').textContent=user.email.substring(0,2).toUpperCase();
+      document.getElementById('owner-name').textContent=user.email.split('@')[0];
+      document.getElementById('oum-email').textContent=user.email;
+      await loadOwnerData(fechaVentasSeleccionada);
+      applyModoUI();
+      mostrarSelectorSuperusuario(user.email);
+      showScreen('screen-owner');
+      renderPage('dashboard');
+      checkDemo();
+    } else if(myRole==='employee'){
+      if(myDoc.estado==='pendiente'){showScreen('screen-pending');}
+      else{
+        const negSnap=await getDoc(doc(db,'negocios',myDoc.negocioId));
+        document.getElementById('emp-neg-name').textContent=negSnap.exists()?negSnap.data().nombre:'Negocio';
+        showScreen('screen-employee');
+        startEmpVentasListener();
+        checkDemo();
+      }
+    }
+  } else {
+    me=null;myDoc=null;myRole=null;
+    if(unsubEmpVentas){unsubEmpVentas();unsubEmpVentas=null;}
+    document.getElementById('demo-wall').classList.remove('open');
+    if(!activeInvite)showScreen('screen-login');
   }
-});
-document.getElementById('btn-loading-error-logout').addEventListener('click',async()=>{
-  document.getElementById('loading-error-box').style.display='none';
-  document.getElementById('loading-text').textContent='Cargando tu negocio...';
-  await signOut(auth);
-  location.reload();
 });
 
 // Oculta secciones que no aplican en modo "negocio único" (Mis negocios, Empleados)
@@ -1035,13 +1002,11 @@ function mostrarSelectorSuperusuario(email){
   const esSuper=SUPERUSER_EMAILS.includes(email);
   const wrap=document.getElementById('superuser-mode-switch');
   const wrapMob=document.getElementById('superuser-mode-switch-mob');
-  if(wrap)wrap.style.display=esSuper?'block':'none';
-  if(wrapMob)wrapMob.style.display=esSuper?'block':'none';
+  wrap.style.display=esSuper?'block':'none';
+  wrapMob.style.display=esSuper?'block':'none';
   if(esSuper){
-    const sel=document.getElementById('superuser-modo-select');
-    const selMob=document.getElementById('superuser-modo-select-mob');
-    if(sel)sel.value=modoNegocio;
-    if(selMob)selMob.value=modoNegocio;
+    document.getElementById('superuser-modo-select').value=modoNegocio;
+    document.getElementById('superuser-modo-select-mob').value=modoNegocio;
   }
 }
 async function cambiarModoSuperusuario(nuevoModo){
@@ -1147,31 +1112,12 @@ let fechaVentasSeleccionada=null; // null = hoy
 
 async function loadOwnerData(fecha=null){
   const f=fecha||hoy();
-
-  async function safeLoad(nombre,q1,fallbackQ){
-    try{
-      return await getDocs(q1);
-    }catch(e){
-      console.error(`Error cargando ${nombre} (probablemente falta índice compuesto):`,e);
-      if(fallbackQ){
-        try{return await getDocs(fallbackQ);}
-        catch(e2){console.error(`Fallback de ${nombre} también falló:`,e2);return{forEach:()=>{},docs:[]};}
-      }
-      return{forEach:()=>{},docs:[]};
-    }
-  }
-
-  const negSnap=await safeLoad('negocios',query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
+  const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
   negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
-
-  const ventasSnap=await safeLoad('ventas',
-    query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')),
-    query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f)));
+  const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
   ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
-
-  const empSnap=await safeLoad('empleados',query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
+  const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
   empleados=empSnap.docs.map(d=>({id:d.id,...d.data()}));
-
   updPendBadge();
 }
 
