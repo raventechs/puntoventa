@@ -1009,9 +1009,16 @@ onAuthStateChanged(auth,async user=>{
 });
 
 // Oculta secciones que no aplican en modo "negocio único" (Mis negocios, Empleados)
+function tieneMultiNegocio(){
+  return (myFeatures?.limiteNegocios??1) > 1;
+}
+
 function applyModoUI(){
   const esUnico=modoNegocio==='single';
-  document.querySelectorAll('[data-page="negocios"],[data-page="empleados"]').forEach(el=>{
+  document.querySelectorAll('[data-page="negocios"]').forEach(el=>{
+    el.style.display=tieneMultiNegocio()?'':'none';
+  });
+  document.querySelectorAll('[data-page="empleados"]').forEach(el=>{
     el.style.display=esUnico?'none':'';
   });
 }
@@ -1203,13 +1210,13 @@ function renderDashboard(){
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge" style="background:#f3e8ff;color:#a855f7">Crédito</span></div><div class="kpi-value" style="font-size:22px;color:#a855f7">${fmtARS(cred)}</div><div class="kpi-label">Tarjeta crédito</div></div>
       <div class="kpi-card d-ver-gastos" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">🧮</span><span class="kpi-badge" style="background:#fee2e2;color:var(--danger)">Gastos</span></div><div class="kpi-value" style="font-size:22px;color:var(--danger)">${fmtARS(totalGastos)}</div><div class="kpi-label">Gastos del día</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:${modoNegocio==='single'?'1fr':'1fr 1fr'};gap:20px">
-      ${modoNegocio==='single'?'':`<div>
+    <div style="display:grid;grid-template-columns:${tieneMultiNegocio()?'1fr 1fr':'1fr'};gap:20px">
+      ${tieneMultiNegocio()?`<div>
         <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
         <div style="display:flex;flex-direction:column;gap:10px">
           ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo)}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
         </div>
-      </div>`}
+      </div>`:''}
       <div>
         <div class="sec-header"><span class="sec-title">Últimas ventas</span><button class="btn-sm" id="d-ver-ven">Ver todas →</button></div>
         <div class="ventas-list">${vh.slice(0,4).map(v=>ventaHTML(v,true)).join('')||emptyHTML('🧾','Sin ventas hoy')}</div>
