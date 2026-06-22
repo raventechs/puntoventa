@@ -953,7 +953,9 @@ onAuthStateChanged(auth,async user=>{
     const userRef=doc(db,'usuarios',user.uid);
     let snap=await getDoc(userRef);
     if(!snap.exists()){
-      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:'multi',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:'single',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+      const nombreNegPorDefecto=user.displayName?`Negocio de ${user.displayName}`:'Mi negocio';
+      await addDoc(collection(db,'negocios'),{nombre:nombreNegPorDefecto,tipo:'Negocio único',icon:'🏪',ownerUid:user.uid,ownerEmail:user.email,createdAt:serverTimestamp()});
       snap=await getDoc(userRef);
     }
     myDoc=snap.data();myRole=myDoc.rol;
