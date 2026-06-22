@@ -1,3 +1,1660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Sistema de punto de venta para negocios y empleados.">
+<meta name="theme-color" content="#0f1e3d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PuntoVenta">
+<title>PuntoVenta</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ══ TOKENS ════════════════════════════════════════════════ */
+:root{
+  --navy:#0f1e3d;--navy3:#1e2f55;
+  --blue:#1d4ed8;--blue-dark:#1338a0;
+  --gold:#f0b84a;--gold2:#c49020;
+  --green:#16a34a;--green-bg:#dcfce7;
+  --warn:#d97706;--warn-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --mp:#009ee3;--mp-bg:#e6f6fd;
+  --bg:#eef0f6;--surface:#ffffff;--surface2:#f4f6fb;
+  --border:#dde1ec;--text:#0f1e3d;--muted:#6b7a99;
+  --shadow:0 2px 8px rgba(15,30,61,.08);
+  --shadow-md:0 4px 20px rgba(15,30,61,.12);
+  --font:'Inter',sans-serif;--radius:12px;--radius-sm:8px;
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#0f172a;
+  --border:#334155;--text:#f1f5f9;--muted:#94a3b8;
+  --shadow:0 2px 8px rgba(0,0,0,.3);--shadow-md:0 4px 20px rgba(0,0,0,.4);
+  --green-bg:#052e16;--warn-bg:#1c1000;--red-bg:#3f0f0f;--mp-bg:#0c1e2e;
+}
+/* ══ RESET ═════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5;transition:background .2s,color .2s}
+input,select,button,textarea{font-family:var(--font)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes moneyBounce{0%{left:0;transform:scaleX(1) translateY(0)}10%{transform:scaleX(1) translateY(-14px)}20%{left:46px;transform:scaleX(1) translateY(0)}22%{transform:scaleX(-1) translateY(0)}30%{transform:scaleX(-1) translateY(-14px)}40%{left:0;transform:scaleX(-1) translateY(0)}42%{transform:scaleX(1) translateY(0)}100%{left:0;transform:scaleX(1) translateY(0)}}
+@keyframes moneyTopbar{0%{left:-20px;transform:scaleX(1)}45%{left:20px;transform:scaleX(1)}50%{left:20px;transform:scaleX(-1)}95%{left:-20px;transform:scaleX(-1)}100%{left:-20px;transform:scaleX(1)}}
+
+/* ══ SCREENS — cada pantalla ocupa todo el viewport ════════ */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+#screen-login.active{align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%)}
+#screen-pending.active{align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%)}
+#screen-owner.active{flex-direction:row}
+#screen-employee.active{flex-direction:column;background:var(--bg)}
+#screen-admin.active{flex-direction:column;background:var(--bg)}
+
+/* ══ AUTH CARD ══════════════════════════════════════════════ */
+.auth-card{background:var(--surface);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.3);animation:fadeUp .4s ease both}
+.brand-row{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.brand-icon{width:44px;height:44px;background:var(--navy);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;user-select:none;flex-shrink:0}
+.brand-name{font-size:22px;font-weight:800;color:var(--navy)}
+.brand-name span{color:var(--gold)}
+.auth-title{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.auth-sub{font-size:14px;color:var(--muted);margin-bottom:24px}
+.role-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.role-opt{padding:14px 10px;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.role-opt.active{border-color:var(--navy);background:#f0f3fa}
+.role-opt-icon{font-size:24px;margin-bottom:4px}
+.role-opt-label{font-size:13px;font-weight:700;color:var(--navy)}
+.role-opt-sub{font-size:11px;color:var(--muted)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--blue)}
+.field input::placeholder{color:var(--muted)}
+.field.hidden-field{display:none}
+.btn-primary{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 var(--navy3);transition:transform .1s,box-shadow .1s;margin-top:6px}
+.btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--navy3)}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.auth-toggle{text-align:center;font-size:13px;color:var(--muted);margin-top:16px}
+.auth-toggle span{color:var(--blue);cursor:pointer;font-weight:600}
+.auth-err{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+.auth-err.show{display:block}
+
+/* ══ PENDING ════════════════════════════════════════════════ */
+.pending-card{background:var(--surface);border-radius:20px;padding:48px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.3)}
+.pending-icon{font-size:52px;margin-bottom:16px}
+.pending-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.pending-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.pending-badge{background:var(--warn-bg);color:var(--warn);border:1px solid #fcd34d;border-radius:var(--radius);padding:10px 16px;font-size:13px;font-weight:600;margin-bottom:20px}
+
+/* ══ OWNER LAYOUT ═══════════════════════════════════════════ */
+.sidebar{width:230px;min-width:230px;background:var(--navy);display:flex;flex-direction:column;padding:24px 14px;height:100vh;position:sticky;top:0;overflow-y:auto;transition:background .2s}
+[data-theme="dark"] .sidebar{background:#080f1e}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 28px}
+.sb-brand-icon{width:36px;height:36px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;user-select:none}
+.sb-brand-name{font-size:18px;font-weight:800;color:#fff}
+.sb-brand-name span{color:var(--gold)}
+.sb-section{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;padding:14px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;user-select:none;margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:rgba(240,184,74,.15);color:var(--gold);font-weight:700}
+.nav-icon{font-size:17px;width:22px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;display:none}
+.nav-badge.show{display:block}
+.sb-bottom{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--navy);flex-shrink:0}
+.sb-user-name{font-size:13px;font-weight:600;color:#fff}
+.sb-user-role{font-size:11px;color:rgba(255,255,255,.4)}
+.sb-btn{width:100%;margin-top:6px;padding:9px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.sb-btn:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.main{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10;transition:background .2s}
+.topbar-title{font-size:19px;font-weight:800;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-pending{font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:99px;display:none}
+.topbar-pending.show{display:block}
+.page{padding:24px 28px;animation:fadeUp .3s ease both;flex:1}
+
+/* ══ KPI GRID ═══════════════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.kpi-icon{font-size:22px}
+.kpi-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
+.kpi-badge.ok{background:var(--green-bg);color:var(--green)}
+.kpi-badge.mp{background:var(--mp-bg);color:var(--mp)}
+.kpi-badge.info{background:#dbeafe;color:var(--blue)}
+.kpi-value{font-size:26px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+.kpi-label{font-size:12px;color:var(--muted);font-weight:500}
+
+/* ══ BOTONES ════════════════════════════════════════════════ */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-size:15px;font-weight:700;color:var(--text)}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-sm:hover{background:var(--surface2);border-color:var(--blue)}
+.btn-sm.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);box-shadow:0 3px 0 var(--gold2)}
+.btn-sm.danger{background:var(--red-bg);color:var(--red);border-color:#fca5a5}
+.btn-sm.success{background:var(--green-bg);color:var(--green);border-color:#86efac}
+
+/* ══ NEGOCIOS ═══════════════════════════════════════════════ */
+.negocios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.negocio-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .2s,transform .15s}
+.negocio-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.neg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.neg-icon{font-size:32px}
+.live-dot-wrap{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--green)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.neg-nombre{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px}
+.neg-tipo{font-size:12px;color:var(--muted);margin-bottom:14px}
+.neg-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.neg-stat{background:var(--bg);border-radius:var(--radius-sm);padding:10px}
+.neg-stat-val{font-size:16px;font-weight:800;color:var(--text)}
+.neg-stat-lbl{font-size:11px;color:var(--muted)}
+
+/* ══ VENTAS ════════════════════════════════════════════════ */
+.ventas-list{display:flex;flex-direction:column;gap:8px}
+.venta-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow)}
+.venta-medio-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.venta-medio-icon.efectivo{background:var(--green-bg)}
+.venta-medio-icon.mp{background:var(--mp-bg)}
+.venta-medio-icon.debito{background:#dbeafe}
+.venta-medio-icon.credito{background:#f3e8ff}
+.venta-info{flex:1}
+.venta-desc{font-size:14px;font-weight:600;color:var(--text)}
+.venta-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.venta-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;margin-top:4px;display:inline-block}
+.tag-efectivo{background:var(--green-bg);color:var(--green)}
+.tag-mp{background:var(--mp-bg);color:var(--mp)}
+.tag-debito{background:#dbeafe;color:var(--blue)}
+.tag-credito{background:#f3e8ff;color:#a855f7}
+.venta-importe{font-size:17px;font-weight:800;color:var(--text);white-space:nowrap}
+
+/* ══ EMPLEADOS ══════════════════════════════════════════════ */
+.empleados-list{display:flex;flex-direction:column;gap:8px}
+.emp-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.emp-avatar{width:40px;height:40px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--navy);flex-shrink:0}
+.emp-info{flex:1}
+.emp-nombre{font-size:15px;font-weight:700;color:var(--text)}
+.emp-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.emp-estado{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.estado-ok{background:var(--green-bg);color:var(--green)}
+.estado-pend{background:var(--warn-bg);color:var(--warn)}
+.emp-actions{display:flex;gap:6px}
+
+/* ══ CIERRE ════════════════════════════════════════════════ */
+.cierre-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.cierre-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:16px}
+.cierre-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.cierre-row:last-of-type{border-bottom:none}
+.cierre-label{font-size:14px;color:var(--muted)}
+.cierre-val{font-size:16px;font-weight:700;color:var(--text)}
+.cierre-total .cierre-label{font-size:15px;font-weight:800;color:var(--text)}
+.cierre-total .cierre-val{font-size:20px;font-weight:800;color:var(--navy)}
+[data-theme="dark"] .cierre-total .cierre-val{color:var(--gold)}
+
+/* ══ EMPLOYEE APP ═══════════════════════════════════════════ */
+.emp-header{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+[data-theme="dark"] .emp-header{background:#080f1e}
+.emp-header-brand{font-size:18px;font-weight:800;color:#fff;cursor:pointer;user-select:none}
+.emp-header-brand span{color:var(--gold)}
+.emp-header-right{display:flex;align-items:center;gap:8px}
+.emp-neg-tag{font-size:11px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;padding:4px 10px;border-radius:99px}
+.emp-icon-btn{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:18px;padding:4px}
+.emp-body{flex:1;overflow-y:auto;padding:16px;max-width:480px;width:100%;margin:0 auto}
+.emp-total-card{background:var(--navy);border-radius:14px;padding:20px;margin-bottom:20px;text-align:center}
+[data-theme="dark"] .emp-total-card{background:#080f1e}
+.emp-total-label{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px}
+.emp-total-val{font-size:36px;font-weight:800;color:#fff}
+.emp-form-card{background:var(--surface);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.emp-form-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px}
+.medios-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.medio-opt{padding:14px 8px;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.medio-opt:hover{border-color:var(--blue)}
+.medio-opt-icon{font-size:22px;margin-bottom:4px}
+.medio-opt-label{font-size:12px;font-weight:700;color:var(--text)}
+.medio-opt.sel-efectivo{border-color:var(--green);background:var(--green-bg)}
+.medio-opt.sel-mp{border-color:var(--mp);background:var(--mp-bg)}
+.medio-opt.sel-debito{border-color:var(--blue);background:#dbeafe}
+.medio-opt.sel-credito{border-color:#a855f7;background:#f3e8ff}
+.importe-input{width:100%;padding:14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:22px;font-weight:700;color:var(--text);background:var(--surface2);outline:none;margin-bottom:12px}
+.importe-input:focus{border-color:var(--blue)}
+.desc-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--surface2);outline:none;margin-bottom:14px}
+.desc-input:focus{border-color:var(--blue)}
+.btn-venta{width:100%;padding:14px;background:var(--gold);color:var(--navy);border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 var(--gold2);transition:transform .1s,box-shadow .1s}
+.btn-venta:active{transform:translateY(2px);box-shadow:0 2px 0 var(--gold2)}
+
+/* ══ ADMIN PANEL ════════════════════════════════════════════ */
+.admin-header{background:#7c3aed;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.admin-header-title{font-size:18px;font-weight:800;color:#fff}
+.admin-header-right{display:flex;align-items:center;gap:8px}
+.admin-badge{background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px}
+.btn-admin-exit{background:none;border:2px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.admin-tabs{background:#6d28d9;display:flex}
+.admin-tab{flex:1;padding:12px 4px;text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.admin-tab.active{color:#fff;border-bottom-color:var(--gold)}
+.admin-body{flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
+.admin-section-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
+.admin-card{background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.admin-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.admin-card-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+.admin-card-actions{display:flex;gap:8px}
+.btn-adel{flex:1;padding:8px;background:var(--red-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-aban{flex:1;padding:8px;background:var(--red-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-aunban{flex:1;padding:8px;background:var(--green-bg);border:1.5px solid #86efac;border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.ban-badge{font-size:10px;font-weight:700;background:var(--red);color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px}
+
+/* ══ PIN MODAL ══════════════════════════════════════════════ */
+.pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:9999}
+.pin-overlay.open{display:flex}
+@media(min-width:600px){.pin-overlay{align-items:center}}
+.pin-modal{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:360px}
+@media(min-width:600px){.pin-modal{border-radius:20px}}
+.pin-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.pin-modal-title{font-size:17px;font-weight:800;color:var(--text)}
+.pin-close{width:32px;height:32px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted);border:none}
+.pin-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px}
+.pin-dots{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--border);transition:background .2s}
+.pin-dot.filled{background:var(--blue)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pin-btn{padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;font-size:20px;font-weight:700;color:var(--text);cursor:pointer;font-family:var(--font);transition:all .2s}
+.pin-btn:active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pin-err{color:var(--red);font-size:13px;font-weight:600;text-align:center;margin-top:10px;display:none}
+
+/* ══ MODAL ══════════════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:1000}
+.modal-overlay.open{display:flex}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+@media(min-width:600px){.modal{border-radius:20px}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:17px;font-weight:800;color:var(--text)}
+.modal-close{width:32px;height:32px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted);border:none}
+.modal-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.btn-cancel{padding:10px 18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.btn-save{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 var(--navy3)}
+.btn-save:disabled{opacity:.5;cursor:default}
+
+/* ══ EMPTY / LOADING ════════════════════════════════════════ */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-msg{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:14px}
+.loading-wrap{display:flex;justify-content:center;padding:40px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+
+/* ══ TOAST ══════════════════════════════════════════════════ */
+#toast-wrap{position:fixed;bottom:24px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:9998}
+.toast{background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-md);animation:fadeUp .3s ease both}
+[data-theme="dark"] .toast{background:#1e293b;border:1px solid var(--border)}
+.toast.err{background:var(--red)}
+.toast.green{background:var(--green)}
+
+/* ══ MOB NAV ════════════════════════════════════════════════ */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy);border-top:1px solid rgba(255,255,255,.1);z-index:100}
+[data-theme="dark"] .mob-nav{background:#080f1e}
+.mob-nav-items{display:flex}
+.mob-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;font-size:10px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer;gap:3px;position:relative}
+.mob-item.active{color:var(--gold)}
+.mob-icon{font-size:20px}
+.mob-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;display:none}
+.mob-badge.show{display:block}
+.hidden{display:none!important;pointer-events:none!important}
+
+@media(max-width:768px){
+  #screen-owner.active{flex-direction:column}
+  .sidebar{display:none}
+  .mob-nav{display:block}
+  .main{padding-bottom:70px}
+  .page{padding:16px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .negocios-grid{grid-template-columns:1fr}
+  .topbar{padding:14px 16px}
+}
+@media(min-width:769px){.mob-nav{display:none!important}}
+/* ══ DEMO VENCIDA ═══════════════════════════════════════════ */
+#demo-wall{position:fixed;inset:0;background:linear-gradient(145deg,var(--navy),#1a3060);display:none;align-items:center;justify-content:center;z-index:9990;padding:24px}
+#demo-wall.open{display:flex}
+.demo-card{background:var(--surface);border-radius:20px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.4);animation:fadeUp .4s ease both}
+.demo-icon{font-size:56px;margin-bottom:16px}
+.demo-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px}
+.demo-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px}
+.btn-demo-email{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:10px;font-family:var(--font)}
+.btn-demo-email:hover{background:var(--navy3)}
+.btn-demo-logout{font-size:13px;color:var(--muted);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:var(--font);margin-top:4px}
+.demo-countdown{font-size:11px;font-weight:700;background:rgba(240,184,74,.25);color:var(--gold);padding:4px 10px;border-radius:99px}
+.demo-countdown.urgente{background:rgba(220,38,38,.25);color:#fca5a5}
+.btn-aext{flex:1;padding:8px;background:#dbeafe;border:1.5px solid #93c5fd;border-radius:8px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-aact{flex:1;padding:8px;background:var(--green-bg);border:1.5px solid #86efac;border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.demo-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:6px}
+.demo-badge.activa{background:var(--warn-bg);color:var(--warn)}
+.demo-badge.vencida{background:var(--red-bg);color:var(--red)}
+.demo-badge.completa{background:var(--green-bg);color:var(--green)}
+/* INVITE */
+#screen-invite.active{align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy),#1a3060);padding:24px}
+.invite-card{background:var(--surface);border-radius:20px;padding:40px 32px;width:100%;max-width:380px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.4)}
+.invite-card-icon{font-size:52px;margin-bottom:12px}
+.invite-card-negocio{font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px}
+.invite-card-sub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.invite-card-badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);border:1px solid #86efac;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;margin-bottom:20px}
+.invite-expired{background:var(--red-bg);border:1px solid #fca5a5;border-radius:var(--radius);padding:14px;color:var(--red);font-size:14px;font-weight:600;margin-bottom:16px}
+.invite-section{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+.invite-section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.invite-banner-box{background:linear-gradient(135deg,#0f1e3d,#1d4ed8);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.invite-banner-icon{font-size:26px;flex-shrink:0}
+.invite-banner-title{font-size:14px;font-weight:800;color:#fff}
+.invite-banner-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.invite-row{display:flex;gap:8px;margin-bottom:8px}
+.invite-link-box{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--muted);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-copy-link{background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.btn-wa-invite{background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.invite-expiry{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<!-- LOADING -->
+<div id="loading-screen" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#1a3060 100%);z-index:9999">
+  <div style="text-align:center">
+    <div style="width:90px;height:60px;overflow:hidden;position:relative;margin:0 auto 14px">
+      <span style="position:absolute;top:6px;animation:moneyBounce 1.6s ease-in-out infinite">
+        <svg width="44" height="44" viewBox="0 0 48 48">
+          <!-- nudo / lazo arriba -->
+          <path d="M19 6c0-2 2-3 5-3s5 1 5 3c0 1.5-1 2-1 2h-8s-1-.5-1-2z" fill="#c49020"/>
+          <rect x="21" y="2" width="6" height="6" rx="1.5" fill="#a87c1a"/>
+          <!-- cuerpo de la bolsa -->
+          <path d="M16 13c0-1.5 1-2.5 2.5-2.5h11c1.5 0 2.5 1 2.5 2.5 0 2-1.5 4-1.5 4 4 2 6 6.5 6 10.5 0 7-5.5 12-12.5 12S11 34.5 11 27.5c0-4 2-8.5 6-10.5 0 0-1.5-2-1.5-4z" fill="#f0b84a" stroke="#c49020" stroke-width="1.2"/>
+          <!-- signo $ -->
+          <text x="24" y="32" font-size="17" font-weight="900" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif">$</text>
+        </svg>
+      </span>
+    </div>
+    <div style="font-size:22px;font-weight:800;color:#ffffff;margin-bottom:4px;letter-spacing:.3px">Punto<span style="color:#f0b84a;font-weight:900">Venta</span></div>
+    <div style="font-size:13px;color:rgba(255,255,255,.75)">Cargando tu negocio...</div>
+  </div>
+</div>
+
+<div id="screen-login" class="screen active">
+  <div class="auth-card">
+    <div class="brand-row">
+      <div class="brand-icon" id="login-logo">🛒</div>
+      <div class="brand-name">Punto<span>Venta</span></div>
+    </div>
+    <div class="auth-title" id="auth-title">Bienvenido</div>
+    <div class="auth-sub">Gestioná tus negocios y ventas</div>
+    <div class="role-selector">
+      <div class="role-opt active" id="mode-single">
+        <div class="role-opt-icon">🏪</div>
+        <div class="role-opt-label">Negocio único</div>
+        <div class="role-opt-sub">Mi propio local</div>
+      </div>
+      <div class="role-opt" id="mode-multi">
+        <div class="role-opt-icon">🏢</div>
+        <div class="role-opt-label">Varias sucursales</div>
+        <div class="role-opt-sub">Equipo con roles</div>
+      </div>
+    </div>
+        <button class="btn-primary" id="btn-google" style="background:#fff;color:#0f1e3d;border:2px solid #dde1ec;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.04a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.48A4.8 4.8 0 0 1 4.5 7.5V5.43H1.83a8 8 0 0 0 0 7.14l2.67-2.09z"/><path fill="#EA4335" d="M8.98 3.58c1.32 0 2.5.45 3.44 1.35l2.54-2.54A8 8 0 0 0 1.83 5.43L4.5 7.5c.66-1.97 2.49-3.92 4.48-3.92z"/></svg>
+      Continuar con Google
+    </button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:12px;color:var(--muted);font-weight:600">o ingresá con email</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="field"><label>Email</label><input id="f-email" type="email" placeholder="tu@email.com"/></div>
+    <div class="field"><label>Contraseña</label><input id="f-pass" type="password" placeholder="••••••••"/></div>
+    <div class="field" id="field-negocio-nombre"><label>Nombre de tu negocio</label><input id="f-negocio-nombre" placeholder="Almacén Don José"/></div>
+    <button class="btn-primary" id="btn-auth">Ingresar →</button>
+    <div class="auth-toggle"><span id="toggle-mode">Registrarse</span></div>
+  </div>
+</div>
+
+<!-- INVITE -->
+<div id="screen-invite" class="screen">
+  <div class="invite-card">
+    <div class="invite-card-icon" id="invite-neg-icon">🏪</div>
+    <div class="invite-card-negocio" id="invite-neg-nombre">Cargando...</div>
+    <div class="invite-card-sub" id="invite-neg-sub">Fuiste invitado a unirte como empleado</div>
+    <div id="invite-expired-msg" style="display:none" class="invite-expired">⏰ Este link ya expiró. Pedile al dueño que genere uno nuevo.</div>
+    <div id="invite-valid-wrap">
+      <div class="invite-card-badge">✅ Invitación válida</div>
+      <div class="field" style="text-align:left"><label>Email</label><input id="inv-email" type="email" placeholder="tu@email.com"/></div>
+      <div class="field" style="text-align:left"><label>Contraseña</label><input id="inv-pass" type="password" placeholder="Mínimo 6 caracteres"/></div>
+      <div class="auth-err" id="inv-err"></div>
+      <button class="btn-primary" id="btn-inv-register">Unirme al negocio →</button>
+    </div>
+    <button class="btn-demo-logout" style="margin-top:14px" id="btn-inv-cancel">Cancelar</button>
+  </div>
+</div>
+
+<!-- PENDING -->
+<div id="screen-pending" class="screen">
+  <div class="pending-card">
+    <div class="pending-icon" style="animation:pulse 1.6s ease-in-out infinite">⏳</div>
+    <div class="pending-title">Solicitud enviada</div>
+    <div class="pending-sub">Tu solicitud fue enviada al dueño. Podrás operar una vez que sea aprobada.</div>
+    <div class="pending-badge">Esperando aprobación del dueño</div>
+    <button class="btn-primary" id="btn-pending-logout">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- OWNER -->
+<div id="screen-owner" class="screen">
+  <nav class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-icon" id="sidebar-logo">🛒</div>
+      <div class="sb-brand-name">Punto<span>Venta</span></div>
+    </div>
+    <div class="sb-section">Principal</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" data-page="negocios"><span class="nav-icon">🏪</span>Mis negocios</div>
+    <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
+    <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
+    <div class="nav-item" data-page="gastos"><span class="nav-icon">🧮</span>Gastos</div>
+    <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
+    <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
+    <div class="sb-bottom">
+      <div id="superuser-mode-switch" style="display:none;margin-bottom:12px;padding:10px;background:rgba(255,255,255,.06);border-radius:8px;border:1px dashed rgba(255,255,255,.2)">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔧 Modo testing</div>
+        <select id="superuser-modo-select" style="width:100%;font-size:12px;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.2);color:#fff">
+          <option value="single">🏪 Negocio único</option>
+          <option value="multi">🏢 Varias sucursales</option>
+        </select>
+      </div>
+      <div class="sb-user">
+        <div class="avatar" id="owner-av">D</div>
+        <div><div class="sb-user-name" id="owner-name">Dueño</div><div class="sb-user-role">Administrador</div></div>
+      </div>
+      <button class="sb-btn" id="btn-theme">🌙 Modo oscuro</button>
+      <button class="sb-btn" id="btn-logout-owner">⏻ Cerrar sesión</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="topbar-title" id="owner-page-title">Dashboard</span>
+        <div id="topbar-money-anim" style="width:40px;height:20px;overflow:hidden;position:relative;display:none">
+          <span style="position:absolute;animation:moneyTopbar 3.5s linear infinite">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path d="M19 6c0-2 2-3 5-3s5 1 5 3c0 1.5-1 2-1 2h-8s-1-.5-1-2z" fill="#c49020"/>
+              <rect x="21" y="2" width="6" height="6" rx="1.5" fill="#a87c1a"/>
+              <path d="M16 13c0-1.5 1-2.5 2.5-2.5h11c1.5 0 2.5 1 2.5 2.5 0 2-1.5 4-1.5 4 4 2 6 6.5 6 10.5 0 7-5.5 12-12.5 12S11 34.5 11 27.5c0-4 2-8.5 6-10.5 0 0-1.5-2-1.5-4z" fill="#f0b84a" stroke="#c49020" stroke-width="1.2"/>
+              <text x="24" y="32" font-size="17" font-weight="900" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif">$</text>
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div class="topbar-right" style="position:relative">
+        <span class="topbar-pending" id="topbar-pend">⏳ Pendientes</span>
+        <div class="avatar" id="owner-av2" style="cursor:pointer">D</div>
+        <div id="owner-user-menu" class="hidden" style="position:absolute;top:48px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);min-width:220px;z-index:300;padding:10px;">
+          <div id="oum-email" style="font-size:12px;color:var(--muted);padding:6px 8px 10px;border-bottom:1px solid var(--border);margin-bottom:6px;word-break:break-all">—</div>
+          <div id="superuser-mode-switch-mob" style="display:none;margin-bottom:8px;padding:8px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔧 Modo testing</div>
+            <select id="superuser-modo-select-mob" style="width:100%;font-size:12px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+              <option value="single">🏪 Negocio único</option>
+              <option value="multi">🏢 Varias sucursales</option>
+            </select>
+          </div>
+          <button id="btn-config-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px">⚙️ Configuración</button>
+          <button id="btn-theme-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px">🌙 Modo oscuro</button>
+          <button id="btn-logout-owner-mob" style="width:100%;text-align:left;background:none;border:none;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--danger);display:flex;align-items:center;gap:8px">⏻ Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+    <div id="page-dashboard" class="page"></div>
+    <div id="page-negocios" class="page" style="display:none"></div>
+    <div id="page-ventas" class="page" style="display:none"></div>
+    <div id="page-empleados" class="page" style="display:none"></div>
+    <div id="page-gastos" class="page" style="display:none"></div>
+    <div id="page-cierre" class="page" style="display:none"></div>
+    <div id="page-config" class="page" style="display:none"></div>
+  </div>
+  <div class="mob-nav">
+    <div class="mob-nav-items">
+      <div class="mob-item active" data-page="dashboard"><span class="mob-icon">📊</span>Dashboard</div>
+      <div class="mob-item" data-page="negocios"><span class="mob-icon">🏪</span>Negocios</div>
+      <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Ventas</div>
+      <div class="mob-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge" id="mob-pend-badge">0</span></div>
+      <div class="mob-item" data-page="gastos"><span class="mob-icon">🧮</span>Gastos</div>
+      <div class="mob-item" data-page="cierre"><span class="mob-icon">🔒</span>Cierre</div>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE -->
+<div id="screen-employee" class="screen">
+  <div class="emp-header">
+    <div class="emp-header-brand" id="emp-logo">Punto<span>Venta</span></div>
+    <div class="emp-header-right">
+      <span class="emp-neg-tag" id="emp-neg-name">—</span>
+      <button class="emp-icon-btn" id="btn-theme-emp">🌙</button>
+      <button class="emp-icon-btn" id="btn-logout-emp">⏻</button>
+    </div>
+  </div>
+  <div class="emp-body">
+    <div class="emp-total-card">
+      <div class="emp-total-label">Total vendido hoy</div>
+      <div class="emp-total-val" id="emp-total">$0</div>
+    </div>
+    <div class="emp-form-card">
+      <div class="emp-form-title">Registrar venta</div>
+      <div class="medios-grid">
+        <div class="medio-opt" id="m-efectivo"><div class="medio-opt-icon">💵</div><div class="medio-opt-label">Efectivo</div></div>
+        <div class="medio-opt" id="m-mp"><div class="medio-opt-icon">📱</div><div class="medio-opt-label">Mercado Pago</div></div>
+        <div class="medio-opt" id="m-debito"><div class="medio-opt-icon">💳</div><div class="medio-opt-label">Débito</div></div>
+        <div class="medio-opt" id="m-credito"><div class="medio-opt-icon">💰</div><div class="medio-opt-label">Crédito</div></div>
+      </div>
+      <input class="importe-input" type="number" id="emp-importe" placeholder="$ 0" min="0"/>
+      <input class="desc-input" type="text" id="emp-desc" placeholder="Descripción (opcional)"/>
+      <button class="btn-venta" id="btn-venta">✓ Registrar venta</button>
+    </div>
+    <div class="sec-title" style="margin-bottom:12px">Mis ventas de hoy</div>
+    <div id="emp-ventas"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="screen-admin" class="screen">
+  <div class="admin-header">
+    <div class="admin-header-title">⚡ Panel Admin</div>
+    <div class="admin-header-right">
+      <span class="admin-badge">SUPER USUARIO</span>
+      <button class="btn-admin-exit" id="btn-admin-exit">Salir</button>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <div class="admin-tab active" id="atab-negocios">🏪 Negocios</div>
+    <div class="admin-tab" id="atab-users">👥 Usuarios</div>
+  </div>
+  <div class="admin-body">
+    <div id="admin-negocios-view">
+      <p class="admin-section-title">Todos los negocios</p>
+      <div id="admin-negocios-list"><div class="loading-wrap"><div class="spinner"></div></div></div>
+    </div>
+    <div id="admin-users-view" style="display:none">
+      <p class="admin-section-title">Todos los usuarios</p>
+      <div id="admin-users-list"><div class="loading-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-modal">
+    <div class="pin-modal-header">
+      <span class="pin-modal-title">🔐 Acceso admin</span>
+      <button class="pin-close" id="btn-pin-close">✕</button>
+    </div>
+    <p class="pin-sub">Ingresá el PIN de administrador</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" data-n="1">1</button><button class="pin-btn" data-n="2">2</button><button class="pin-btn" data-n="3">3</button>
+      <button class="pin-btn" data-n="4">4</button><button class="pin-btn" data-n="5">5</button><button class="pin-btn" data-n="6">6</button>
+      <button class="pin-btn" data-n="7">7</button><button class="pin-btn" data-n="8">8</button><button class="pin-btn" data-n="9">9</button>
+      <button class="pin-btn" data-n="del">⌫</button><button class="pin-btn" data-n="0">0</button>
+      <button class="pin-btn" data-n="ok" style="background:var(--blue);color:#fff;border-color:var(--blue);font-size:14px">OK</button>
+    </div>
+    <p class="pin-err" id="pin-err">PIN incorrecto</p>
+  </div>
+</div>
+
+<!-- MODAL NEGOCIO -->
+<div class="modal-overlay" id="modal-venta-owner">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🧾 Nueva venta</span>
+      <button class="modal-close" id="btn-modal-venta-close">✕</button>
+    </div>
+    <div class="field"><label>Importe *</label><input id="mv-importe" type="number" placeholder="1500" inputmode="decimal"/></div>
+    <div class="field"><label>Descripción</label><input id="mv-desc" placeholder="Gaseosas, snacks..."/></div>
+    <div class="field"><label>Medio de pago *</label>
+      <div style="display:flex;gap:8px">
+        <div class="medio-opt" id="mv-m-efectivo" style="flex:1;text-align:center;cursor:pointer">💵 Efectivo</div>
+        <div class="medio-opt" id="mv-m-mp" style="flex:1;text-align:center;cursor:pointer">📱 MP</div>
+        <div class="medio-opt" id="mv-m-debito" style="flex:1;text-align:center;cursor:pointer">💳 Débito</div>
+        <div class="medio-opt" id="mv-m-credito" style="flex:1;text-align:center;cursor:pointer">💰 Crédito</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btn-modal-venta-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-modal-venta-save">Registrar venta</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-negocio">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🏪 Nuevo negocio</span>
+      <button class="modal-close" id="btn-modal-neg-close">✕</button>
+    </div>
+    <div class="field"><label>Nombre del negocio *</label><input id="neg-nombre" placeholder="Kiosco Don Luis"/></div>
+    <div class="field"><label>Tipo</label>
+      <select id="neg-tipo">
+        <option>Kiosco</option><option>Ferretería</option><option>Almacén</option>
+        <option>Verdulería</option><option>Panadería</option><option>Farmacia</option><option>Otro</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btn-modal-neg-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-modal-neg-save">Agregar negocio</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO VENCIDA -->
+<div id="demo-wall">
+  <div class="demo-card">
+    <div class="demo-icon">⏳</div>
+    <div class="demo-title">Tu demo de 24hs terminó</div>
+    <div class="demo-sub">Gracias por probar PuntoVenta. Para continuar gestionando tus ventas, contactanos y te activamos tu cuenta.</div>
+    <a href="mailto:ventas@raventechsapp.com?subject=Quiero activar PuntoVenta&body=Hola, probé la demo y me interesa continuar." class="btn-demo-email">✉️ Contactar por email</a>
+    <button class="btn-demo-logout" id="btn-demo-logout">Cerrar sesión</button>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,doc,setDoc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// 🔧 FIREBASE CONFIG
+const FB={
+  apiKey:"AIzaSyAP9PEuKM9ck-a9ltWorlFunxPYXw7trtE",
+  authDomain:"puntoventa-f316c.firebaseapp.com",
+  projectId:"puntoventa-f316c",
+  storageBucket:"puntoventa-f316c.firebasestorage.app",
+  messagingSenderId:"229168693051",
+  appId:"1:229168693051:web:9dcb7d95f39edc4c17011e"
+};
+// 🔐 PIN ADMIN — cambiarlo por el número que quieras
+const ADMIN_PIN="1990";
+
+const fbApp=initializeApp(FB);
+const auth=getAuth(fbApp);
+const db=getFirestore(fbApp);
+
+function sanitizeHTML(str){const d=document.createElement('div');d.textContent=str??"";return d.innerHTML;}
+
+// Detección sincrónica de invite para que onAuthStateChanged la respete
+const _inviteCode=new URLSearchParams(window.location.search).get('invite');
+let activeInvite=_inviteCode?{code:_inviteCode,negocioId:null,ownerUid:null,loading:true}:null;
+
+// ── ESTADO ────────────────────────────────────────────────
+let me=null, myDoc=null, myRole=null, myFeatures=null;
+let negocios=[], ventas=[], empleados=[], empVentas=[], gastos=[];
+let currentPage="dashboard", selectedMedio=null;
+let isRegister=false, modoSelected="single"; // single | multi
+let modoNegocio="multi"; // se setea tras login según userDoc.modo
+let logoTaps=0, logoTimer=null, pinBuf="";
+let unsubEmpVentas=null;
+
+// ── TEMA ──────────────────────────────────────────────────
+function initTheme(){applyTheme(localStorage.getItem('pv-theme')||'light');}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const dark=t==='dark';
+  const sb=document.getElementById('btn-theme');
+  const eb=document.getElementById('btn-theme-emp');
+  const mb=document.getElementById('btn-theme-owner-mob');
+  if(sb)sb.textContent=dark?'🌞 Modo claro':'🌙 Modo oscuro';
+  if(eb)eb.textContent=dark?'🌞':'🌙';
+  if(mb)mb.textContent=dark?'🌞 Modo claro':'🌙 Modo oscuro';
+  localStorage.setItem('pv-theme',t);
+}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
+initTheme();
+
+// ── DETECCIÓN DE INVITE ───────────────────────────────
+if(_inviteCode){
+  showScreen('screen-invite');
+  (async()=>{
+    try{
+      const invSnap=await getDoc(doc(db,'invitaciones',_inviteCode));
+      if(!invSnap.exists()){
+        document.getElementById('invite-neg-nombre').textContent='Link inválido';
+        document.getElementById('invite-expired-msg').style.display='block';
+        document.getElementById('invite-valid-wrap').style.display='none';
+        activeInvite=null;return;
+      }
+      const inv=invSnap.data();
+      const expirado=inv.expiry?.toMillis?.()<Date.now()||inv.usado===true;
+      const negSnap=await getDoc(doc(db,'negocios',inv.negocioId));
+      const neg=negSnap.exists()?negSnap.data():{nombre:'Negocio',icon:'🏪',tipo:''};
+      document.getElementById('invite-neg-icon').textContent=neg.icon||'🏪';
+      document.getElementById('invite-neg-nombre').textContent=neg.nombre;
+      document.getElementById('invite-neg-sub').textContent=neg.tipo?`Negocio: ${neg.tipo}`:'Fuiste invitado a unirte como empleado';
+      activeInvite={code:_inviteCode,negocioId:inv.negocioId,ownerUid:inv.ownerUid};
+      if(expirado){
+        document.getElementById('invite-expired-msg').style.display='block';
+        document.getElementById('invite-valid-wrap').style.display='none';
+        activeInvite=null;
+      }
+    }catch(e){
+      document.getElementById('invite-neg-nombre').textContent='Error al cargar';
+      document.getElementById('invite-expired-msg').style.display='block';
+      document.getElementById('invite-valid-wrap').style.display='none';
+      activeInvite=null;
+    }
+  })();
+}
+
+// ── LISTENERS INVITE ──────────────────────────────────
+document.getElementById('btn-inv-cancel').addEventListener('click',()=>{
+  activeInvite=null;window.history.replaceState({},'',window.location.pathname);showScreen('screen-login');
+});
+document.getElementById('btn-inv-register').addEventListener('click',async()=>{
+  if(!activeInvite)return;
+  const email=document.getElementById('inv-email').value.trim();
+  const pass=document.getElementById('inv-pass').value;
+  const errEl=document.getElementById('inv-err');errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='Completá todos los campos';errEl.style.display='block';return;}
+  const btn=document.getElementById('btn-inv-register');btn.disabled=true;btn.textContent='Registrando...';
+  try{
+    await updateDoc(doc(db,'invitaciones',activeInvite.code),{usado:true,usadoPor:email,usadoAt:serverTimestamp()});
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,'usuarios',cred.user.uid),{uid:cred.user.uid,email,rol:'employee',ownerUid:activeInvite.ownerUid,negocioId:activeInvite.negocioId,estado:'pendiente',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+    await addDoc(collection(db,'empleados'),{uid:cred.user.uid,email,ownerUid:activeInvite.ownerUid,negocioId:activeInvite.negocioId,estado:'pendiente',inviteCode:activeInvite.code,createdAt:serverTimestamp()});
+    window.history.replaceState({},'',window.location.pathname);
+    activeInvite=null;
+  }catch(e){
+    const msgs={'auth/email-already-in-use':'Ya existe cuenta con ese email.','auth/weak-password':'Mínimo 6 caracteres.'};
+    errEl.textContent=msgs[e.code]||'Error al registrarse.';errEl.style.display='block';
+    btn.disabled=false;btn.textContent='Unirme al negocio →';
+  }
+});
+
+// ── PANTALLAS ─────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function hoy(){return new Date().toISOString().split('T')[0];}
+function fmtARS(n){return'$'+(n||0).toLocaleString('es-AR');}
+function fmtHora(){return new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});}
+function toast(msg,type=''){
+  const el=document.createElement('div');
+  el.className=`toast${type?' '+type:''}`;
+  el.textContent=(type==='err'?'❌ ':type==='green'?'✅ ':'✅ ')+msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+function spinnerHTML(){return'<div class="loading-wrap"><div class="spinner"></div></div>';}
+function emptyHTML(icon,msg,sub=''){return`<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-msg">${msg}</div>${sub?`<div class="empty-sub">${sub}</div>`:''}</div>`;}
+function ventaHTML(v,withActions=false){
+  const MEDIOS={efectivo:{cls:'efectivo',icon:'💵',label:'Efectivo'},mp:{cls:'mp',icon:'📱',label:'Mercado Pago'},debito:{cls:'debito',icon:'💳',label:'Débito'},credito:{cls:'credito',icon:'💰',label:'Crédito'}};
+  const m=MEDIOS[v.medio]||MEDIOS.efectivo;
+  const modBadge=v.editado?`<span title="Esta venta fue modificada" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--danger-bg,#fee2e2);color:var(--danger,#dc2626);font-size:11px;font-weight:800;margin-left:6px">M</span>`:'';
+  return`<div class="venta-row" data-venta-id="${v.id}"><div class="venta-medio-icon ${m.cls}">${m.icon}</div><div class="venta-info"><div class="venta-desc">${sanitizeHTML(v.descripcion||'Venta sin descripción')}${modBadge}</div><div class="venta-meta">${sanitizeHTML(v.hora||'')} · ${sanitizeHTML(v.empleadoNombre||'')}</div><span class="venta-tag tag-${m.cls}">${m.label}</span></div><div class="venta-importe">${fmtARS(v.importe)}</div>${withActions?`<div class="venta-actions" style="display:flex;gap:6px;margin-left:8px"><button class="btn-sm" data-edit-venta="${v.id}" style="padding:6px 8px">✏️</button><button class="btn-sm danger" data-del-venta="${v.id}" style="padding:6px 8px">🗑</button></div>`:''}</div>`;
+}
+
+// ── LOGO TAPS → PIN ───────────────────────────────────────
+function bindLogoTap(id){
+  document.getElementById(id)?.addEventListener('click',()=>{
+    logoTaps++;clearTimeout(logoTimer);
+    if(logoTaps>=5){logoTaps=0;openPin();return;}
+    logoTimer=setTimeout(()=>logoTaps=0,2000);
+  });
+}
+bindLogoTap('login-logo');
+bindLogoTap('sidebar-logo');
+bindLogoTap('emp-logo');
+
+// ── PIN ───────────────────────────────────────────────────
+function openPin(){pinBuf='';updDots();document.getElementById('pin-err').style.display='none';document.getElementById('pin-overlay').classList.add('open');}
+function closePin(){document.getElementById('pin-overlay').classList.remove('open');}
+function updDots(){for(let i=0;i<4;i++)document.getElementById(`d${i}`).classList.toggle('filled',i<pinBuf.length);}
+
+document.querySelector('.pin-pad').addEventListener('click',e=>{
+  const btn=e.target.closest('.pin-btn');if(!btn)return;
+  const n=btn.dataset.n;
+  if(n==='del'){pinBuf=pinBuf.slice(0,-1);updDots();return;}
+  if(n==='ok'||pinBuf.length===4){checkPin();return;}
+  if(pinBuf.length<4){pinBuf+=n;updDots();}
+  if(pinBuf.length===4)checkPin();
+});
+function checkPin(){
+  if(pinBuf===ADMIN_PIN){closePin();showScreen('screen-admin');loadAdminNegocios();}
+  else{document.getElementById('pin-err').style.display='block';pinBuf='';updDots();setTimeout(()=>document.getElementById('pin-err').style.display='none',1500);}
+}
+document.getElementById('btn-pin-close').addEventListener('click',closePin);
+document.getElementById('pin-overlay').addEventListener('click',e=>{if(e.target.id==='pin-overlay')closePin();});
+
+// ── ADMIN ─────────────────────────────────────────────────
+async function loadAdminNegocios(){
+  const c=document.getElementById('admin-negocios-list');c.innerHTML=spinnerHTML();
+  const snap=await getDocs(collection(db,'negocios'));
+  if(snap.empty){c.innerHTML=emptyHTML('🏪','Sin negocios');return;}
+  c.innerHTML=snap.docs.map(d=>{const n=d.data();return`<div class="admin-card"><div class="admin-card-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)}</div><div class="admin-card-sub">${sanitizeHTML(n.tipo||'—')} · ${sanitizeHTML(n.ownerEmail||'—')}</div><div class="admin-card-actions"><button class="btn-adel" data-id="${d.id}">🗑️ Eliminar</button></div></div>`;}).join('');
+}
+async function loadAdminUsers(){
+  const c=document.getElementById('admin-users-list');c.innerHTML=spinnerHTML();
+  const snap=await getDocs(collection(db,'usuarios'));
+  if(snap.empty){c.innerHTML=emptyHTML('👥','Sin usuarios');return;}
+  const ahora=Date.now();
+  c.innerHTML=snap.docs.map(d=>{
+    const u=d.data();const ban=u.banned===true;
+    let demoBadge='';let demoInfo='';let demoActions='';
+    if(u.status==='activo'){
+      demoBadge='<span class="demo-badge completa">ACTIVO</span>';
+    } else {
+      const start=u.demoStart?.toMillis?.()||0;
+      const expiry=u.demoExpiry?.toMillis?.()||start+86400000;
+      const restante=expiry-ahora;
+      if(restante>0){
+        const h=Math.floor(restante/3600000);const m=Math.floor((restante%3600000)/60000);
+        demoBadge='<span class="demo-badge activa">DEMO</span>';
+        demoInfo=`<div style="font-size:11px;color:var(--warn);margin-top:4px">⏱ Vence en ${h}h ${m}m</div>`;
+      } else {
+        demoBadge='<span class="demo-badge vencida">VENCIDA</span>';
+        demoInfo='<div style="font-size:11px;color:var(--red);margin-top:4px">Demo vencida</div>';
+      }
+      demoActions=`<div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap">
+        <input type="number" min="1" max="30" value="7" style="width:56px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font)" data-ext-uid="${d.id}"/>
+        <button class="btn-aext" data-uid="${d.id}">⏱ Extender</button>
+        <button class="btn-aact" data-uid="${d.id}">✅ Activar</button>
+      </div>`;
+    }
+    return`<div class="admin-card">
+      <div class="admin-card-title">${sanitizeHTML(u.email||d.id)}${ban?'<span class="ban-badge">BANEADO</span>':''} ${demoBadge}</div>
+      <div class="admin-card-sub">${u.rol||'—'}</div>
+      ${demoInfo}
+      <div class="admin-card-actions" style="margin-top:8px">
+        ${ban?`<button class="btn-aunban" data-uid="${d.id}">✅ Desbanear</button>`:`<button class="btn-aban" data-uid="${d.id}">🚫 Banear</button>`}
+      </div>
+      ${demoActions}
+      ${u.rol==='owner'?`<div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--muted)">Límite de negocios:</span>
+        <input type="number" min="1" max="20" value="${u.features?.limiteNegocios??1}" style="width:56px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font)" data-lim-uid="${d.id}"/>
+        <button class="btn-alim" data-uid="${d.id}">💾 Guardar</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('admin-negocios-list').addEventListener('click',async e=>{
+  const del=e.target.closest('.btn-adel');
+  if(del&&confirm('¿Eliminar este negocio?')){await deleteDoc(doc(db,'negocios',del.dataset.id));toast('Negocio eliminado');await loadAdminNegocios();}
+});
+document.getElementById('admin-users-list').addEventListener('click',async e=>{
+  const ban=e.target.closest('.btn-aban');const unban=e.target.closest('.btn-aunban');
+  const ext=e.target.closest('.btn-aext');const act=e.target.closest('.btn-aact');
+  const lim=e.target.closest('.btn-alim');
+  if(ban&&confirm('¿Banear este usuario?')){await updateDoc(doc(db,'usuarios',ban.dataset.uid),{banned:true});toast('Usuario baneado');await loadAdminUsers();}
+  if(unban){await updateDoc(doc(db,'usuarios',unban.dataset.uid),{banned:false});toast('Usuario desbaneado');await loadAdminUsers();}
+  if(ext){
+    const dias=parseInt(document.querySelector(`input[data-ext-uid="${ext.dataset.uid}"]`)?.value)||7;
+    const snap=await getDoc(doc(db,'usuarios',ext.dataset.uid));const u=snap.data();
+    const baseMs=u.demoExpiry?.toMillis?.()||((u.demoStart?.toMillis?.()||Date.now())+86400000);
+    const nuevoExpiry=new Date(Math.max(baseMs,Date.now())+dias*86400000);
+    await updateDoc(doc(db,'usuarios',ext.dataset.uid),{demoExpiry:Timestamp.fromDate(nuevoExpiry),status:'demo'});
+    toast(`Demo extendida ${dias} días`,'green');await loadAdminUsers();
+  }
+  if(act&&confirm('¿Activar cuenta completa?')){
+    await updateDoc(doc(db,'usuarios',act.dataset.uid),{status:'activo',demoExpiry:null});
+    toast('Cuenta activada','green');await loadAdminUsers();
+  }
+  if(lim){
+    const nuevoLimite=parseInt(document.querySelector(`input[data-lim-uid="${lim.dataset.uid}"]`)?.value)||1;
+    try{
+      await updateDoc(doc(db,'usuarios',lim.dataset.uid),{features:{limiteNegocios:nuevoLimite}});
+      toast(`Límite actualizado a ${nuevoLimite}`,'green');
+      if(me&&me.uid===lim.dataset.uid)myFeatures={limiteNegocios:nuevoLimite};
+    }catch(e){toast('Error al actualizar límite','err');}
+  }
+});
+document.getElementById('atab-negocios').addEventListener('click',()=>{
+  document.getElementById('admin-negocios-view').style.display='block';
+  document.getElementById('admin-users-view').style.display='none';
+  document.getElementById('atab-negocios').classList.add('active');
+  document.getElementById('atab-users').classList.remove('active');
+  loadAdminNegocios();
+});
+document.getElementById('atab-users').addEventListener('click',()=>{
+  document.getElementById('admin-users-view').style.display='block';
+  document.getElementById('admin-negocios-view').style.display='none';
+  document.getElementById('atab-users').classList.add('active');
+  document.getElementById('atab-negocios').classList.remove('active');
+  loadAdminUsers();
+});
+document.getElementById('btn-admin-exit').addEventListener('click',()=>{
+  if(myRole==='owner')showScreen('screen-owner');
+  else if(myRole==='employee')showScreen('screen-employee');
+  else showScreen('screen-login');
+});
+
+// ── DEMO HELPERS ──────────────────────────────────────────
+const DEMO_MS=24*60*60*1000;
+
+function getDemoRestante(data){
+  if(data.status==='activo')return Infinity;
+  const start=data.demoStart?.toMillis?.()||0;
+  const expiry=data.demoExpiry?.toMillis?.()||start+DEMO_MS;
+  return expiry-Date.now();
+}
+
+function checkDemo(){
+  if(!myDoc)return;
+  const restante=getDemoRestante(myDoc);
+  if(restante===Infinity)return;
+  if(restante<=0){document.getElementById('demo-wall').classList.add('open');return;}
+  const h=Math.floor(restante/3600000);
+  const m=Math.floor((restante%3600000)/60000);
+  const urgente=restante<3600000;
+  const cd=document.createElement('span');
+  cd.className='demo-countdown'+(urgente?' urgente':'');
+  cd.textContent='⏱ '+(h>0?h+'h '+m+'m':m+'m');
+  // Insertar en el header visible según rol
+  const hdr=document.querySelector('#screen-owner .sidebar-header')
+    ||document.querySelector('#screen-employee .emp-header');
+  if(hdr)hdr.appendChild(cd);
+}
+
+document.getElementById('btn-demo-logout').addEventListener('click',()=>signOut(auth));
+
+// ── AUTH STATE ────────────────────────────────────────────
+onAuthStateChanged(auth,async user=>{
+  if(activeInvite&&!user)return; // No pisar la pantalla de invitación
+  document.getElementById('loading-screen').style.display='none';
+  if(user){
+    me=user;
+    const userRef=doc(db,'usuarios',user.uid);
+    let snap=await getDoc(userRef);
+    if(!snap.exists()){
+      await setDoc(userRef,{uid:user.uid,email:user.email,rol:'owner',modo:'single',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
+      const nombreNegPorDefecto=user.displayName?`Negocio de ${user.displayName}`:'Mi negocio';
+      await addDoc(collection(db,'negocios'),{nombre:nombreNegPorDefecto,tipo:'Negocio único',icon:'🏪',ownerUid:user.uid,ownerEmail:user.email,createdAt:serverTimestamp()});
+      snap=await getDoc(userRef);
+    }
+    myDoc=snap.data();myRole=myDoc.rol;
+    myFeatures=myDoc.features||{limiteNegocios:1};
+    if(myDoc.banned){toast('Cuenta suspendida','err');await signOut(auth);return;}
+    if(myRole==='owner'){
+      modoNegocio=myDoc.modo||'multi';
+      document.getElementById('owner-av').textContent=user.email.substring(0,2).toUpperCase();
+      document.getElementById('owner-av2').textContent=user.email.substring(0,2).toUpperCase();
+      document.getElementById('owner-name').textContent=user.email.split('@')[0];
+      document.getElementById('oum-email').textContent=user.email;
+      await loadOwnerData(fechaVentasSeleccionada);
+      applyModoUI();
+      mostrarSelectorSuperusuario(user.email);
+      showScreen('screen-owner');
+      renderPage('dashboard');
+      checkDemo();
+    } else if(myRole==='employee'){
+      if(myDoc.estado==='pendiente'){showScreen('screen-pending');}
+      else{
+        const negSnap=await getDoc(doc(db,'negocios',myDoc.negocioId));
+        document.getElementById('emp-neg-name').textContent=negSnap.exists()?negSnap.data().nombre:'Negocio';
+        showScreen('screen-employee');
+        startEmpVentasListener();
+        checkDemo();
+      }
+    }
+  } else {
+    me=null;myDoc=null;myRole=null;
+    if(unsubEmpVentas){unsubEmpVentas();unsubEmpVentas=null;}
+    document.getElementById('demo-wall').classList.remove('open');
+    if(!activeInvite)showScreen('screen-login');
+  }
+});
+
+// Oculta secciones que no aplican en modo "negocio único" (Mis negocios, Empleados)
+function applyModoUI(){
+  const esUnico=modoNegocio==='single';
+  document.querySelectorAll('[data-page="negocios"],[data-page="empleados"]').forEach(el=>{
+    el.style.display=esUnico?'none':'';
+  });
+}
+
+// ── SUPERUSUARIO (testing interno) ────────────────────────
+const SUPERUSER_EMAILS=['rgaraventa@gmail.com'];
+function mostrarSelectorSuperusuario(email){
+  const esSuper=SUPERUSER_EMAILS.includes(email);
+  const wrap=document.getElementById('superuser-mode-switch');
+  const wrapMob=document.getElementById('superuser-mode-switch-mob');
+  wrap.style.display=esSuper?'block':'none';
+  wrapMob.style.display=esSuper?'block':'none';
+  if(esSuper){
+    document.getElementById('superuser-modo-select').value=modoNegocio;
+    document.getElementById('superuser-modo-select-mob').value=modoNegocio;
+  }
+}
+async function cambiarModoSuperusuario(nuevoModo){
+  if(nuevoModo===modoNegocio)return;
+  try{
+    await updateDoc(doc(db,'usuarios',me.uid),{modo:nuevoModo});
+    modoNegocio=nuevoModo;
+    myDoc.modo=nuevoModo;
+    if(nuevoModo==='single'&&negocios.length===0){
+      await addDoc(collection(db,'negocios'),{nombre:'Mi negocio de prueba',tipo:'Negocio único',icon:'🏪',ownerUid:me.uid,ownerEmail:me.email,createdAt:serverTimestamp()});
+      await loadOwnerData(fechaVentasSeleccionada);
+    }
+    applyModoUI();
+    document.getElementById('superuser-modo-select').value=nuevoModo;
+    document.getElementById('superuser-modo-select-mob').value=nuevoModo;
+    toast(`Modo cambiado a: ${nuevoModo==='single'?'Negocio único':'Varias sucursales'}`,'green');
+    renderPage('dashboard');
+  }catch(err){toast('Error al cambiar de modo','err');}
+}
+document.getElementById('superuser-modo-select').addEventListener('change',e=>cambiarModoSuperusuario(e.target.value));
+document.getElementById('superuser-modo-select-mob').addEventListener('change',e=>cambiarModoSuperusuario(e.target.value));
+
+// ── MENÚ DEL AVATAR (siempre visible, incluido mobile) ────
+document.getElementById('owner-av2').addEventListener('click',e=>{
+  e.stopPropagation();
+  document.getElementById('owner-user-menu').classList.toggle('hidden');
+});
+document.addEventListener('click',e=>{
+  const menu=document.getElementById('owner-user-menu');
+  if(menu&&!menu.classList.contains('hidden')&&!menu.contains(e.target)&&e.target.id!=='owner-av2'){
+    menu.classList.add('hidden');
+  }
+});
+document.getElementById('btn-config-owner-mob').addEventListener('click',()=>{document.getElementById('owner-user-menu').classList.add('hidden');renderPage('config');});
+document.getElementById('btn-theme-owner-mob').addEventListener('click',()=>{toggleTheme();document.getElementById('owner-user-menu').classList.add('hidden');});
+document.getElementById('btn-logout-owner-mob').addEventListener('click',async()=>{
+  document.getElementById('owner-user-menu').classList.add('hidden');
+  await signOut(auth);
+});
+
+// ── AUTH ACTIONS ──────────────────────────────────────────
+document.getElementById('mode-single').addEventListener('click',()=>{
+  modoSelected='single';
+  document.getElementById('mode-single').classList.add('active');
+  document.getElementById('mode-multi').classList.remove('active');
+  document.getElementById('field-negocio-nombre').style.display='block';
+});
+document.getElementById('mode-multi').addEventListener('click',()=>{
+  modoSelected='multi';
+  document.getElementById('mode-multi').classList.add('active');
+  document.getElementById('mode-single').classList.remove('active');
+  document.getElementById('field-negocio-nombre').style.display='none';
+});
+document.getElementById('toggle-mode').addEventListener('click',()=>{
+  isRegister=!isRegister;
+  document.getElementById('btn-auth').textContent=isRegister?'Crear cuenta →':'Ingresar →';
+  document.getElementById('toggle-mode').textContent=isRegister?'Ya tengo cuenta':'Registrarse';
+  document.getElementById('auth-title').textContent=isRegister?'Crear cuenta':'Bienvenido';
+});
+document.getElementById('f-pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-auth').click();});
+
+document.getElementById('btn-auth').addEventListener('click',async()=>{
+  const email=document.getElementById('f-email').value.trim();
+  const pass=document.getElementById('f-pass').value;
+  const errEl=document.getElementById('auth-err');
+  errEl.style.display='none';errEl.classList.remove('show');
+  if(!email||!pass){errEl.textContent='Completá todos los campos';errEl.style.display='block';errEl.classList.add('show');return;}
+  if(isRegister&&modoSelected==='single'&&!document.getElementById('f-negocio-nombre').value.trim()){
+    errEl.textContent='Ingresá el nombre de tu negocio';errEl.style.display='block';errEl.classList.add('show');return;
+  }
+  const btn=document.getElementById('btn-auth');
+  btn.disabled=true;btn.textContent=isRegister?'Creando...':'Ingresando...';
+  try{
+    if(isRegister){
+      const cred=await createUserWithEmailAndPassword(auth,email,pass);
+      await setDoc(doc(db,'usuarios',cred.user.uid),{
+        uid:cred.user.uid,email,rol:'owner',modo:modoSelected,
+        banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()
+      });
+      if(modoSelected==='single'){
+        const nombreNeg=document.getElementById('f-negocio-nombre').value.trim();
+        await addDoc(collection(db,'negocios'),{nombre:nombreNeg,tipo:'Negocio único',icon:'🏪',ownerUid:cred.user.uid,ownerEmail:email,createdAt:serverTimestamp()});
+      }
+    } else {
+      await signInWithEmailAndPassword(auth,email,pass);
+    }
+  } catch(e){
+    const msgs={"auth/user-not-found":"No existe cuenta con ese email.","auth/wrong-password":"Contraseña incorrecta.","auth/email-already-in-use":"Ya existe cuenta con ese email.","auth/weak-password":"Mínimo 6 caracteres.","auth/invalid-credential":"Email o contraseña incorrectos."};
+    errEl.textContent=msgs[e.code]||'Error. Intentá de nuevo.';
+    errEl.style.display='block';errEl.classList.add('show');
+    btn.disabled=false;btn.textContent=isRegister?'Crear cuenta →':'Ingresar →';
+  }
+});
+
+document.getElementById('btn-pending-logout').addEventListener('click',()=>signOut(auth));
+document.getElementById('btn-logout-owner').addEventListener('click',()=>signOut(auth));
+document.getElementById('btn-logout-emp').addEventListener('click',()=>signOut(auth));
+document.getElementById('btn-theme').addEventListener('click',toggleTheme);
+document.getElementById('btn-theme-emp').addEventListener('click',toggleTheme);
+
+// ── OWNER: CARGAR DATOS ───────────────────────────────────
+let fechaVentasSeleccionada=null; // null = hoy
+
+async function loadOwnerData(fecha=null){
+  const f=fecha||hoy();
+  const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
+  negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
+  ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
+  empleados=empSnap.docs.map(d=>({id:d.id,...d.data()}));
+  try{
+    const gastosSnap=await getDocs(query(collection(db,'gastos'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
+    gastos=gastosSnap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    console.error('Error al cargar gastos:',e);
+    gastos=[];
+  }
+  updPendBadge();
+}
+
+function updPendBadge(){
+  const n=empleados.filter(e=>e.estado==='pendiente').length;
+  const sb=document.getElementById('sb-pend-badge');
+  const mob=document.getElementById('mob-pend-badge');
+  const tp=document.getElementById('topbar-pend');
+  if(n>0){sb.textContent=n;sb.classList.add('show');mob.textContent=n;mob.classList.add('show');tp.textContent=`⏳ ${n} pendiente${n>1?'s':''}`;tp.classList.add('show');}
+  else{sb.classList.remove('show');mob.classList.remove('show');tp.classList.remove('show');}
+}
+
+// ── OWNER: NAV ────────────────────────────────────────────
+const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',cierre:'Cierre de caja',config:'Configuración'};
+
+function renderPage(page){
+  // Si había una fecha distinta a hoy seleccionada en Ventas y se navega a otra sección, volver a hoy
+  if(page!=='ventas'&&fechaVentasSeleccionada!==null){
+    fechaVentasSeleccionada=null;
+    loadOwnerData().then(()=>{}); // recarga en segundo plano, no bloquea la navegación
+  }
+  currentPage=page;
+  document.querySelectorAll('.nav-item[data-page],.mob-item[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
+  document.querySelectorAll('.page[id^=page-]').forEach(p=>p.style.display='none');
+  document.getElementById(`page-${page}`).style.display='block';
+  document.getElementById('owner-page-title').textContent=PAGE_TITLES[page]||'';
+  document.getElementById('topbar-money-anim').style.display=page==='dashboard'?'block':'none';
+  if(page==='dashboard')renderDashboard();
+  else if(page==='negocios')renderNegocios();
+  else if(page==='ventas')renderVentas();
+  else if(page==='empleados')renderEmpleados();
+  else if(page==='gastos')renderGastos();
+  else if(page==='cierre')renderCierre();
+  else if(page==='config')renderConfig();
+}
+
+document.querySelectorAll('.nav-item[data-page],.mob-item[data-page]').forEach(el=>el.addEventListener('click',()=>renderPage(el.dataset.page)));
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDashboard(){
+  const el=document.getElementById('page-dashboard');
+  const vh=ventas.filter(v=>v.fecha===hoy());
+  const total=vh.reduce((a,v)=>a+v.importe,0);
+  const ef=vh.filter(v=>v.medio==='efectivo').reduce((a,v)=>a+v.importe,0);
+  const mp=vh.filter(v=>v.medio==='mp').reduce((a,v)=>a+v.importe,0);
+  const deb=vh.filter(v=>v.medio==='debito').reduce((a,v)=>a+v.importe,0);
+  const cred=vh.filter(v=>v.medio==='credito').reduce((a,v)=>a+v.importe,0);
+  const gh=gastos.filter(g=>g.fecha===hoy());
+  const totalGastos=gh.reduce((a,g)=>a+g.importe,0);
+  el.innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(total)}</div><div class="kpi-label">Total del día</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(ef)}</div><div class="kpi-label">En caja</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">📱</span><span class="kpi-badge mp">MP</span></div><div class="kpi-value" style="font-size:22px;color:var(--mp)">${fmtARS(mp)}</div><div class="kpi-label">Mercado Pago</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(deb)}</div><div class="kpi-label">Tarjeta débito</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge" style="background:#f3e8ff;color:#a855f7">Crédito</span></div><div class="kpi-value" style="font-size:22px;color:#a855f7">${fmtARS(cred)}</div><div class="kpi-label">Tarjeta crédito</div></div>
+      <div class="kpi-card d-ver-gastos" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">🧮</span><span class="kpi-badge" style="background:#fee2e2;color:var(--danger)">Gastos</span></div><div class="kpi-value" style="font-size:22px;color:var(--danger)">${fmtARS(totalGastos)}</div><div class="kpi-label">Gastos del día</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:${modoNegocio==='single'?'1fr':'1fr 1fr'};gap:20px">
+      ${modoNegocio==='single'?'':`<div>
+        <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=vn.reduce((a,v)=>a+v.importe,0);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo)}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
+        </div>
+      </div>`}
+      <div>
+        <div class="sec-header"><span class="sec-title">Últimas ventas</span><button class="btn-sm" id="d-ver-ven">Ver todas →</button></div>
+        <div class="ventas-list">${vh.slice(0,4).map(v=>ventaHTML(v,true)).join('')||emptyHTML('🧾','Sin ventas hoy')}</div>
+      </div>
+    </div>`;
+  el.querySelector('#d-ver-neg')?.addEventListener('click',()=>renderPage('negocios'));
+  el.querySelector('#d-ver-ven')?.addEventListener('click',()=>renderPage('ventas'));
+  el.querySelector('.d-ver-gastos')?.addEventListener('click',()=>renderPage('gastos'));
+  el.querySelectorAll('.d-neg-card').forEach(c=>c.addEventListener('click',()=>renderPage('ventas')));
+}
+
+// ── NEGOCIOS ──────────────────────────────────────────────
+function renderNegocios(){
+  const el=document.getElementById('page-negocios');
+  el.innerHTML=`
+    <div class="sec-header"><span class="sec-title" style="font-size:17px">Mis negocios</span><button class="btn-sm gold" id="btn-add-neg">＋ Agregar negocio</button></div>
+    <div class="negocios-grid">
+      ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá tu primer negocio'):negocios.map(n=>{
+        const vn=ventas.filter(v=>v.negocioId===n.id&&v.fecha===hoy());
+        const tn=vn.reduce((a,v)=>a+v.importe,0);
+        const emps=empleados.filter(e=>e.negocioId===n.id&&e.estado==='aprobado').length;
+        return`<div class="negocio-card"><div class="neg-header"><span class="neg-icon">${sanitizeHTML(n.icon||'🏪')}</span><div class="live-dot-wrap"><div class="live-dot"></div>En vivo</div></div><div class="neg-nombre">${sanitizeHTML(n.nombre)}</div><div class="neg-tipo">${sanitizeHTML(n.tipo)} · ${emps} empleado${emps!==1?'s':''}</div><div class="neg-stats"><div class="neg-stat"><div class="neg-stat-val">${fmtARS(tn)}</div><div class="neg-stat-lbl">Total hoy</div></div><div class="neg-stat"><div class="neg-stat-val">${vn.length}</div><div class="neg-stat-lbl">Ventas</div></div></div></div>`;
+      }).join('')}
+    </div>`;
+  el.querySelector('#btn-add-neg')?.addEventListener('click',()=>document.getElementById('modal-negocio').classList.add('open'));
+}
+
+// ── VENTAS ────────────────────────────────────────────────
+function renderVentas(){
+  const el=document.getElementById('page-ventas');
+  const fechaMostrada=fechaVentasSeleccionada||hoy();
+  const esHoy=fechaMostrada===hoy();
+  const vh=ventas; // ya viene filtrado por la fecha cargada en loadOwnerData
+  el.innerHTML=`
+    <div class="sec-header" style="flex-wrap:wrap;gap:10px">
+      <span class="sec-title" style="font-size:17px">Ventas — ${new Date(fechaMostrada+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}${esHoy?' (hoy)':''}</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="date" id="ventas-fecha-filtro" value="${fechaMostrada}" max="${hoy()}" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px"/>
+        ${!esHoy?`<button class="btn-sm" id="btn-ventas-hoy">Volver a hoy</button>`:''}
+        ${esHoy?`<button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button>`:''}
+      </div>
+    </div>
+    ${vh.length===0?emptyHTML('🧾',esHoy?'Sin ventas hoy':'Sin ventas ese día',esHoy?'Las ventas aparecen acá en tiempo real':''):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`}`;
+  el.querySelector('#btn-nueva-venta')?.addEventListener('click',()=>openModalVentaOwner());
+  el.querySelector('#ventas-fecha-filtro')?.addEventListener('change',async e=>{
+    const nuevaFecha=e.target.value;
+    if(!nuevaFecha)return;
+    fechaVentasSeleccionada=nuevaFecha===hoy()?null:nuevaFecha;
+    await loadOwnerData(fechaVentasSeleccionada);
+    renderVentas();
+  });
+  el.querySelector('#btn-ventas-hoy')?.addEventListener('click',async()=>{
+    fechaVentasSeleccionada=null;
+    await loadOwnerData();
+    renderVentas();
+  });
+}
+
+// ── EMPLEADOS ─────────────────────────────────────────────
+function renderEmpleados(){
+  const el=document.getElementById('page-empleados');
+  const pend=empleados.filter(e=>e.estado==='pendiente');
+  const apro=empleados.filter(e=>e.estado==='aprobado');
+
+  const inviteSections=negocios.map(n=>`
+    <div class="invite-section">
+      <div class="invite-section-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)}</div>
+      <div class="invite-banner-box">
+        <div class="invite-banner-icon">🔗</div>
+        <div><div class="invite-banner-title">Invitar empleado</div><div class="invite-banner-sub">Generá un link válido por 24hs</div></div>
+      </div>
+      <div id="invite-wrap-${n.id}">
+        <button class="btn-primary" style="margin-bottom:0;font-size:14px" data-gen-invite="${n.id}">Generar link de invitación</button>
+      </div>
+    </div>`).join('');
+
+  function sec(title,color,items,withActions){
+    if(!items.length)return'';
+    return`<div style="font-size:12px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:20px">${title}</div>
+    <div class="empleados-list">${items.map(e=>`<div class="emp-row">
+      <div class="emp-avatar">${sanitizeHTML((e.email||'?').substring(0,2).toUpperCase())}</div>
+      <div class="emp-info"><div class="emp-nombre">${sanitizeHTML(e.email||'—')}</div><div class="emp-sub">${sanitizeHTML(negocios.find(n=>n.id===e.negocioId)?.nombre||'—')}</div></div>
+      <div class="emp-estado ${e.estado==='aprobado'?'estado-ok':'estado-pend'}">${e.estado==='aprobado'?'✓ Aprobado':'⏳ Pendiente'}</div>
+      ${withActions?`<div class="emp-actions"><button class="btn-sm success" data-aprobar="${e.id}">Aprobar</button><button class="btn-sm danger" data-rechazar="${e.id}">Rechazar</button></div>`:''}
+    </div>`).join('')}</div>`;
+  }
+
+  el.innerHTML=`
+    ${inviteSections}
+    ${pend.length?`<div style="background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">⏳</span><div><div style="font-size:14px;font-weight:700;color:var(--warn)">${pend.length} solicitud${pend.length>1?'es':''} pendiente${pend.length>1?'s':''}</div><div style="font-size:12px;color:var(--warn)">Aprobá o rechazá para que puedan operar</div></div></div>`:''}
+    ${sec('⏳ Esperando aprobación','var(--warn)',pend,true)}
+    ${sec('✅ Activos','var(--green)',apro,false)}
+    ${!pend.length&&!apro.length&&!negocios.length?emptyHTML('👥','Sin empleados','Primero creá un negocio'):''}`;
+
+  el.querySelectorAll('[data-aprobar]').forEach(btn=>btn.addEventListener('click',()=>aprobar(btn.dataset.aprobar)));
+  el.querySelectorAll('[data-rechazar]').forEach(btn=>btn.addEventListener('click',()=>rechazar(btn.dataset.rechazar)));
+
+  el.querySelectorAll('[data-gen-invite]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const negId=btn.dataset.genInvite;
+      btn.disabled=true;btn.textContent='Generando...';
+      try{
+        const expiry=new Date(Date.now()+24*60*60*1000);
+        const code=Math.random().toString(36).substring(2,10)+Date.now().toString(36);
+        await setDoc(doc(db,'invitaciones',code),{negocioId:negId,ownerUid:me.uid,expiry:Timestamp.fromDate(expiry),usado:false,createdAt:serverTimestamp()});
+        const neg=negocios.find(n=>n.id===negId);
+        const baseUrl=window.location.origin+window.location.pathname;
+        const link=`${baseUrl}?invite=${code}`;
+        const wrap=document.getElementById(`invite-wrap-${negId}`);
+        const horaExp=expiry.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+        const waText=encodeURIComponent(`¡Hola! Te invito a unirte a PuntoVenta como empleado en ${neg?.nombre||'el negocio'}. El link es válido por 24 horas:\n${link}`);
+        wrap.innerHTML=`
+          <div class="invite-row">
+            <div class="invite-link-box">${link}</div>
+            <button class="btn-copy-link" data-copy="${link}">📋 Copiar</button>
+          </div>
+          <button class="btn-wa-invite" data-wa="${waText}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.854L.055 23.454a.75.75 0 0 0 .919.919l5.6-1.469A11.951 11.951 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.951 9.951 0 0 1-5.073-1.386l-.361-.214-3.754.984.998-3.648-.235-.374A9.956 9.956 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            Compartir por WhatsApp
+          </button>
+          <div class="invite-expiry">⏰ Vence hoy a las ${horaExp}</div>
+          <div style="margin-top:10px"><button class="btn-primary" style="background:var(--surface2);color:var(--muted);border:1.5px solid var(--border);box-shadow:none;font-size:13px" data-gen-invite="${negId}">🔄 Generar nuevo link</button></div>`;
+        wrap.querySelector('[data-copy]')?.addEventListener('click',e=>{
+          navigator.clipboard.writeText(e.target.dataset.copy).then(()=>toast('Link copiado','ok')).catch(()=>{const ta=document.createElement('textarea');ta.value=e.target.dataset.copy;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Link copiado','ok');});
+        });
+        wrap.querySelector('[data-wa]')?.addEventListener('click',e=>{window.open(`https://wa.me/?text=${e.target.closest('[data-wa]').dataset.wa}`,'_blank');});
+        wrap.querySelector('[data-gen-invite]')?.addEventListener('click',()=>renderEmpleados());
+      }catch(e){toast('Error al generar el link','err');btn.disabled=false;btn.textContent='Generar link de invitación';}
+    });
+  });
+}
+
+async function aprobar(id){
+  const emp=empleados.find(e=>e.id===id);if(!emp)return;
+  await updateDoc(doc(db,'empleados',id),{estado:'aprobado'});
+  await updateDoc(doc(db,'usuarios',emp.uid),{estado:'aprobado'});
+  emp.estado='aprobado';
+  toast('Empleado aprobado','green');renderEmpleados();updPendBadge();
+}
+async function rechazar(id){
+  const idx=empleados.findIndex(e=>e.id===id);if(idx<0)return;
+  await deleteDoc(doc(db,'empleados',id));
+  await updateDoc(doc(db,'usuarios',empleados[idx].uid),{estado:'rechazado'});
+  empleados.splice(idx,1);
+  toast('Empleado rechazado');renderEmpleados();updPendBadge();
+}
+
+// ── GASTOS ────────────────────────────────────────────────
+function renderGastos(){
+  const el=document.getElementById('page-gastos');
+  if(!negocios.length){el.innerHTML=emptyHTML('🧮','Sin negocios','Creá tu negocio primero');return;}
+  const total=gastos.reduce((a,g)=>a+g.importe,0);
+  el.innerHTML=`
+    <div class="cierre-card" style="margin-bottom:16px">
+      <div class="cierre-title">＋ Nuevo gasto</div>
+      <div class="field" style="margin-bottom:10px">
+        <input type="text" id="gasto-desc" placeholder="Descripción del gasto (ej: flete, insumos, luz...)" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <input type="number" id="gasto-importe" placeholder="$ 0" min="0" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
+      </div>
+      <button class="btn-sm gold" id="btn-add-gasto" style="width:100%;justify-content:center;padding:12px">＋ Agregar gasto</button>
+    </div>
+    <div class="sec-header"><span class="sec-title" style="font-size:17px">Gastos de hoy</span></div>
+    ${gastos.length===0?emptyHTML('🧮','Sin gastos hoy'):`
+      <div class="cierre-card" style="padding:0;overflow:hidden">
+        ${gastos.map(g=>`<div class="cierre-row" style="padding:14px 20px"><span class="cierre-label" style="color:var(--text)">${sanitizeHTML(g.descripcion)}<div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitizeHTML(g.hora||'')}</div></span><span style="display:flex;align-items:center;gap:10px"><span class="cierre-val" style="color:var(--danger)">-${fmtARS(g.importe)}</span><button data-del-gasto="${g.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">🗑️</button></span></div>`).join('')}
+        <div class="cierre-row cierre-total" style="padding:14px 20px;background:var(--surface2)"><span class="cierre-label">Total gastos del día</span><span class="cierre-val" style="color:var(--danger)">-${fmtARS(total)}</span></div>
+      </div>`}`;
+  el.querySelector('#btn-add-gasto').addEventListener('click',agregarGasto);
+  el.querySelectorAll('[data-del-gasto]').forEach(btn=>btn.addEventListener('click',()=>eliminarGasto(btn.dataset.delGasto)));
+}
+
+async function agregarGasto(){
+  const descInput=document.getElementById('gasto-desc');
+  const importeInput=document.getElementById('gasto-importe');
+  const descripcion=descInput.value.trim();
+  const importe=parseFloat(importeInput.value);
+  if(!descripcion){toast('Ingresá una descripción','err');return;}
+  if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
+  const btn=document.getElementById('btn-add-gasto');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const negocioActivo=negocios[0];
+    await addDoc(collection(db,'gastos'),{
+      negocioId:negocioActivo.id,ownerUid:me.uid,
+      descripcion,importe,
+      fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
+    });
+    toast('Gasto registrado','green');
+    descInput.value='';importeInput.value='';
+    await loadOwnerData();
+    renderGastos();
+  }catch(e){
+    console.error('Error al guardar gasto:',e);
+    toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
+  }
+  btn.disabled=false;btn.textContent='＋ Agregar gasto';
+}
+
+async function eliminarGasto(gastoId){
+  if(!confirm('¿Eliminar este gasto?'))return;
+  try{
+    await deleteDoc(doc(db,'gastos',gastoId));
+    toast('Gasto eliminado');
+    await loadOwnerData();
+    renderGastos();
+  }catch(e){
+    console.error('Error al eliminar gasto:',e);
+    toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
+  }
+}
+
+// ── CIERRE ─────────────────────────────────────────────────
+function renderCierre(){
+  const el=document.getElementById('page-cierre');
+  if(!negocios.length){el.innerHTML=emptyHTML('🔒','Sin negocios');return;}
+  const vh=ventas.filter(v=>v.fecha===hoy());
+  el.innerHTML=negocios.map(n=>{
+    const vn=vh.filter(v=>v.negocioId===n.id);
+    const ef=vn.filter(v=>v.medio==='efectivo').reduce((a,v)=>a+v.importe,0);
+    const mp=vn.filter(v=>v.medio==='mp').reduce((a,v)=>a+v.importe,0);
+    const deb=vn.filter(v=>v.medio==='debito').reduce((a,v)=>a+v.importe,0);
+    const cred=vn.filter(v=>v.medio==='credito').reduce((a,v)=>a+v.importe,0);
+    return`<div class="cierre-card"><div class="cierre-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)} — Resumen del día</div>
+      <div class="cierre-row"><span class="cierre-label">💵 Efectivo</span><span class="cierre-val">${fmtARS(ef)}</span></div>
+      <div class="cierre-row"><span class="cierre-label">📱 Mercado Pago</span><span class="cierre-val" style="color:var(--mp)">${fmtARS(mp)}</span></div>
+      <div class="cierre-row"><span class="cierre-label">💳 Débito</span><span class="cierre-val" style="color:var(--blue)">${fmtARS(deb)}</span></div>
+      <div class="cierre-row"><span class="cierre-label">💰 Crédito</span><span class="cierre-val" style="color:#a855f7">${fmtARS(cred)}</span></div>
+      <div class="cierre-row cierre-total"><span class="cierre-label">Total del día</span><span class="cierre-val">${fmtARS(ef+mp+deb+cred)}</span></div>
+      <button class="btn-sm gold" style="width:100%;justify-content:center;margin-top:16px;padding:12px">🔒 Cerrar caja del día</button>
+    </div>`;
+  }).join('');
+}
+
+// ── CONFIGURACIÓN ──────────────────────────────────────────
+function renderConfig(){
+  const el=document.getElementById('page-config');
+  if(!negocios.length){el.innerHTML=emptyHTML('⚙️','Sin negocios para configurar');return;}
+  el.innerHTML=`
+    <div class="sec-header"><span class="sec-title" style="font-size:17px">Datos del negocio</span></div>
+    ${negocios.map(n=>`
+      <div class="cierre-card" style="margin-bottom:14px">
+        <div class="field"><label>Nombre del negocio</label>
+          <input class="config-nombre-input" data-neg-id="${n.id}" value="${sanitizeHTML(n.nombre)}" placeholder="Nombre del negocio" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
+        </div>
+        ${modoNegocio==='multi'?`<div class="field" style="margin-top:10px"><label>Tipo</label>
+          <select class="config-tipo-select" data-neg-id="${n.id}" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px">
+            ${['Kiosco','Ferretería','Almacén','Verdulería','Panadería','Farmacia','Negocio único','Otro'].map(t=>`<option${n.tipo===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>`:''}
+        <button class="btn-sm gold" data-save-neg="${n.id}" style="width:100%;justify-content:center;margin-top:14px;padding:11px">💾 Guardar cambios</button>
+      </div>
+    `).join('')}`;
+  el.querySelectorAll('[data-save-neg]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const negId=btn.dataset.saveNeg;
+      const nombreInput=el.querySelector(`.config-nombre-input[data-neg-id="${negId}"]`);
+      const tipoSelect=el.querySelector(`.config-tipo-select[data-neg-id="${negId}"]`);
+      const nuevoNombre=nombreInput.value.trim();
+      if(!nuevoNombre){toast('El nombre no puede estar vacío','err');return;}
+      btn.disabled=true;btn.textContent='Guardando...';
+      try{
+        const data={nombre:nuevoNombre};
+        if(tipoSelect)data.tipo=tipoSelect.value;
+        await updateDoc(doc(db,'negocios',negId),data);
+        const neg=negocios.find(n=>n.id===negId);
+        if(neg){neg.nombre=nuevoNombre;if(tipoSelect)neg.tipo=tipoSelect.value;}
+        toast('Datos guardados','green');
+      }catch(e){toast('Error al guardar','err');}
+      btn.disabled=false;btn.textContent='💾 Guardar cambios';
+    });
+  });
+}
+
+// ── MODAL NEGOCIO ─────────────────────────────────────────
+document.getElementById('btn-modal-neg-close').addEventListener('click',()=>document.getElementById('modal-negocio').classList.remove('open'));
+document.getElementById('btn-modal-neg-cancel').addEventListener('click',()=>document.getElementById('modal-negocio').classList.remove('open'));
+document.getElementById('modal-negocio').addEventListener('click',e=>{if(e.target.id==='modal-negocio')document.getElementById('modal-negocio').classList.remove('open');});
+
+// ── OWNER: NUEVA VENTA / EDITAR VENTA ─────────────────────
+let selectedMedioOwner=null;
+let ventaEditando=null; // null = nueva venta, objeto = editando esa venta
+function openModalVentaOwner(existing=null){
+  if(!existing&&negocios.length===0){toast('Primero creá tu negocio','err');return;}
+  ventaEditando=existing;
+  document.getElementById('mv-importe').value=existing?.importe||'';
+  document.getElementById('mv-desc').value=existing?.descripcion||'';
+  selectedMedioOwner=existing?.medio||null;
+  document.querySelector('#modal-venta-owner .modal-title').textContent=existing?'✏️ Editar venta':'🧾 Nueva venta';
+  document.getElementById('btn-modal-venta-save').textContent=existing?'Guardar cambios':'Registrar venta';
+  ['efectivo','mp','debito','credito'].forEach(m=>{
+    document.getElementById(`mv-m-${m}`).className=(existing&&existing.medio===m)?`medio-opt sel-${m}`:'medio-opt';
+  });
+  document.getElementById('modal-venta-owner').classList.add('open');
+}
+['efectivo','mp','debito','credito'].forEach(m=>{
+  document.getElementById(`mv-m-${m}`).addEventListener('click',()=>{
+    selectedMedioOwner=m;
+    ['efectivo','mp','debito','credito'].forEach(x=>{document.getElementById(`mv-m-${x}`).className='medio-opt';});
+    document.getElementById(`mv-m-${m}`).className=`medio-opt sel-${m}`;
+  });
+});
+document.getElementById('btn-modal-venta-close').addEventListener('click',()=>document.getElementById('modal-venta-owner').classList.remove('open'));
+document.getElementById('btn-modal-venta-cancel').addEventListener('click',()=>document.getElementById('modal-venta-owner').classList.remove('open'));
+document.getElementById('modal-venta-owner').addEventListener('click',e=>{if(e.target.id==='modal-venta-owner')document.getElementById('modal-venta-owner').classList.remove('open');});
+document.getElementById('btn-modal-venta-save').addEventListener('click',async()=>{
+  const importe=parseFloat(document.getElementById('mv-importe').value);
+  const desc=document.getElementById('mv-desc').value.trim();
+  if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
+  if(!selectedMedioOwner){toast('Elegí el medio de pago','err');return;}
+  if(!ventaEditando&&negocios.length===0){toast('No se encontró tu negocio. Recargá la página e intentá de nuevo.','err');return;}
+  const btn=document.getElementById('btn-modal-venta-save');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    if(ventaEditando){
+      await updateDoc(doc(db,'ventas',ventaEditando.id),{
+        importe,medio:selectedMedioOwner,descripcion:desc,
+        editado:true,editadoPor:me.email,editadoAt:serverTimestamp()
+      });
+      toast('Venta actualizada','green');
+    } else {
+      const negocioActivo=negocios[0]; // en modo único hay uno solo; en multi, el primero hasta que se agregue selector
+      await addDoc(collection(db,'ventas'),{
+        negocioId:negocioActivo.id,ownerUid:me.uid,
+        empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
+        importe,medio:selectedMedioOwner,descripcion:desc,
+        fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
+      });
+      toast('Venta registrada','green');
+    }
+    document.getElementById('modal-venta-owner').classList.remove('open');
+    ventaEditando=null;
+    if(myRole==='owner'){await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);}
+  }catch(e){
+    console.error('Error al guardar venta:',e);
+    toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
+  }
+  btn.disabled=false;btn.textContent=ventaEditando?'Guardar cambios':'Registrar venta';
+});
+
+async function eliminarVenta(ventaId){
+  if(!confirm('¿Eliminar esta venta? Esta acción no se puede deshacer.'))return;
+  try{
+    await deleteDoc(doc(db,'ventas',ventaId));
+    toast('Venta eliminada');
+    if(myRole==='owner'){await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);}
+  }catch(e){
+    console.error('Error al eliminar venta:',e);
+    toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
+  }
+}
+
+// Listener delegado para los botones de editar/borrar de cada venta (funciona en cualquier lista que use withActions=true)
+document.addEventListener('click',e=>{
+  const editBtn=e.target.closest('[data-edit-venta]');
+  const delBtn=e.target.closest('[data-del-venta]');
+  if(editBtn){
+    const v=ventas.find(x=>x.id===editBtn.dataset.editVenta)||empVentas.find(x=>x.id===editBtn.dataset.editVenta);
+    if(v)openModalVentaOwner(v);
+  } else if(delBtn){
+    eliminarVenta(delBtn.dataset.delVenta);
+  }
+});
+
+document.getElementById('btn-modal-neg-save').addEventListener('click',async()=>{
+  const nombre=document.getElementById('neg-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','err');return;}
+  const limite=myFeatures?.limiteNegocios??1;
+  if(negocios.length>=limite){
+    toast(`Llegaste al límite de tu plan (${limite} negocio${limite===1?'':'s'}). Consultanos para ampliarlo.`,'err');
+    document.getElementById('modal-negocio').classList.remove('open');
+    return;
+  }
+  const tipo=document.getElementById('neg-tipo').value;
+  const icons={"Kiosco":"🏪","Ferretería":"🔧","Almacén":"🛒","Verdulería":"🥦","Panadería":"🥖","Farmacia":"💊","Otro":"🏬"};
+  const btn=document.getElementById('btn-modal-neg-save');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const ref=await addDoc(collection(db,'negocios'),{nombre,tipo,icon:icons[tipo]||'🏬',ownerUid:me.uid,ownerEmail:me.email,createdAt:serverTimestamp()});
+    negocios.push({id:ref.id,nombre,tipo,icon:icons[tipo]||'🏬',ownerUid:me.uid,ownerEmail:me.email});
+    document.getElementById('modal-negocio').classList.remove('open');
+    document.getElementById('neg-nombre').value='';
+    toast(`${nombre} agregado`,'green');renderNegocios();
+  }catch(e){toast('Error al guardar','err');}
+  btn.disabled=false;btn.textContent='Agregar negocio';
+});
+
+// ── EMPLOYEE: VENTAS ──────────────────────────────────────
+function startEmpVentasListener(){
+  if(!myDoc?.negocioId)return;
+  const q=query(collection(db,'ventas'),where('empleadoUid','==',me.uid),where('fecha','==',hoy()),orderBy('createdAt','desc'));
+  unsubEmpVentas=onSnapshot(q,snap=>{
+    empVentas=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const total=empVentas.reduce((a,v)=>a+v.importe,0);
+    document.getElementById('emp-total').textContent=fmtARS(total);
+    const list=document.getElementById('emp-ventas');
+    list.innerHTML=empVentas.length===0?emptyHTML('🧾','Sin ventas todavía','Registrá tu primera venta arriba'):`<div class="ventas-list">${empVentas.map(v=>ventaHTML(v,true)).join('')}</div>`;
+  });
+}
+
+['efectivo','mp','debito','credito'].forEach(m=>{
+  document.getElementById(`m-${m}`).addEventListener('click',()=>{
+    selectedMedio=m;
+    ['efectivo','mp','debito','credito'].forEach(x=>{document.getElementById(`m-${x}`).className='medio-opt';});
+    document.getElementById(`m-${m}`).className=`medio-opt sel-${m}`;
+  });
+});
+
+document.getElementById('btn-venta').addEventListener('click',async()=>{
+  const importe=parseFloat(document.getElementById('emp-importe').value);
+  const desc=document.getElementById('emp-desc').value.trim();
+  if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
+  if(!selectedMedio){toast('Elegí el medio de pago','err');return;}
+  try{
+    await addDoc(collection(db,'ventas'),{
+      negocioId:myDoc.negocioId,ownerUid:myDoc.ownerUid,
+      empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
+      importe,medio:selectedMedio,descripcion:desc,
+      fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
+    });
+    document.getElementById('emp-importe').value='';
+    document.getElementById('emp-desc').value='';
+    selectedMedio=null;
+    ['efectivo','mp','debito','credito'].forEach(m=>document.getElementById(`m-${m}`).className='medio-opt');
+    toast('Venta registrada','green');
+  }catch(e){toast('Error al registrar','err');}
+});
+
+// ── GOOGLE LOGIN ──────────────────────────────────────────
+document.getElementById("btn-google").addEventListener("click",async()=>{
+  const btn=document.getElementById("btn-google");
+  btn.disabled=true;btn.textContent="Conectando...";
+  try{
+    const provider=new GoogleAuthProvider();
+    await signInWithPopup(auth,provider);
+  }catch(e){
+    console.error(e);
+    const errEl=document.getElementById("auth-err");
+    if(errEl){errEl.textContent="Error al iniciar con Google. Intentá de nuevo.";errEl.style.display="block";errEl.classList.add("show");}
+  }
+  btn.disabled=false;
+});
+</script>
+
+<!--
+FIRESTORE SECURITY RULES
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -41,3 +1698,14 @@ service cloud.firestore {
     }
   }
 }
+
+ÍNDICES COMPUESTOS
+1. negocios | ownerUid ASC, createdAt DESC
+2. ventas | ownerUid ASC, fecha ASC, createdAt DESC
+3. ventas | empleadoUid ASC, fecha ASC, createdAt DESC
+4. empleados | ownerUid ASC, estado ASC
+5. usuarios | email ASC, rol ASC
+6. gastos | ownerUid ASC, fecha ASC, createdAt DESC
+-->
+</body>
+</html>
