@@ -452,6 +452,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
     <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
     <div class="nav-item" data-page="gastos"><span class="nav-icon">🧮</span>Gastos</div>
+    <div class="nav-item" data-page="clientes"><span class="nav-icon">💳</span>Clientes<span class="nav-badge" id="sb-morosidad-badge">0</span></div>
     <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
     <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
     <div class="sb-bottom">
@@ -508,6 +509,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div id="page-ventas" class="page" style="display:none"></div>
     <div id="page-empleados" class="page" style="display:none"></div>
     <div id="page-gastos" class="page" style="display:none"></div>
+    <div id="page-clientes" class="page" style="display:none"></div>
     <div id="page-cierre" class="page" style="display:none"></div>
     <div id="page-config" class="page" style="display:none"></div>
   </div>
@@ -518,6 +520,7 @@ input,select,button,textarea{font-family:var(--font)}
       <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Ventas</div>
       <div class="mob-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge" id="mob-pend-badge">0</span></div>
       <div class="mob-item" data-page="gastos"><span class="mob-icon">🧮</span>Gastos</div>
+      <div class="mob-item" data-page="clientes"><span class="mob-icon">💳</span>Clientes<span class="mob-badge" id="mob-morosidad-badge">0</span></div>
       <div class="mob-item" data-page="cierre"><span class="mob-icon">🔒</span>Cierre</div>
     </div>
   </div>
@@ -647,6 +650,84 @@ input,select,button,textarea{font-family:var(--font)}
   </div>
 </div>
 
+<!-- MODAL CLIENTE (alta/edición) -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="mc-title">💳 Nuevo cliente</span>
+      <button class="modal-close" id="btn-modal-cliente-close">✕</button>
+    </div>
+    <div class="field"><label>Nombre *</label><input id="mc-nombre" placeholder="Juan Pérez"/></div>
+    <div class="field"><label>Teléfono</label><input id="mc-telefono" placeholder="11 2345 6789"/></div>
+    <div class="field"><label>Nota</label><input id="mc-nota" placeholder="Ej: paga los gastos de luz cada quincena"/></div>
+    <div id="mc-cuotas-wrap">
+      <div class="field"><label>Monto por cuota *</label><input id="mc-monto" type="number" placeholder="5000"/></div>
+      <div class="field"><label>Frecuencia *</label>
+        <select id="mc-frecuencia">
+          <option value="semanal">Semanal</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="mensual" selected>Mensual</option>
+          <option value="unica">Pago único</option>
+        </select>
+      </div>
+      <div class="field"><label>Primer vencimiento *</label><input id="mc-fecha" type="date"/></div>
+      <div class="field" id="mc-cantidad-wrap"><label>Cantidad de cuotas a generar *</label><input id="mc-cantidad" type="number" min="1" max="36" value="1"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btn-modal-cliente-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-modal-cliente-save">Guardar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GENERAR MÁS CUOTAS -->
+<div class="modal-overlay" id="modal-mas-cuotas">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">＋ Generar más cuotas</span>
+      <button class="modal-close" id="btn-modal-mc2-close">✕</button>
+    </div>
+    <div class="field"><label>Monto por cuota *</label><input id="mc2-monto" type="number" placeholder="5000"/></div>
+    <div class="field"><label>Frecuencia *</label>
+      <select id="mc2-frecuencia">
+        <option value="semanal">Semanal</option>
+        <option value="quincenal">Quincenal</option>
+        <option value="mensual" selected>Mensual</option>
+        <option value="unica">Pago único</option>
+      </select>
+    </div>
+    <div class="field"><label>Primer vencimiento *</label><input id="mc2-fecha" type="date"/></div>
+    <div class="field" id="mc2-cantidad-wrap"><label>Cantidad de cuotas *</label><input id="mc2-cantidad" type="number" min="1" max="36" value="1"/></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btn-modal-mc2-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-modal-mc2-save">Generar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COBRAR CUOTA -->
+<div class="modal-overlay" id="modal-cobrar">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">💰 Cobrar cuota</span>
+      <button class="modal-close" id="btn-modal-cobrar-close">✕</button>
+    </div>
+    <div id="cobrar-info" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
+    <div class="field"><label>Medio de pago *</label>
+      <div style="display:flex;gap:8px">
+        <div class="medio-opt" id="cb-m-efectivo" style="flex:1;text-align:center;cursor:pointer">💵 Efectivo</div>
+        <div class="medio-opt" id="cb-m-mp" style="flex:1;text-align:center;cursor:pointer">📱 MP</div>
+        <div class="medio-opt" id="cb-m-debito" style="flex:1;text-align:center;cursor:pointer">💳 Débito</div>
+        <div class="medio-opt" id="cb-m-credito" style="flex:1;text-align:center;cursor:pointer">💰 Crédito</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btn-modal-cobrar-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-modal-cobrar-save">Confirmar cobro</button>
+    </div>
+  </div>
+</div>
+
 <!-- DEMO VENCIDA -->
 <div id="demo-wall">
   <div class="demo-card">
@@ -689,7 +770,8 @@ let activeInvite=_inviteCode?{code:_inviteCode,negocioId:null,ownerUid:null,load
 
 // ── ESTADO ────────────────────────────────────────────────
 let me=null, myDoc=null, myRole=null, myFeatures=null;
-let negocios=[], ventas=[], empleados=[], empVentas=[], gastos=[];
+let negocios=[], ventas=[], empleados=[], empVentas=[], gastos=[], clientes=[];
+let clienteEditando=null, masCuotasClienteId=null, cobrarCtx=null, selectedMedioCobrar=null;
 let currentPage="dashboard", selectedMedio=null;
 let isRegister=false, modoSelected="single"; // single | multi
 let modoNegocio="multi"; // se setea tras login según userDoc.modo
@@ -876,6 +958,10 @@ async function loadAdminUsers(){
         <span style="font-size:12px;color:var(--muted)">Límite de negocios:</span>
         <input type="number" min="1" max="20" value="${u.features?.limiteNegocios??1}" style="width:56px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font)" data-lim-uid="${d.id}"/>
         <button class="btn-alim" data-uid="${d.id}">💾 Guardar</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+        <span style="font-size:12px;color:var(--muted)">Plus Morosidad:</span>
+        <button class="btn-amoros" data-uid="${d.id}" data-val="${u.features?.morosidad?'off':'on'}">${u.features?.morosidad?'✅ Activado (tocá para desactivar)':'🔒 Desactivado (tocá para activar)'}</button>
       </div>`:''}
     </div>`;
   }).join('');
@@ -888,7 +974,7 @@ document.getElementById('admin-negocios-list').addEventListener('click',async e=
 document.getElementById('admin-users-list').addEventListener('click',async e=>{
   const ban=e.target.closest('.btn-aban');const unban=e.target.closest('.btn-aunban');
   const ext=e.target.closest('.btn-aext');const act=e.target.closest('.btn-aact');
-  const lim=e.target.closest('.btn-alim');
+  const lim=e.target.closest('.btn-alim');const moros=e.target.closest('.btn-amoros');
   if(ban&&confirm('¿Banear este usuario?')){await updateDoc(doc(db,'usuarios',ban.dataset.uid),{banned:true});toast('Usuario baneado');await loadAdminUsers();}
   if(unban){await updateDoc(doc(db,'usuarios',unban.dataset.uid),{banned:false});toast('Usuario desbaneado');await loadAdminUsers();}
   if(ext){
@@ -906,10 +992,19 @@ document.getElementById('admin-users-list').addEventListener('click',async e=>{
   if(lim){
     const nuevoLimite=parseInt(document.querySelector(`input[data-lim-uid="${lim.dataset.uid}"]`)?.value)||1;
     try{
-      await updateDoc(doc(db,'usuarios',lim.dataset.uid),{features:{limiteNegocios:nuevoLimite}});
+      await updateDoc(doc(db,'usuarios',lim.dataset.uid),{'features.limiteNegocios':nuevoLimite});
       toast(`Límite actualizado a ${nuevoLimite}`,'green');
-      if(me&&me.uid===lim.dataset.uid)myFeatures={limiteNegocios:nuevoLimite};
+      if(me&&me.uid===lim.dataset.uid){myFeatures={...myFeatures,limiteNegocios:nuevoLimite};applyModoUI();}
     }catch(e){toast('Error al actualizar límite','err');}
+  }
+  if(moros){
+    const activar=moros.dataset.val==='on';
+    try{
+      await updateDoc(doc(db,'usuarios',moros.dataset.uid),{'features.morosidad':activar});
+      toast(activar?'Plus Morosidad activado':'Plus Morosidad desactivado','green');
+      if(me&&me.uid===moros.dataset.uid){myFeatures={...myFeatures,morosidad:activar};applyModoUI();}
+      await loadAdminUsers();
+    }catch(e){toast('Error al actualizar','err');}
   }
 });
 document.getElementById('atab-negocios').addEventListener('click',()=>{
@@ -1012,6 +1107,9 @@ onAuthStateChanged(auth,async user=>{
 function tieneMultiNegocio(){
   return (myFeatures?.limiteNegocios??1) > 1;
 }
+function tieneMorosidad(){
+  return myFeatures?.morosidad===true;
+}
 
 function applyModoUI(){
   const esUnico=modoNegocio==='single';
@@ -1020,6 +1118,9 @@ function applyModoUI(){
   });
   document.querySelectorAll('[data-page="empleados"]').forEach(el=>{
     el.style.display=esUnico?'none':'';
+  });
+  document.querySelectorAll('[data-page="clientes"]').forEach(el=>{
+    el.style.display=tieneMorosidad()?'':'none';
   });
 }
 
@@ -1152,7 +1253,15 @@ async function loadOwnerData(fecha=null){
     console.error('Error al cargar gastos:',e);
     gastos=[];
   }
+  try{
+    const clientesSnap=await getDocs(query(collection(db,'clientes'),where('ownerUid','==',me.uid),orderBy('createdAt','desc')));
+    clientes=clientesSnap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    console.error('Error al cargar clientes:',e);
+    clientes=[];
+  }
   updPendBadge();
+  updMorosidadBadge();
 }
 
 function updPendBadge(){
@@ -1164,8 +1273,17 @@ function updPendBadge(){
   else{sb.classList.remove('show');mob.classList.remove('show');tp.classList.remove('show');}
 }
 
+function updMorosidadBadge(){
+  const sb=document.getElementById('sb-morosidad-badge');
+  const mob=document.getElementById('mob-morosidad-badge');
+  if(!tieneMorosidad()){sb.classList.remove('show');mob.classList.remove('show');return;}
+  const n=clientes.filter(cl=>estadoCliente(cl).color==='red').length;
+  if(n>0){sb.textContent=n;sb.classList.add('show');mob.textContent=n;mob.classList.add('show');}
+  else{sb.classList.remove('show');mob.classList.remove('show');}
+}
+
 // ── OWNER: NAV ────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',cierre:'Cierre de caja',config:'Configuración'};
+const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',cierre:'Cierre de caja',config:'Configuración'};
 
 function renderPage(page){
   // Si había una fecha distinta a hoy seleccionada en Ventas y se navega a otra sección, volver a hoy
@@ -1184,6 +1302,7 @@ function renderPage(page){
   else if(page==='ventas')renderVentas();
   else if(page==='empleados')renderEmpleados();
   else if(page==='gastos')renderGastos();
+  else if(page==='clientes')renderClientes();
   else if(page==='cierre')renderCierre();
   else if(page==='config')renderConfig();
 }
@@ -1201,7 +1320,14 @@ function renderDashboard(){
   const cred=vh.filter(v=>v.medio==='credito').reduce((a,v)=>a+v.importe,0);
   const gh=gastos.filter(g=>g.fecha===hoy());
   const totalGastos=gh.reduce((a,g)=>a+g.importe,0);
+  const alertaMorosidad=tieneMorosidad()?clientes.map(cl=>({cl,e:estadoCliente(cl)})).filter(x=>x.e.color==='red'||x.e.color==='warn'):[];
   el.innerHTML=`
+    ${tieneMorosidad()&&alertaMorosidad.length?`<div class="cierre-card" style="margin-bottom:20px;border-left:4px solid var(--danger)">
+      <div class="sec-header" style="margin-bottom:10px"><span class="sec-title" style="font-size:15px">⚠️ Clientes con pagos atrasados o por vencer</span><button class="btn-sm" id="d-ver-clientes">Ver todos →</button></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${alertaMorosidad.slice(0,4).map(({cl,e})=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px"><span style="font-size:13px;font-weight:600;color:var(--text)">${sanitizeHTML(cl.nombre)}</span><span style="font-size:12px;font-weight:700;color:${e.color==='red'?'var(--danger)':'var(--warn)'}">${e.label}</span></div>`).join('')}
+      </div>
+    </div>`:''}
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(total)}</div><div class="kpi-label">Total del día</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(ef)}</div><div class="kpi-label">En caja</div></div>
@@ -1224,6 +1350,7 @@ function renderDashboard(){
     </div>`;
   el.querySelector('#d-ver-neg')?.addEventListener('click',()=>renderPage('negocios'));
   el.querySelector('#d-ver-ven')?.addEventListener('click',()=>renderPage('ventas'));
+  el.querySelector('#d-ver-clientes')?.addEventListener('click',()=>renderPage('clientes'));
   el.querySelector('.d-ver-gastos')?.addEventListener('click',()=>renderPage('gastos'));
   el.querySelectorAll('.d-neg-card').forEach(c=>c.addEventListener('click',()=>renderPage('ventas')));
 }
@@ -1428,6 +1555,246 @@ async function eliminarGasto(gastoId){
     toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
   }
 }
+
+// ── CLIENTES / MOROSIDAD (plus pago) ───────────────────────
+function fmtFechaCorta(f){const[y,m,d]=f.split('-');return`${d}/${m}`;}
+
+function nextDate(dateStr,freq){
+  const d=new Date(dateStr+'T00:00:00');
+  if(freq==='semanal')d.setDate(d.getDate()+7);
+  else if(freq==='quincenal')d.setDate(d.getDate()+15);
+  else d.setMonth(d.getMonth()+1); // mensual (unica no itera)
+  return d.toISOString().split('T')[0];
+}
+
+function generarCuotas(fechaInicio,monto,frecuencia,cantidad){
+  const arr=[];let f=fechaInicio;
+  for(let i=0;i<cantidad;i++){
+    arr.push({id:'c'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,6),fecha:f,monto,estado:'pendiente',medioPago:null,fechaPago:null,ventaId:null});
+    if(i<cantidad-1)f=nextDate(f,frecuencia);
+  }
+  return arr;
+}
+
+function calcEstadoCuota(c){
+  if(c.estado==='pagado')return{color:'pagado',label:'Pagado',dias:9999};
+  const hoyD=new Date(hoy()+'T00:00:00');
+  const venc=new Date(c.fecha+'T00:00:00');
+  const dias=Math.round((venc-hoyD)/86400000);
+  if(dias<0)return{color:'red',label:`Vencido hace ${Math.abs(dias)} día${Math.abs(dias)===1?'':'s'}`,dias};
+  if(dias<=1)return{color:'warn',label:dias===0?'Vence hoy':'Vence mañana',dias};
+  return{color:'green',label:`Vence ${fmtFechaCorta(c.fecha)}`,dias};
+}
+
+function estadoCliente(cliente){
+  const pendientes=(cliente.cuotas||[]).filter(c=>c.estado!=='pagado');
+  if(!pendientes.length)return{color:'green',label:'Al día'};
+  const peor=pendientes.map(c=>calcEstadoCuota(c)).sort((a,b)=>a.dias-b.dias)[0];
+  return{color:peor.color,label:peor.label};
+}
+
+function renderClientes(){
+  const el=document.getElementById('page-clientes');
+  if(!negocios.length){el.innerHTML=emptyHTML('💳','Sin negocios','Creá tu negocio primero');return;}
+  const conEstado=clientes.map(cl=>({cl,e:estadoCliente(cl)}));
+  const orden={red:0,warn:1,green:2};
+  conEstado.sort((a,b)=>orden[a.e.color]-orden[b.e.color]);
+  el.innerHTML=`
+    <div class="sec-header"><span class="sec-title" style="font-size:17px">Clientes</span><button class="btn-sm gold" id="btn-add-cliente">＋ Nuevo cliente</button></div>
+    ${clientes.length===0?emptyHTML('💳','Sin clientes','Agregá tu primer cliente con cuenta corriente'):conEstado.map(({cl,e})=>clienteCardHTML(cl,e)).join('')}`;
+  el.querySelector('#btn-add-cliente').addEventListener('click',()=>openModalCliente());
+  el.querySelectorAll('[data-edit-cliente]').forEach(b=>b.addEventListener('click',()=>openModalCliente(clientes.find(c=>c.id===b.dataset.editCliente))));
+  el.querySelectorAll('[data-del-cliente]').forEach(b=>b.addEventListener('click',()=>eliminarCliente(b.dataset.delCliente)));
+  el.querySelectorAll('[data-cobrar]').forEach(b=>b.addEventListener('click',()=>openModalCobrar(b.dataset.clienteId,b.dataset.cuotaId)));
+  el.querySelectorAll('[data-mas-cuotas]').forEach(b=>b.addEventListener('click',()=>openModalMasCuotas(b.dataset.clienteId)));
+}
+
+function clienteCardHTML(cl,e){
+  const colorMap={red:'var(--danger)',warn:'var(--warn)',green:'var(--green)'};
+  const bgMap={red:'var(--red-bg)',warn:'var(--warn-bg)',green:'var(--green-bg)'};
+  const pendientes=(cl.cuotas||[]).filter(c=>c.estado!=='pagado').sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  return`<div class="cierre-card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(cl.nombre)}</div>
+        ${cl.telefono?`<div style="font-size:12px;color:var(--muted)">📞 ${sanitizeHTML(cl.telefono)}</div>`:''}
+      </div>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;color:${colorMap[e.color]};background:${bgMap[e.color]}">${e.label}</span>
+    </div>
+    ${cl.nota?`<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">${sanitizeHTML(cl.nota)}</div>`:''}
+    ${pendientes.length?`<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+      ${pendientes.map(c=>{const ce=calcEstadoCuota(c);const col=ce.color==='red'?'var(--danger)':ce.color==='warn'?'var(--warn)':'var(--muted)';
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;flex-wrap:wrap;gap:8px">
+          <span style="font-size:13px;color:${col}">${ce.label} · ${fmtARS(c.monto)}</span>
+          <button class="btn-sm gold" data-cobrar data-cliente-id="${cl.id}" data-cuota-id="${c.id}" style="padding:6px 12px;font-size:12px">💰 Cobrar</button>
+        </div>`;}).join('')}
+    </div>`:'<div style="font-size:12px;color:var(--green);margin-top:10px">✅ Sin cuotas pendientes</div>'}
+    <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
+      <button class="btn-cancel" data-mas-cuotas data-cliente-id="${cl.id}" style="font-size:12px;padding:7px 12px">＋ Generar más cuotas</button>
+      <button class="btn-cancel" data-edit-cliente="${cl.id}" style="font-size:12px;padding:7px 12px">✏️ Editar</button>
+      <button class="btn-cancel" data-del-cliente="${cl.id}" style="font-size:12px;padding:7px 12px;color:var(--danger)">🗑️ Eliminar</button>
+    </div>
+  </div>`;
+}
+
+function openModalCliente(existing=null){
+  if(!existing&&negocios.length===0){toast('Primero creá tu negocio','err');return;}
+  clienteEditando=existing;
+  document.getElementById('mc-title').textContent=existing?'✏️ Editar cliente':'💳 Nuevo cliente';
+  document.getElementById('mc-nombre').value=existing?.nombre||'';
+  document.getElementById('mc-telefono').value=existing?.telefono||'';
+  document.getElementById('mc-nota').value=existing?.nota||'';
+  document.getElementById('mc-cuotas-wrap').style.display=existing?'none':'block';
+  if(!existing){
+    document.getElementById('mc-monto').value='';
+    document.getElementById('mc-frecuencia').value='mensual';
+    document.getElementById('mc-fecha').value=hoy();
+    document.getElementById('mc-cantidad').value=1;
+    document.getElementById('mc-cantidad-wrap').style.display='block';
+  }
+  document.getElementById('btn-modal-cliente-save').textContent=existing?'Guardar cambios':'Guardar cliente';
+  document.getElementById('modal-cliente').classList.add('open');
+}
+document.getElementById('mc-frecuencia').addEventListener('change',()=>{
+  const u=document.getElementById('mc-frecuencia').value==='unica';
+  document.getElementById('mc-cantidad-wrap').style.display=u?'none':'block';
+  if(u)document.getElementById('mc-cantidad').value=1;
+});
+document.getElementById('btn-modal-cliente-close').addEventListener('click',()=>document.getElementById('modal-cliente').classList.remove('open'));
+document.getElementById('btn-modal-cliente-cancel').addEventListener('click',()=>document.getElementById('modal-cliente').classList.remove('open'));
+document.getElementById('modal-cliente').addEventListener('click',e=>{if(e.target.id==='modal-cliente')document.getElementById('modal-cliente').classList.remove('open');});
+document.getElementById('btn-modal-cliente-save').addEventListener('click',async()=>{
+  const nombre=document.getElementById('mc-nombre').value.trim();
+  const telefono=document.getElementById('mc-telefono').value.trim();
+  const nota=document.getElementById('mc-nota').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','err');return;}
+  const btn=document.getElementById('btn-modal-cliente-save');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    if(clienteEditando){
+      await updateDoc(doc(db,'clientes',clienteEditando.id),{nombre,telefono,nota});
+      toast('Cliente actualizado','green');
+    } else {
+      const monto=parseFloat(document.getElementById('mc-monto').value);
+      const frecuencia=document.getElementById('mc-frecuencia').value;
+      const fecha=document.getElementById('mc-fecha').value;
+      const cantidad=frecuencia==='unica'?1:(parseInt(document.getElementById('mc-cantidad').value)||1);
+      if(!monto||monto<=0){toast('Ingresá un monto de cuota válido','err');btn.disabled=false;btn.textContent='Guardar cliente';return;}
+      if(!fecha){toast('Ingresá la fecha del primer vencimiento','err');btn.disabled=false;btn.textContent='Guardar cliente';return;}
+      const cuotas=generarCuotas(fecha,monto,frecuencia,cantidad);
+      await addDoc(collection(db,'clientes'),{
+        ownerUid:me.uid,negocioId:negocios[0].id,
+        nombre,telefono,nota,montoCuota:monto,frecuencia,
+        cuotas,createdAt:serverTimestamp()
+      });
+      toast('Cliente agregado','green');
+    }
+    document.getElementById('modal-cliente').classList.remove('open');
+    clienteEditando=null;
+    await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);
+  }catch(e){
+    console.error('Error al guardar cliente:',e);
+    toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
+  }
+  btn.disabled=false;btn.textContent=clienteEditando?'Guardar cambios':'Guardar cliente';
+});
+
+async function eliminarCliente(id){
+  if(!confirm('¿Eliminar este cliente y todo su historial de cuotas? Esta acción no se puede deshacer.'))return;
+  try{
+    await deleteDoc(doc(db,'clientes',id));
+    toast('Cliente eliminado');
+    await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);
+  }catch(e){
+    console.error('Error al eliminar cliente:',e);
+    toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
+  }
+}
+
+function openModalMasCuotas(clienteId){
+  masCuotasClienteId=clienteId;
+  const cl=clientes.find(c=>c.id===clienteId);
+  document.getElementById('mc2-monto').value=cl?.montoCuota||'';
+  document.getElementById('mc2-frecuencia').value=(cl?.frecuencia&&cl.frecuencia!=='unica')?cl.frecuencia:'mensual';
+  document.getElementById('mc2-fecha').value=hoy();
+  document.getElementById('mc2-cantidad').value=1;
+  document.getElementById('mc2-cantidad-wrap').style.display='block';
+  document.getElementById('modal-mas-cuotas').classList.add('open');
+}
+document.getElementById('mc2-frecuencia').addEventListener('change',()=>{
+  const u=document.getElementById('mc2-frecuencia').value==='unica';
+  document.getElementById('mc2-cantidad-wrap').style.display=u?'none':'block';
+  if(u)document.getElementById('mc2-cantidad').value=1;
+});
+document.getElementById('btn-modal-mc2-close').addEventListener('click',()=>document.getElementById('modal-mas-cuotas').classList.remove('open'));
+document.getElementById('btn-modal-mc2-cancel').addEventListener('click',()=>document.getElementById('modal-mas-cuotas').classList.remove('open'));
+document.getElementById('modal-mas-cuotas').addEventListener('click',e=>{if(e.target.id==='modal-mas-cuotas')document.getElementById('modal-mas-cuotas').classList.remove('open');});
+document.getElementById('btn-modal-mc2-save').addEventListener('click',async()=>{
+  const monto=parseFloat(document.getElementById('mc2-monto').value);
+  const frecuencia=document.getElementById('mc2-frecuencia').value;
+  const fecha=document.getElementById('mc2-fecha').value;
+  const cantidad=frecuencia==='unica'?1:(parseInt(document.getElementById('mc2-cantidad').value)||1);
+  if(!monto||monto<=0){toast('Ingresá un monto válido','err');return;}
+  if(!fecha){toast('Ingresá la fecha del primer vencimiento','err');return;}
+  const btn=document.getElementById('btn-modal-mc2-save');btn.disabled=true;btn.textContent='Generando...';
+  try{
+    const cl=clientes.find(c=>c.id===masCuotasClienteId);
+    const nuevas=generarCuotas(fecha,monto,frecuencia,cantidad);
+    await updateDoc(doc(db,'clientes',masCuotasClienteId),{cuotas:[...(cl.cuotas||[]),...nuevas],montoCuota:monto,frecuencia});
+    toast(`${cantidad} cuota${cantidad>1?'s':''} generada${cantidad>1?'s':''}`,'green');
+    document.getElementById('modal-mas-cuotas').classList.remove('open');
+    await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);
+  }catch(e){
+    console.error('Error al generar cuotas:',e);
+    toast('Error al generar: '+(e.message||e.code||'desconocido'),'err');
+  }
+  btn.disabled=false;btn.textContent='Generar';
+});
+
+function openModalCobrar(clienteId,cuotaId){
+  cobrarCtx={clienteId,cuotaId};
+  selectedMedioCobrar=null;
+  ['efectivo','mp','debito','credito'].forEach(m=>document.getElementById(`cb-m-${m}`).className='medio-opt');
+  const cl=clientes.find(c=>c.id===clienteId);
+  const cuota=cl?.cuotas.find(c=>c.id===cuotaId);
+  document.getElementById('cobrar-info').textContent=(cl&&cuota)?`${cl.nombre} · ${fmtARS(cuota.monto)} · vencimiento ${fmtFechaCorta(cuota.fecha)}`:'';
+  document.getElementById('modal-cobrar').classList.add('open');
+}
+['efectivo','mp','debito','credito'].forEach(m=>{
+  document.getElementById(`cb-m-${m}`).addEventListener('click',()=>{
+    selectedMedioCobrar=m;
+    ['efectivo','mp','debito','credito'].forEach(x=>document.getElementById(`cb-m-${x}`).className='medio-opt');
+    document.getElementById(`cb-m-${m}`).className=`medio-opt sel-${m}`;
+  });
+});
+document.getElementById('btn-modal-cobrar-close').addEventListener('click',()=>document.getElementById('modal-cobrar').classList.remove('open'));
+document.getElementById('btn-modal-cobrar-cancel').addEventListener('click',()=>document.getElementById('modal-cobrar').classList.remove('open'));
+document.getElementById('modal-cobrar').addEventListener('click',e=>{if(e.target.id==='modal-cobrar')document.getElementById('modal-cobrar').classList.remove('open');});
+document.getElementById('btn-modal-cobrar-save').addEventListener('click',async()=>{
+  if(!selectedMedioCobrar){toast('Elegí el medio de pago','err');return;}
+  const{clienteId,cuotaId}=cobrarCtx;
+  const cl=clientes.find(c=>c.id===clienteId);
+  const cuota=cl?.cuotas.find(c=>c.id===cuotaId);
+  if(!cl||!cuota){toast('No se encontró la cuota','err');return;}
+  const btn=document.getElementById('btn-modal-cobrar-save');btn.disabled=true;btn.textContent='Confirmando...';
+  try{
+    const ventaRef=await addDoc(collection(db,'ventas'),{
+      negocioId:cl.negocioId||negocios[0].id,ownerUid:me.uid,
+      empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
+      importe:cuota.monto,medio:selectedMedioCobrar,
+      descripcion:`Cobro cuota — ${cl.nombre}`,
+      fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
+    });
+    const cuotasActualizadas=cl.cuotas.map(c=>c.id===cuotaId?{...c,estado:'pagado',medioPago:selectedMedioCobrar,fechaPago:hoy(),ventaId:ventaRef.id}:c);
+    await updateDoc(doc(db,'clientes',clienteId),{cuotas:cuotasActualizadas});
+    toast('Cobro registrado','green');
+    document.getElementById('modal-cobrar').classList.remove('open');
+    await loadOwnerData(fechaVentasSeleccionada);renderPage(currentPage);
+  }catch(e){
+    console.error('Error al confirmar cobro:',e);
+    toast('Error al confirmar cobro: '+(e.message||e.code||'desconocido'),'err');
+  }
+  btn.disabled=false;btn.textContent='Confirmar cobro';
+});
 
 // ── CIERRE ─────────────────────────────────────────────────
 function renderCierre(){
@@ -1703,6 +2070,11 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
     }
+    match /clientes/{clienteId} {
+      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
   }
 }
 
@@ -1713,6 +2085,7 @@ service cloud.firestore {
 4. empleados | ownerUid ASC, estado ASC
 5. usuarios | email ASC, rol ASC
 6. gastos | ownerUid ASC, fecha ASC, createdAt DESC
+7. clientes | ownerUid ASC, createdAt DESC
 -->
 </body>
 </html>
