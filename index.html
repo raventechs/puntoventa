@@ -451,6 +451,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div class="nav-item" data-page="negocios"><span class="nav-icon">🏪</span>Mis negocios</div>
     <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
     <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
+    <div class="nav-item" data-page="gastos"><span class="nav-icon">🧮</span>Gastos</div>
     <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
     <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
     <div class="sb-bottom">
@@ -506,6 +507,7 @@ input,select,button,textarea{font-family:var(--font)}
     <div id="page-negocios" class="page" style="display:none"></div>
     <div id="page-ventas" class="page" style="display:none"></div>
     <div id="page-empleados" class="page" style="display:none"></div>
+    <div id="page-gastos" class="page" style="display:none"></div>
     <div id="page-cierre" class="page" style="display:none"></div>
     <div id="page-config" class="page" style="display:none"></div>
   </div>
@@ -515,6 +517,7 @@ input,select,button,textarea{font-family:var(--font)}
       <div class="mob-item" data-page="negocios"><span class="mob-icon">🏪</span>Negocios</div>
       <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Ventas</div>
       <div class="mob-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge" id="mob-pend-badge">0</span></div>
+      <div class="mob-item" data-page="gastos"><span class="mob-icon">🧮</span>Gastos</div>
       <div class="mob-item" data-page="cierre"><span class="mob-icon">🔒</span>Cierre</div>
     </div>
   </div>
@@ -686,7 +689,7 @@ let activeInvite=_inviteCode?{code:_inviteCode,negocioId:null,ownerUid:null,load
 
 // ── ESTADO ────────────────────────────────────────────────
 let me=null, myDoc=null, myRole=null;
-let negocios=[], ventas=[], empleados=[], empVentas=[];
+let negocios=[], ventas=[], empleados=[], empVentas=[], gastos=[];
 let currentPage="dashboard", selectedMedio=null;
 let isRegister=false, modoSelected="single"; // single | multi
 let modoNegocio="multi"; // se setea tras login según userDoc.modo
@@ -1120,6 +1123,13 @@ async function loadOwnerData(fecha=null){
   ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
   const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
   empleados=empSnap.docs.map(d=>({id:d.id,...d.data()}));
+  try{
+    const gastosSnap=await getDocs(query(collection(db,'gastos'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
+    gastos=gastosSnap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    console.error('Error al cargar gastos:',e);
+    gastos=[];
+  }
   updPendBadge();
 }
 
@@ -1133,7 +1143,7 @@ function updPendBadge(){
 }
 
 // ── OWNER: NAV ────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',cierre:'Cierre de caja',config:'Configuración'};
+const PAGE_TITLES={dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',cierre:'Cierre de caja',config:'Configuración'};
 
 function renderPage(page){
   // Si había una fecha distinta a hoy seleccionada en Ventas y se navega a otra sección, volver a hoy
@@ -1151,6 +1161,7 @@ function renderPage(page){
   else if(page==='negocios')renderNegocios();
   else if(page==='ventas')renderVentas();
   else if(page==='empleados')renderEmpleados();
+  else if(page==='gastos')renderGastos();
   else if(page==='cierre')renderCierre();
   else if(page==='config')renderConfig();
 }
@@ -1166,6 +1177,8 @@ function renderDashboard(){
   const mp=vh.filter(v=>v.medio==='mp').reduce((a,v)=>a+v.importe,0);
   const deb=vh.filter(v=>v.medio==='debito').reduce((a,v)=>a+v.importe,0);
   const cred=vh.filter(v=>v.medio==='credito').reduce((a,v)=>a+v.importe,0);
+  const gh=gastos.filter(g=>g.fecha===hoy());
+  const totalGastos=gh.reduce((a,g)=>a+g.importe,0);
   el.innerHTML=`
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(total)}</div><div class="kpi-label">Total del día</div></div>
@@ -1173,6 +1186,7 @@ function renderDashboard(){
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">📱</span><span class="kpi-badge mp">MP</span></div><div class="kpi-value" style="font-size:22px;color:var(--mp)">${fmtARS(mp)}</div><div class="kpi-label">Mercado Pago</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(deb)}</div><div class="kpi-label">Tarjeta débito</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge" style="background:#f3e8ff;color:#a855f7">Crédito</span></div><div class="kpi-value" style="font-size:22px;color:#a855f7">${fmtARS(cred)}</div><div class="kpi-label">Tarjeta crédito</div></div>
+      <div class="kpi-card d-ver-gastos" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">🧮</span><span class="kpi-badge" style="background:#fee2e2;color:var(--danger)">Gastos</span></div><div class="kpi-value" style="font-size:22px;color:var(--danger)">${fmtARS(totalGastos)}</div><div class="kpi-label">Gastos del día</div></div>
     </div>
     <div style="display:grid;grid-template-columns:${modoNegocio==='single'?'1fr':'1fr 1fr'};gap:20px">
       ${modoNegocio==='single'?'':`<div>
@@ -1188,6 +1202,7 @@ function renderDashboard(){
     </div>`;
   el.querySelector('#d-ver-neg')?.addEventListener('click',()=>renderPage('negocios'));
   el.querySelector('#d-ver-ven')?.addEventListener('click',()=>renderPage('ventas'));
+  el.querySelector('.d-ver-gastos')?.addEventListener('click',()=>renderPage('gastos'));
   el.querySelectorAll('.d-neg-card').forEach(c=>c.addEventListener('click',()=>renderPage('ventas')));
 }
 
@@ -1327,7 +1342,72 @@ async function rechazar(id){
   toast('Empleado rechazado');renderEmpleados();updPendBadge();
 }
 
-// ── CIERRE ────────────────────────────────────────────────
+// ── GASTOS ────────────────────────────────────────────────
+function renderGastos(){
+  const el=document.getElementById('page-gastos');
+  if(!negocios.length){el.innerHTML=emptyHTML('🧮','Sin negocios','Creá tu negocio primero');return;}
+  const total=gastos.reduce((a,g)=>a+g.importe,0);
+  el.innerHTML=`
+    <div class="cierre-card" style="margin-bottom:16px">
+      <div class="cierre-title">＋ Nuevo gasto</div>
+      <div class="field" style="margin-bottom:10px">
+        <input type="text" id="gasto-desc" placeholder="Descripción del gasto (ej: flete, insumos, luz...)" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <input type="number" id="gasto-importe" placeholder="$ 0" min="0" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
+      </div>
+      <button class="btn-sm gold" id="btn-add-gasto" style="width:100%;justify-content:center;padding:12px">＋ Agregar gasto</button>
+    </div>
+    <div class="sec-header"><span class="sec-title" style="font-size:17px">Gastos de hoy</span></div>
+    ${gastos.length===0?emptyHTML('🧮','Sin gastos hoy'):`
+      <div class="cierre-card" style="padding:0;overflow:hidden">
+        ${gastos.map(g=>`<div class="cierre-row" style="padding:14px 20px"><span class="cierre-label" style="color:var(--text)">${sanitizeHTML(g.descripcion)}<div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitizeHTML(g.hora||'')}</div></span><span style="display:flex;align-items:center;gap:10px"><span class="cierre-val" style="color:var(--danger)">-${fmtARS(g.importe)}</span><button data-del-gasto="${g.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">🗑️</button></span></div>`).join('')}
+        <div class="cierre-row cierre-total" style="padding:14px 20px;background:var(--surface2)"><span class="cierre-label">Total gastos del día</span><span class="cierre-val" style="color:var(--danger)">-${fmtARS(total)}</span></div>
+      </div>`}`;
+  el.querySelector('#btn-add-gasto').addEventListener('click',agregarGasto);
+  el.querySelectorAll('[data-del-gasto]').forEach(btn=>btn.addEventListener('click',()=>eliminarGasto(btn.dataset.delGasto)));
+}
+
+async function agregarGasto(){
+  const descInput=document.getElementById('gasto-desc');
+  const importeInput=document.getElementById('gasto-importe');
+  const descripcion=descInput.value.trim();
+  const importe=parseFloat(importeInput.value);
+  if(!descripcion){toast('Ingresá una descripción','err');return;}
+  if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
+  const btn=document.getElementById('btn-add-gasto');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const negocioActivo=negocios[0];
+    await addDoc(collection(db,'gastos'),{
+      negocioId:negocioActivo.id,ownerUid:me.uid,
+      descripcion,importe,
+      fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()
+    });
+    toast('Gasto registrado','green');
+    descInput.value='';importeInput.value='';
+    await loadOwnerData();
+    renderGastos();
+  }catch(e){
+    console.error('Error al guardar gasto:',e);
+    toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');
+  }
+  btn.disabled=false;btn.textContent='＋ Agregar gasto';
+}
+
+async function eliminarGasto(gastoId){
+  if(!confirm('¿Eliminar este gasto?'))return;
+  try{
+    await deleteDoc(doc(db,'gastos',gastoId));
+    toast('Gasto eliminado');
+    await loadOwnerData();
+    renderGastos();
+  }catch(e){
+    console.error('Error al eliminar gasto:',e);
+    toast('Error al eliminar: '+(e.message||e.code||'desconocido'),'err');
+  }
+}
+
+// ── CIERRE ─────────────────────────────────────────────────
 function renderCierre(){
   const el=document.getElementById('page-cierre');
   if(!negocios.length){el.innerHTML=emptyHTML('🔒','Sin negocios');return;}
@@ -1587,6 +1667,11 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null;
     }
+    match /gastos/{gastoId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
   }
 }
 
@@ -1596,6 +1681,7 @@ service cloud.firestore {
 3. ventas | empleadoUid ASC, fecha ASC, createdAt DESC
 4. empleados | ownerUid ASC, estado ASC
 5. usuarios | email ASC, rol ASC
+6. gastos | ownerUid ASC, fecha ASC, createdAt DESC
 -->
 </body>
 </html>
