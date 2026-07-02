@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PuntoVenta">
+<!-- PuntoVenta v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
 <title>PuntoVenta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -506,7 +507,8 @@ input,select,button,textarea{font-family:var(--font)}
     </div>
     <div id="page-dashboard" class="page"></div>
     <div id="page-negocios" class="page" style="display:none"></div>
-    <div id="page-ventas" class="page" style="display:none"></div>
+    <div id="page-ventas" class="page" style="display:none">
+      <button onclick="exportarCSV()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;width:100%">⬇️ Exportar ventas CSV</button></div>
     <div id="page-empleados" class="page" style="display:none"></div>
     <div id="page-gastos" class="page" style="display:none"></div>
     <div id="page-clientes" class="page" style="display:none"></div>
@@ -756,11 +758,25 @@ const FB={
   appId:"1:229168693051:web:9dcb7d95f39edc4c17011e"
 };
 // 🔐 PIN ADMIN — cambiarlo por el número que quieras
-const ADMIN_PIN="1990";
+const ADMIN_PIN="2580";
 
 const fbApp=initializeApp(FB);
 const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
+
+// LOG DE ERRORES — P5 ROBUSTEZ
+async function logError(origen, mensaje, extra) {
+  try {
+    const uid = auth.currentUser ? auth.currentUser.uid : 'anonimo';
+    await addDoc(collection(db,'errores'), {
+      app: 'PuntoVenta', origen, 
+      mensaje: String(mensaje),
+      extra: extra ? String(extra) : null,
+      uid,
+      ts: serverTimestamp()
+    });
+  } catch(_) {}
+}
 
 function sanitizeHTML(str){const d=document.createElement('div');d.textContent=str??"";return d.innerHTML;}
 
@@ -2087,5 +2103,39 @@ service cloud.firestore {
 6. gastos | ownerUid ASC, fecha ASC, createdAt DESC
 7. clientes | ownerUid ASC, createdAt DESC
 -->
+
+<script>
+  // SERVICE WORKER — P3 ROBUSTEZ
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/puntoventa/sw-puntoventa.js')
+      .catch(e => console.warn('SW:', e));
+  }
+
+// EXPORTAR CSV — P2 ROBUSTEZ
+async function exportarCSV() {
+  try {
+    const uid = auth.currentUser ? auth.currentUser.uid : null;
+    if (!uid) return;
+    const snap = await getDocs(query(collection(db,'ventas'), where('uid','==',uid), orderBy('ts','desc')));
+    const rows = [['Fecha','Descripcion','Negocio','Importe','Medio','Empleado']];
+    snap.forEach(d => {
+      const v = d.data();
+      rows.push([
+        v.fecha || '', 
+        (v.descripcion||'').replace(/"/g,"'"),
+        v.negocioId || '',
+        v.importe || 0,
+        v.medio || '',
+        v.empleadoNombre || ''
+      ]);
+    });
+    const csv = rows.map(r => r.map(x => `"${x}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'puntoventa-ventas-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+  } catch(e) { logError('exportCSV', e); }
+}
+</script>
 </body>
 </html>
