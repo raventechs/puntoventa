@@ -2098,9 +2098,10 @@ const DEPTOS_DEFAULT = ['Departamento 1','Departamento 2','Departamento 3','Depa
 let departamentos = [...DEPTOS_DEFAULT];
 
 async function cargarDepartamentos() {
-  if (!me) return;
+  const uid = (me && me.uid) || (auth.currentUser && auth.currentUser.uid);
+  if (!uid) return;
   try {
-    const snap = await getDoc(doc(db, 'usuarios', me.uid));
+    const snap = await getDoc(doc(db, 'usuarios', uid));
     if (snap.exists() && snap.data().departamentos) {
       departamentos = snap.data().departamentos;
     }
@@ -2109,9 +2110,10 @@ async function cargarDepartamentos() {
 
 async function guardarDepartamentos(nuevos) {
   departamentos = nuevos;
-  if (!me) return;
+  const uid = (me && me.uid) || (auth.currentUser && auth.currentUser.uid);
+  if (!uid) { console.warn('guardarDepartamentos: sin usuario'); return; }
   try {
-    await updateDoc(doc(db, 'usuarios', me.uid), { departamentos: nuevos });
+    await setDoc(doc(db, 'usuarios', uid), { departamentos: nuevos }, { merge: true });
   } catch(e) { console.error('guardar deptos:', e); }
 }
 
