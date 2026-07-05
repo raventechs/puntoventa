@@ -1,7 +1,7 @@
 // sw-puntoventa.js — Service Worker PuntoVenta v2.1
 // P3 ROBUSTEZ: Caja + Ventas offline
 
-const CACHE_NAME = 'puntoventa-v2.1';
+const CACHE_NAME = 'puntoventa-v2.2';
 const SHELL = [
   '/puntoventa/',
   '/puntoventa/index.html',
@@ -39,7 +39,8 @@ self.addEventListener('fetch', e => {
             (url.origin === self.location.origin ||
              url.hostname.includes('googleapis.com') ||
              url.hostname.includes('gstatic.com'))) {
-          caches.open(CACHE_NAME).then(c => c.put(e.request, response.clone()));
+          const clon = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, clon));
         }
         return response;
       }).catch(() => {
