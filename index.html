@@ -601,7 +601,11 @@ input,select,button,textarea{font-family:var(--font)}
       <button class="modal-close" id="btn-modal-venta-close">✕</button>
     </div>
     <div class="field"><label>Importe *</label><input id="mv-importe" type="number" placeholder="1500" inputmode="decimal"/></div>
-    <div class="field"><label>Descripción</label><input id="mv-desc" placeholder="Gaseosas, snacks..."/></div>
+    <div class="field">
+      <label>Departamento / Descripción</label>
+      <div class="depto-chips" id="depto-chips-venta" style="margin-bottom:8px;"></div>
+      <input id="mv-desc" placeholder="Gaseosas, snacks..."/>
+    </div>
     <div class="field"><label>Medio de pago *</label>
       <div style="display:flex;gap:8px">
         <div class="medio-opt" id="mv-m-efectivo" style="flex:1;text-align:center;cursor:pointer">💵 Efectivo</div>
