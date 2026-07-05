@@ -1804,7 +1804,7 @@ function renderConfig(){
   });
 
   // Card departamentos
-  el.innerHTML += `
+  el.insertAdjacentHTML('beforeend', `
     <div class="cierre-card" style="margin-top:14px">
       <div class="cierre-title">🏷️ Departamentos</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Se muestran como chips rápidos al registrar ventas y gastos. Editá los nombres y guardá.</p>
@@ -1826,9 +1826,10 @@ function renderConfig(){
       <input type="file" id="inputRestaurar" accept=".json" style="display:none;" onchange="restaurarBackup(this)">
       <p style="font-size:11px;color:var(--muted);">Último backup: <span id="ultimoBackupFecha">-</span></p>
     </div>
-  `;
+  `);
 
-  document.getElementById('btn-save-deptos').addEventListener('click', async () => {
+  const btnSaveDeptos = document.getElementById('btn-save-deptos');
+  if (btnSaveDeptos) btnSaveDeptos.addEventListener('click', async () => {
     const inputs = el.querySelectorAll('.depto-edit-input');
     const nuevos = Array.from(inputs).map(i => i.value.trim() || i.placeholder);
     await guardarDepartamentos(nuevos);
