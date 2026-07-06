@@ -2003,72 +2003,10 @@ document.getElementById("btn-google").addEventListener("click",async()=>{
   }
   btn.disabled=false;
 });
-</script>
 
-<!--
-FIRESTORE SECURITY RULES
 
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /usuarios/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && (
-        request.resource.data.features == resource.data.features ||
-        request.auth.token.email == 'rgaraventa@gmail.com'
-      );
-      allow delete: if false;
-    }
-    match /negocios/{negocioId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid;
-      allow delete: if request.auth != null;
-    }
-    match /invitaciones/{code} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if request.auth != null;
-    }
-    match /ventas/{ventaId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.empleadoUid == request.auth.uid;
-      allow update, delete: if request.auth != null && (
-        resource.data.ownerUid == request.auth.uid ||
-        resource.data.empleadoUid == request.auth.uid
-      );
-    }
-    match /empleados/{empId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
-    }
-    match /gastos/{gastoId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
-    }
-    match /clientes/{clienteId} {
-      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
-    }
-  }
-}
-
-ÍNDICES COMPUESTOS
-1. negocios | ownerUid ASC, createdAt DESC
-2. ventas | ownerUid ASC, fecha ASC, createdAt DESC
-3. ventas | empleadoUid ASC, fecha ASC, createdAt DESC
-4. empleados | ownerUid ASC, estado ASC
-5. usuarios | email ASC, rol ASC
-6. gastos | ownerUid ASC, fecha ASC, createdAt DESC
-7. clientes | ownerUid ASC, createdAt DESC
--->
-
-<script>
-  if ('serviceWorker' in navigator) {
+// === CÓDIGO MOVIDO AL MÓDULO PARA ACCESO A VARIABLES ===
+if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/puntoventa/sw-puntoventa.js')
       .catch(e => console.warn('SW:', e));
   }
@@ -2297,7 +2235,70 @@ function chequearBackupDiario() {
   const ultimo = localStorage.getItem('puntoventa-ultimo-backup');
   if(ultimo!==hoy) setTimeout(()=>generarBackup(true),5000);
 }
-
 </script>
+
+<!--
+FIRESTORE SECURITY RULES
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.resource.data.features == resource.data.features ||
+        request.auth.token.email == 'rgaraventa@gmail.com'
+      );
+      allow delete: if false;
+    }
+    match /negocios/{negocioId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow delete: if request.auth != null;
+    }
+    match /invitaciones/{code} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null;
+    }
+    match /ventas/{ventaId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.empleadoUid == request.auth.uid;
+      allow update, delete: if request.auth != null && (
+        resource.data.ownerUid == request.auth.uid ||
+        resource.data.empleadoUid == request.auth.uid
+      );
+    }
+    match /empleados/{empId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+    match /gastos/{gastoId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+    match /clientes/{clienteId} {
+      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+  }
+}
+
+ÍNDICES COMPUESTOS
+1. negocios | ownerUid ASC, createdAt DESC
+2. ventas | ownerUid ASC, fecha ASC, createdAt DESC
+3. ventas | empleadoUid ASC, fecha ASC, createdAt DESC
+4. empleados | ownerUid ASC, estado ASC
+5. usuarios | email ASC, rol ASC
+6. gastos | ownerUid ASC, fecha ASC, createdAt DESC
+7. clientes | ownerUid ASC, createdAt DESC
+-->
+
+
 </body>
 </html>
