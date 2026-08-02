@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PuntoVenta">
-<!-- PuntoVenta v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
+<!-- PuntoVenta v2.2 — 2026-08-01 — Seguridad: sanitizeHTML() completada (departamentos), App Check SDK preparado -->
 <title>PuntoVenta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -835,6 +835,7 @@ button[class*="metodo"]:active, button[class*="pago"]:active {
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{initializeAppCheck,ReCaptchaV3Provider}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import{getFirestore,collection,doc,setDoc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const FB={
@@ -848,6 +849,10 @@ const FB={
 const ADMIN_PIN="2580";
 
 const fbApp=initializeApp(FB);
+const APPCHECK_KEY="";
+if(APPCHECK_KEY){
+  initializeAppCheck(fbApp,{provider:new ReCaptchaV3Provider(APPCHECK_KEY),isTokenAutoRefreshEnabled:true});
+}
 const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
 async function logError(origen, mensaje, extra) {
@@ -2166,7 +2171,7 @@ function renderChipsDeptos() {
     if (!el) return;
     const targetId = id === 'depto-chips-venta' ? 'mv-desc' : 'gasto-desc';
     el.innerHTML = departamentos.map((d,i) =>
-      `<button type="button" class="depto-chip" data-depto="${i}" onclick="seleccionarDepto('${id}','${targetId}',${i})">${d}</button>`
+      `<button type="button" class="depto-chip" data-depto="${i}" onclick="seleccionarDepto('${id}','${targetId}',${i})">${sanitizeHTML(d)}</button>`
     ).join('');
   });
 }
