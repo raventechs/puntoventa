@@ -3,7 +3,7 @@
   "short_name": "PuntoVenta",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAFAFA",
+  "background_color": "#FFFFFF",
   "theme_color": "#F27B13",
   "lang": "es",
   "icons": [
