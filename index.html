@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PuntoVenta">
-<!-- PuntoVenta v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
+<!-- PuntoVenta v2.2 — 2026-10-26 — BACKUP ARREGLADO: el botón no funcionaba (la función no era visible desde la pantalla) y el automático no guardaba nada. v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
 <title>PuntoVenta</title>
 <meta name="theme-color" content="#F27B13">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1964,7 +1964,7 @@ function renderConfig(){
     </div>
     <div class="cierre-card" style="margin-top:14px">
       <div class="cierre-title">💾 Backup de datos</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Se genera automáticamente una vez por día. Incluye ventas, clientes, gastos y configuración.</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Se baja solo una vez por día al entrar. Incluye ventas, gastos, clientes, empleados y negocios. También podés bajarlo cuando quieras o restaurar uno anterior.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         <button class="btn-sm gold" onclick="generarBackup(false)" style="justify-content:center;">Descargar backup</button>
         <button class="btn-sm" onclick="document.getElementById('inputRestaurar').click()" style="justify-content:center;">Restaurar backup</button>
@@ -2317,66 +2317,130 @@ function initOffline() {
     .catch(e => console.error('IDB:', e));
 }
 
-// BACKUP PuntoVenta
+// ══════════ BACKUP ESTÁNDAR 2.2 ══════════
+// Automático: una vez por día al entrar el dueño. Baja el archivo JSON al dispositivo y deja una copia en IndexedDB (las últimas 7).
+// Manual y restaurar: botones de la sección de backup. Las fechas de Firestore (Timestamp) se guardan con una marca reversible.
+// Está dentro del módulo de la app (antes estaba en un script aparte que no veía db, auth ni getDocs y fallaba siempre).
+function _bkHoy() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function _bkSer(v) {
+  if (v && typeof v === 'object') {
+    if (typeof v.toMillis === 'function' && 'seconds' in v && 'nanoseconds' in v) return { __ts: [v.seconds, v.nanoseconds] };
+    if (Array.isArray(v)) return v.map(_bkSer);
+    const o = {}; Object.keys(v).forEach(k => { o[k] = _bkSer(v[k]); }); return o;
+  }
+  return v;
+}
+function _bkRev(v) {
+  if (v && typeof v === 'object') {
+    if (Array.isArray(v)) return v.map(_bkRev);
+    if (Array.isArray(v.__ts) && v.__ts.length === 2) return new Timestamp(v.__ts[0], v.__ts[1]);
+    const o = {}; Object.keys(v).forEach(k => { o[k] = _bkRev(v[k]); }); return o;
+  }
+  return v;
+}
+async function _bkLeer(ref) {
+  const s = await ref.get();
+  return s.docs.map(d => Object.assign({ _id: d.id }, _bkSer(d.data())));
+}
+function _bkIdb(fecha, json) {
+  return new Promise(function (res) {
+    try {
+      const rq = indexedDB.open('puntoventa-backup', 1);
+      rq.onupgradeneeded = function () { rq.result.createObjectStore('b', { keyPath: 'fecha' }); };
+      rq.onsuccess = function () {
+        const idb = rq.result, tx = idb.transaction('b', 'readwrite'), st = tx.objectStore('b');
+        st.put({ fecha: fecha, json: json });
+        st.getAllKeys().onsuccess = function (e) { const ks = e.target.result.sort(); while (ks.length > 7) st.delete(ks.shift()); };
+        tx.oncomplete = function () { idb.close(); res(true); };
+        tx.onerror = tx.onabort = function () { idb.close(); res(false); };
+      };
+      rq.onerror = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+function _bkDescargar(json, fecha) {
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'puntoventa-backup-' + fecha + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+async function _bkDocs(q) { const s = await getDocs(q); return s.docs.map(function (d) { return Object.assign({ _id: d.id }, _bkSer(d.data())); }); }
+async function _bkEscribir(ops) {
+  for (let i = 0; i < ops.length; i += 25)
+    await Promise.all(ops.slice(i, i + 25).map(function (o) { return o[2] ? setDoc(o[0], o[1], { merge: true }) : setDoc(o[0], o[1]); }));
+}
+function _bkCfg() { return { app: 'PuntoVenta', ver: '2.2', ls: 'puntoventa-ultimo-backup', label: 'ultimoBackupFecha', cols: ['ventas', 'gastos', 'clientes', 'empleados', 'negocios'] }; }
+function _bkMsg(m, t) { toast(m, t === 'err' ? 'err' : 'green'); }
+function _bkCtx() {
+  if (!me) return { ok: false, msg: 'Iniciá sesión primero' };
+  if (myRole !== 'owner') return { ok: false, msg: 'Solo el dueño puede hacer el backup' };
+  return { ok: true, uid: me.uid };
+}
+async function _bkReunir(C) {
+  const datos = {};
+  for (const n of _bkCfg().cols) datos[n] = await _bkDocs(query(collection(db, n), where('ownerUid', '==', C.uid)));
+  return { datos: datos };
+}
+function _bkOps(bk, C) {
+  if (!bk.datos && !bk.ventas) throw new Error('el archivo no tiene datos');
+  const datos = bk.datos || { ventas: bk.ventas, gastos: bk.gastos, clientes: bk.clientes, negocios: bk.negocios };   // acepta también el formato viejo
+  const ops = [];
+  _bkCfg().cols.forEach(function (n) {
+    (datos[n] || []).forEach(function (d) {
+      const r = Object.assign({}, d), id = r._id; delete r._id; if (!id) return;
+      const x = _bkRev(r); x.ownerUid = C.uid;
+      ops.push([doc(db, n, id), x]);
+    });
+  });
+  return ops;
+}
+
 async function generarBackup(silencioso) {
-  if (!me) return;
+  const K = _bkCfg(), C = _bkCtx();
+  if (!C.ok) { if (!silencioso) _bkMsg(C.msg, 'err'); return; }
   try {
-    const uid = me.uid;
-    const [ventasSnap, gastosSnap, clientesSnap, negociosSnap, userSnap] = await Promise.all([
-      getDocs(query(collection(db,'ventas'), where('ownerUid','==',uid))).catch(()=>({docs:[]})),
-      getDocs(query(collection(db,'gastos'), where('ownerUid','==',uid))).catch(()=>({docs:[]})),
-      getDocs(query(collection(db,'clientes'), where('ownerUid','==',uid))).catch(()=>({docs:[]})),
-      getDocs(query(collection(db,'negocios'), where('ownerUid','==',uid))).catch(()=>({docs:[]})),
-      getDoc(doc(db,'usuarios',uid)).catch(()=>({exists:()=>false}))
-    ]);
-    const fecha = new Date().toISOString().slice(0,10);
-    const backup = {
-      app: 'PuntoVenta', version: '2.1', fecha: new Date().toISOString(), uid,
-      ventas: ventasSnap.docs.map(d => Object.assign({_id:d.id}, d.data())),
-      gastos: gastosSnap.docs.map(d => Object.assign({_id:d.id}, d.data())),
-      clientes: clientesSnap.docs.map(d => Object.assign({_id:d.id}, d.data())),
-      negocios: negociosSnap.docs.map(d => Object.assign({_id:d.id}, d.data())),
-      usuario: userSnap.exists() ? userSnap.data() : {}
-    };
-    const json = JSON.stringify(backup, null, 2);
-    localStorage.setItem('puntoventa-ultimo-backup', fecha);
-    const el = document.getElementById('ultimoBackupFecha');
-    if (el) el.textContent = fecha;
-    if (!silencioso) {
-      const blob = new Blob([json], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download='puntoventa-backup-'+fecha+'.json'; a.click();
-      URL.revokeObjectURL(url);
-      toast('Backup descargado','green');
-    }
-  } catch(e) { console.error('backup:', e); if(!silencioso) toast('Error al generar backup','err'); }
+    if (!silencioso) _bkMsg('Preparando backup…');
+    const datos = await _bkReunir(C);
+    const fecha = _bkHoy();
+    const json = JSON.stringify(Object.assign({ app: K.app, version: K.ver, fecha: new Date().toISOString(), uid: C.uid }, datos));
+    _bkDescargar(json, fecha);
+    await _bkIdb(fecha, json);
+    try { localStorage.setItem(K.ls, fecha); } catch (e) {}
+    const el = document.getElementById(K.label); if (el) el.textContent = fecha;
+    if (!silencioso) _bkMsg('✅ Backup descargado');
+  } catch (e) { logError('generarBackup', e.message); if (!silencioso) _bkMsg('Error al generar backup: ' + e.message, 'err'); }
 }
-
 async function restaurarBackup(input) {
-  const file = input.files[0]; if(!file) return;
-  if(!me){toast('Iniciá sesión primero','err');return;}
-  if(!confirm('Esto agrega los datos del backup a tu cuenta. Continuar?')){input.value='';return;}
+  const K = _bkCfg(), C = _bkCtx();
+  const file = input.files && input.files[0];
+  if (!file) return;
   try {
-    const text = await file.text();
-    const backup = JSON.parse(text);
-    if(backup.app!=='PuntoVenta'){toast('El archivo no es un backup de PuntoVenta','err');return;}
-    toast('Restaurando...','green');
-    const uid = me.uid;
-    for(const v of (backup.ventas||[])){const id=v._id;const d=Object.assign({},v);delete d._id;await setDoc(doc(db,'ventas',id),Object.assign({},d,{ownerUid:uid}));}
-    for(const g of (backup.gastos||[])){const id=g._id;const d=Object.assign({},g);delete d._id;await setDoc(doc(db,'gastos',id),Object.assign({},d,{ownerUid:uid}));}
-    for(const c of (backup.clientes||[])){const id=c._id;const d=Object.assign({},c);delete d._id;await setDoc(doc(db,'clientes',id),Object.assign({},d,{ownerUid:uid}));}
-    toast('Backup restaurado','green');
-    input.value='';
-    setTimeout(()=>location.reload(),1500);
-  } catch(e){toast('Error: '+e.message,'err');input.value='';}
+    if (!C.ok) { _bkMsg(C.msg, 'err'); return; }
+    const bk = JSON.parse(await file.text());
+    if (bk.app !== K.app) { _bkMsg('El archivo no es un backup de ' + K.app, 'err'); return; }
+    const ops = _bkOps(bk, C);
+    if (!confirm('Se van a volver a cargar ' + ops.length + ' registros en tu cuenta. Los que ya existen se reemplazan por los del archivo; el resto queda como está. ¿Continuar?')) return;
+    _bkMsg('Restaurando…');
+    await _bkEscribir(ops);
+    _bkMsg('✅ Backup restaurado (' + ops.length + ' registros)');
+    setTimeout(function () { location.reload(); }, 1500);
+  } catch (e) { logError('restaurarBackup', e.message); _bkMsg('Error al restaurar: ' + e.message, 'err'); }
+  finally { input.value = ''; }
 }
-
 function chequearBackupDiario() {
-  const hoy = new Date().toISOString().slice(0,10);
-  const ultimo = localStorage.getItem('puntoventa-ultimo-backup');
-  if(ultimo!==hoy) setTimeout(()=>generarBackup(true),5000);
+  const K = _bkCfg(), C = _bkCtx();
+  if (!C.ok) return;
+  let ultimo = null; try { ultimo = localStorage.getItem(K.ls); } catch (e) {}
+  const el = document.getElementById(K.label); if (el && ultimo) el.textContent = ultimo;
+  if (ultimo !== _bkHoy()) setTimeout(function () { generarBackup(true); }, 5000);
 }
+window.generarBackup = generarBackup; window.restaurarBackup = restaurarBackup;
+// ══════════ FIN BACKUP ══════════
 </script>
 
 <!--
