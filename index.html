@@ -1046,8 +1046,9 @@ if(_inviteCode){
       }
       const inv=invSnap.data();
       const expirado=inv.expiry?.toMillis?.()<Date.now()||inv.usado===true;
-      const negSnap=await getDoc(doc(db,'negocios',inv.negocioId));
-      const neg=negSnap.exists()?negSnap.data():{nombre:'Negocio',icon:'🏪',tipo:''};
+      // Las reglas no dejan leer el negocio a quien todavía no es parte del equipo: datos genéricos
+      let neg={nombre:'Negocio',icon:'🏪',tipo:''};
+      try{const negSnap=await getDoc(doc(db,'negocios',inv.negocioId));if(negSnap.exists())neg=negSnap.data();}catch(e){}
       document.getElementById('invite-neg-icon').textContent=neg.icon||'🏪';
       document.getElementById('invite-neg-nombre').textContent=neg.nombre;
       document.getElementById('invite-neg-sub').textContent=neg.tipo?`Negocio: ${neg.tipo}`:'Fuiste invitado a unirte como empleado';
@@ -1076,10 +1077,11 @@ document.getElementById('btn-inv-register').addEventListener('click',async()=>{
   if(!email||!pass){errEl.textContent='Completá todos los campos';errEl.style.display='block';return;}
   const btn=document.getElementById('btn-inv-register');btn.disabled=true;btn.textContent='Registrando...';
   try{
-    await updateDoc(doc(db,'invitaciones',activeInvite.code),{usado:true,usadoPor:email,usadoAt:serverTimestamp()});
     const cred=await createUserWithEmailAndPassword(auth,email,pass);
     await setDoc(doc(db,'usuarios',cred.user.uid),{uid:cred.user.uid,email,rol:'employee',ownerUid:activeInvite.ownerUid,negocioId:activeInvite.negocioId,estado:'pendiente',banned:false,status:'demo',demoStart:serverTimestamp(),createdAt:serverTimestamp()});
     await addDoc(collection(db,'empleados'),{uid:cred.user.uid,email,ownerUid:activeInvite.ownerUid,negocioId:activeInvite.negocioId,estado:'pendiente',inviteCode:activeInvite.code,createdAt:serverTimestamp()});
+    // Se marca la invitación como usada recién con la cuenta ya creada (las reglas exigen estar logueado)
+    try{await updateDoc(doc(db,'invitaciones',activeInvite.code),{usado:true,usadoPor:email,usadoAt:serverTimestamp()});}catch(e){console.warn('invitacion',e);}
     window.history.replaceState({},'',window.location.pathname);
     activeInvite=null;
   }catch(e){
@@ -2260,7 +2262,7 @@ async function exportarCSV() {
   try {
     const uid = auth.currentUser ? auth.currentUser.uid : null;
     if (!uid) return;
-    const snap = await getDocs(query(collection(db,'ventas'), where('uid','==',uid), orderBy('ts','desc')));
+    const snap = await getDocs(query(collection(db,'ventas'), where('ownerUid','==',uid)));   // antes filtraba por un campo que no existe (uid) y salía vacío
     const rows = [['Fecha','Descripcion','Negocio','Importe','Medio','Empleado']];
     snap.forEach(d => {
       const v = d.data();
@@ -2548,7 +2550,7 @@ window.generarBackup = generarBackup; window.restaurarBackup = restaurarBackup;
 </script>
 
 <!--
-FIRESTORE SECURITY RULES
+FIRESTORE SECURITY RULES  (OBSOLETAS: las vigentes están en el repo raventechs/gasar → qa/rules/puntoventa.rules)
 
 rules_version = '2';
 service cloud.firestore {
