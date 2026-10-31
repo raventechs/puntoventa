@@ -981,7 +981,7 @@ var __rtPWA = (function() {
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{getFirestore,collection,doc,setDoc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,doc,setDoc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp,writeBatch}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const FB={
   apiKey:"AIzaSyAP9PEuKM9ck-a9ltWorlFunxPYXw7trtE",
   authDomain:"puntoventa-f316c.firebaseapp.com",
@@ -2017,6 +2017,64 @@ function renderCierre(){
     </div>`;
   }).join('');
 }
+// ══════════ MODO PRÁCTICA ══════════
+// Todo lo que se crea acá lleva _demo:true y se puede quitar sin tocar datos reales.
+const _rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+async function _commitOps(ops){
+  for(let i=0;i<ops.length;i+=400){
+    const b=writeBatch(db);
+    ops.slice(i,i+400).forEach(([ref,data])=>data===null?b.delete(ref):b.set(ref,data));
+    await b.commit();
+  }
+}
+async function cargarPractica(){
+  if(!me||!negocios.length){toast('Primero creá tu negocio','err');return;}
+  if(!confirm('Se cargan ventas de 7 días y gastos de mentira en tu negocio. Podés quitarlos después. ¿Seguir?'))return;
+  try{
+    const neg=negocios[0];
+    const ya=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('_demo','==',true)));
+    if(!ya.empty){toast('Ya hay una práctica cargada. Quitala primero.','err');return;}
+    toast('Cargando práctica…');
+    const ops=[],hoyD=new Date();
+    const items=[['Gaseosa 1.5L',2800],['Pan x kg',2200],['Fiambre 200g',4500],['Limpieza varios',6200],['Golosinas',1500],['Lácteos',3900],['Verdura',3100],['Cigarrillos',5200]];
+    const medios=['efectivo','efectivo','efectivo','mp','mp','debito','credito'];
+    const vend=['Valentina','Diego'];
+    for(let d=0;d<7;d++){
+      const dia=new Date(hoyD);dia.setDate(hoyD.getDate()-d);
+      const fechaStr=dia.toISOString().split('T')[0];
+      const cant=_rnd(8,15);
+      for(let k=0;k<cant;k++){
+        const it=items[_rnd(0,items.length-1)],n=_rnd(1,3);
+        const hh=String(_rnd(9,20)).padStart(2,'0')+':'+String(_rnd(0,59)).padStart(2,'0');
+        ops.push([doc(collection(db,'ventas')),{negocioId:neg.id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:vend[_rnd(0,1)],importe:it[1]*n,medio:medios[_rnd(0,medios.length-1)],descripcion:it[0]+(n>1?' x'+n:''),fecha:fechaStr,hora:hh,createdAt:Timestamp.fromDate(new Date(dia.getFullYear(),dia.getMonth(),dia.getDate(),+hh.slice(0,2),+hh.slice(3))),_demo:true}]);
+      }
+    }
+    [['Alquiler del local',320000,1],['Luz',48000,3],['Reposición de mercadería',210000,4],['Sueldo empleado',180000,6]].forEach(([descripcion,importe,dAtras])=>{
+      const f=new Date(hoyD);f.setDate(hoyD.getDate()-dAtras);
+      ops.push([doc(collection(db,'gastos')),{negocioId:neg.id,ownerUid:me.uid,descripcion,importe,fecha:f.toISOString().split('T')[0],hora:'10:00',createdAt:Timestamp.fromDate(f),_demo:true}]);
+    });
+    await _commitOps(ops);
+    toast('✅ Práctica cargada. Mirá Inicio y los reportes.');
+    setTimeout(()=>location.reload(),1200);
+  }catch(e){logError('cargarPractica',e.message);toast('Error: '+e.message,'err');}
+}
+async function quitarPractica(){
+  if(!me)return;
+  if(!confirm('Se quitan SOLO los datos de práctica (ventas y gastos marcados). Tus datos reales no se tocan. ¿Seguir?'))return;
+  try{
+    toast('Quitando práctica…');
+    const ops=[];
+    for(const c of ['ventas','gastos']){
+      const s=await getDocs(query(collection(db,c),where('ownerUid','==',me.uid),where('_demo','==',true)));
+      s.forEach(d=>ops.push([d.ref,null]));
+    }
+    await _commitOps(ops);
+    toast('✅ Datos de práctica quitados');
+    setTimeout(()=>location.reload(),1200);
+  }catch(e){logError('quitarPractica',e.message);toast('Error: '+e.message,'err');}
+}
+window.cargarPractica=cargarPractica;window.quitarPractica=quitarPractica;
+
 function renderConfig(){
   const el=document.getElementById('page-config');
   if(!negocios.length){el.innerHTML=emptyHTML('⚙️','Sin negocios para configurar');return;}
@@ -2077,6 +2135,14 @@ function renderConfig(){
       </div>
       <input type="file" id="inputRestaurar" accept=".json" style="display:none;" onchange="restaurarBackup(this)">
       <p style="font-size:11px;color:var(--muted);">Último backup: <span id="ultimoBackupFecha">-</span></p>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title" style="font-weight:700;margin-bottom:6px;">🎓 Modo Práctica</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Carga ventas de la última semana y gastos de ejemplo en tu negocio para aprender o mostrar la app. Todo queda marcado y se quita con un botón, sin tocar tus datos reales.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-sm gold" onclick="cargarPractica()" style="justify-content:center;">Cargar datos de práctica</button>
+        <button class="btn-sm" onclick="quitarPractica()" style="justify-content:center;">Quitar datos de práctica</button>
+      </div>
     </div>
   `);
 
