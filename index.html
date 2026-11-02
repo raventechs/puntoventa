@@ -2323,7 +2323,7 @@ document.getElementById("btn-google").addEventListener("click",async()=>{
 
 // === CÓDIGO MOVIDO AL MÓDULO PARA ACCESO A VARIABLES ===
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/puntoventa/sw-puntoventa.js')
+    navigator.serviceWorker.register('/sw-puntoventa.js')
       .catch(e => console.warn('SW:', e));
   }
 async function exportarCSV() {
