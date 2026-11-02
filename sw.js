@@ -1,5 +1,5 @@
 /* Service Worker — PuntoVenta | RavenTechs | 02/08/2026 */
-var CACHE = 'puntoventa-pwa-v1';
+var CACHE = 'puntoventa-pwa-v2';
 var SHELL = ['/', '/index.html', '/manifest.json'];
 self.addEventListener('install', function(e) {
   e.waitUntil(caches.open(CACHE).then(function(c) {

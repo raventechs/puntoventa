@@ -1122,6 +1122,7 @@ function bindLogoTap(id){
 bindLogoTap('login-logo');
 bindLogoTap('sidebar-logo');
 bindLogoTap('emp-logo');
+bindLogoTap('owner-page-title'); // celular del dueño: 5 toques al título (Dashboard, Ventas…) abren el menú admin
 function openPin(){/* sin PIN: abre directo solo con la cuenta admin */if(window.rtIsAdmin&&window.rtIsAdmin()){showScreen('screen-admin');loadAdminNegocios();}}
 function closePin(){document.getElementById('pin-overlay').classList.remove('open');}
 function updDots(){for(let i=0;i<4;i++)document.getElementById(`d${i}`).classList.toggle('filled',i<pinBuf.length);}
