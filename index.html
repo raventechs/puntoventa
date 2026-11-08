@@ -113,7 +113,9 @@ input,select,button,textarea{font-family:var(--font)}
 .sb-btn:hover{border-color:rgba(255,255,255,.3);color:#fff}
 .main{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10;transition:background .2s}
-.topbar-title{font-size:19px;font-weight:800;color:var(--text)}
+.topbar-title{font-size:19px;font-weight:800;color:var(--text);line-height:1.15;max-width:62vw;min-width:0}
+.topbar-title .tt-main{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-title .tt-sub{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.3px;white-space:nowrap}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .topbar-pending{font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:99px;display:none}
 .topbar-pending.show{display:block}
@@ -733,7 +735,7 @@ var __rtPWA = (function() {
   <div class="main">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:10px">
-        <span class="topbar-title" id="owner-page-title">Dashboard</span>
+        <span class="topbar-title" id="owner-page-title"><span class="tt-main">PuntoVenta</span><span class="tt-sub"></span></span>
         <div id="topbar-money-anim" style="width:40px;height:20px;overflow:hidden;position:relative;display:none">
           <span style="position:absolute;animation:moneyTopbar 3.5s linear infinite">
             <svg width="20" height="20" viewBox="0 0 48 48">
@@ -1183,7 +1185,7 @@ function bindLogoTap(id){
 bindLogoTap('login-logo');
 bindLogoTap('sidebar-logo');
 bindLogoTap('emp-logo');
-bindLogoTap('owner-page-title'); // celular del dueño: 5 toques al título (Dashboard, Ventas…) abren el menú admin
+bindLogoTap('owner-page-title'); // celular del dueño: 5 toques al título (nombre del negocio) abren el menú admin
 function openPin(){/* sin PIN: abre directo solo con la cuenta admin */if(window.rtIsAdmin&&window.rtIsAdmin()){showScreen('screen-admin');loadAdminNegocios();}}
 function closePin(){document.getElementById('pin-overlay').classList.remove('open');}
 function updDots(){for(let i=0;i<4;i++)document.getElementById(`d${i}`).classList.toggle('filled',i<pinBuf.length);}
@@ -1546,6 +1548,7 @@ async function loadOwnerData(fecha=null){
   const f=fecha||hoy();
   const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
   negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
+  try{setTopTitle();}catch(e){}
   const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
   ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
   const empSnap=await getDocs(query(collection(db,'empleados'),where('ownerUid','==',me.uid)));
@@ -1589,6 +1592,15 @@ function updMorosidadBadge(){
 }
 const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Caja',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',config:'Configuración'};
 
+// Barra de arriba: el nombre del negocio va grande y «PuntoVenta · pantalla» chico (con varios negocios o sin nombre queda PuntoVenta)
+function setTopTitle(page){
+  const el=document.getElementById('owner-page-title');if(!el)return;
+  const pg=page||currentPage;
+  const nombre=(negocios.length===1&&negocios[0].nombre&&String(negocios[0].nombre).trim())||'';
+  const main=el.querySelector('.tt-main'),sub=el.querySelector('.tt-sub');
+  main.textContent=nombre||'PuntoVenta';
+  sub.textContent=(nombre?'PuntoVenta':'')+(nombre&&PAGE_TITLES[pg]?' · ':'')+(PAGE_TITLES[pg]||'');
+}
 function renderPage(page){
   if(page!=='ventas'&&fechaVentasSeleccionada!==null){
     fechaVentasSeleccionada=null;
@@ -1598,7 +1610,7 @@ function renderPage(page){
   document.querySelectorAll('.nav-item[data-page],.mob-item[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
   document.querySelectorAll('.page[id^=page-]').forEach(p=>p.style.display='none');
   document.getElementById(`page-${page}`).style.display='block';
-  document.getElementById('owner-page-title').textContent=PAGE_TITLES[page]||'';
+  setTopTitle(page);
   document.getElementById('topbar-money-anim').style.display=page==='dashboard'?'block':'none';
   if(page==='dashboard')renderDashboard();
   else if(page==='vender')renderVender();
@@ -2222,7 +2234,7 @@ function renderConfig(){
         await updateDoc(doc(db,'negocios',negId),data);
         const neg=negocios.find(n=>n.id===negId);
         if(neg){neg.nombre=nuevoNombre;if(tipoSelect)neg.tipo=tipoSelect.value;}
-        toast('Datos guardados','green');
+        toast('Datos guardados','green');setTopTitle();
       }catch(e){toast('Error al guardar','err');}
       btn.disabled=false;btn.textContent='💾 Guardar cambios';
     });
