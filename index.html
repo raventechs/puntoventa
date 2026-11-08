@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PuntoVenta">
-<!-- PuntoVenta v3.0 — 2026-11-08 — PLAN BÁSICO/AVANZADA: cuentas nuevas arrancan en Básica (Vender, Ventas, Fiado, Gastos, Caja); Avanzada se activa desde el menú admin. Formas de pago nuevas: Transferencia, Fiado y pago mixto. Fiado = cuenta corriente por cliente (deuda, cobros parciales, aviso por WhatsApp). Prueba de 14 días nueva (demoHasta, sin bloqueo) solo para cuentas nuevas. ARREGLO: la fecha del día usaba hora UTC (ventas de las 21 a 24 hs quedaban en el día siguiente); ahora hora de Argentina. Los empleados ya no se bloquean por la prueba. v2.2 — 2026-10-26 — BACKUP ARREGLADO: el botón no funcionaba (la función no era visible desde la pantalla) y el automático no guardaba nada. v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
+<!-- PuntoVenta v3.0 — 2026-11-08 — PLAN BÁSICO/AVANZADA: cuentas nuevas arrancan en Básica (Vender, Ventas, En cuenta, Gastos, Caja); Avanzada se activa desde el menú admin. Formas de pago nuevas: Transferencia, Fiado y pago mixto. Fiado = cuenta corriente por cliente (deuda, cobros parciales, aviso por WhatsApp). Prueba de 14 días nueva (demoHasta, sin bloqueo) solo para cuentas nuevas. ARREGLO: la fecha del día usaba hora UTC (ventas de las 21 a 24 hs quedaban en el día siguiente); ahora hora de Argentina. Los empleados ya no se bloquean por la prueba. v2.2 — 2026-10-26 — BACKUP ARREGLADO: el botón no funcionaba (la función no era visible desde la pantalla) y el automático no guardaba nada. v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
 <title>PuntoVenta</title>
 <meta name="theme-color" content="#F27B13">
 <meta name="mobile-web-app-capable" content="yes">
@@ -641,7 +641,7 @@ var __rtPWA = (function() {
       <div class="brand-name">Punto<span>Venta</span></div>
     </div>
     <div class="auth-title" id="auth-title">Bienvenido</div>
-    <div class="auth-sub">Tus ventas, tu caja y tu fiado, ordenados</div>
+    <div class="auth-sub">Tus ventas, tu caja y tus cuentas, ordenadas</div>
     <div class="role-selector" style="display:none">
       <div class="role-opt active" id="mode-single">
         <div class="role-opt-icon">🏪</div>
@@ -711,7 +711,7 @@ var __rtPWA = (function() {
     <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
     <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
     <div class="nav-item" data-page="gastos"><span class="nav-icon">🧮</span>Gastos</div>
-    <div class="nav-item" data-page="fiado"><span class="nav-icon">📒</span>Fiado</div>
+    <div class="nav-item" data-page="fiado"><span class="nav-icon">📒</span>En cuenta</div>
     <div class="nav-item" data-page="clientes"><span class="nav-icon">💳</span>Clientes<span class="nav-badge" id="sb-morosidad-badge">0</span></div>
     <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
     <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
@@ -784,7 +784,7 @@ var __rtPWA = (function() {
       <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Ventas</div>
       <div class="mob-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge" id="mob-pend-badge">0</span></div>
       <div class="mob-item" data-page="gastos"><span class="mob-icon">🧮</span>Gastos</div>
-      <div class="mob-item" data-page="fiado"><span class="mob-icon">📒</span>Fiado</div>
+      <div class="mob-item" data-page="fiado"><span class="mob-icon">📒</span>En cuenta</div>
       <div class="mob-item" data-page="clientes"><span class="mob-icon">💳</span>Clientes<span class="mob-badge" id="mob-morosidad-badge">0</span></div>
       <div class="mob-item" data-page="cierre"><span class="mob-icon">🔒</span>Cierre</div>
     </div>
@@ -906,7 +906,7 @@ var __rtPWA = (function() {
     <div class="modal-header"><span class="modal-title" id="mcc-title">📒 Nuevo cliente</span><button class="modal-close" id="btn-mcc-close">✕</button></div>
     <div class="field"><label>Nombre *</label><input id="mcc-nombre" placeholder="Ej: Doña Marta"/></div>
     <div class="field"><label>Teléfono (con código de área, sin 0 ni 15)</label><input id="mcc-tel" type="tel" inputmode="tel" placeholder="1155551234"/></div>
-    <div class="field"><label>Nota (opcional)</label><input id="mcc-nota" placeholder="Vive en la esquina, paga los viernes…"/></div>
+    <div class="field"><label>Dato fijo (opcional)</label><input id="mcc-nota" placeholder="Vive en la esquina, paga los viernes…"/></div>
     <div class="modal-footer"><button class="btn-cancel" id="btn-mcc-cancel">Cancelar</button><button class="btn-save" id="btn-mcc-save">Guardar cliente</button></div>
   </div>
 </div>
@@ -1149,7 +1149,7 @@ const MEDIOS_PV={
   debito:{cls:'debito',icon:'💳',label:'Débito'},
   credito:{cls:'credito',icon:'💰',label:'Crédito'},
   transferencia:{cls:'transferencia',icon:'🏦',label:'Transferencia'},
-  fiado:{cls:'fiado',icon:'📒',label:'Fiado'},
+  fiado:{cls:'fiado',icon:'📒',label:'En cuenta'},
   mixto:{cls:'mixto',icon:'🔀',label:'Pago mixto'}};
 const MEDIOS_COBRO=['efectivo','mp','debito','credito','transferencia'];   // medios donde entra plata
 const MEDIOS_VENTA=['efectivo','mp','debito','credito','transferencia','fiado'];
@@ -1590,7 +1590,7 @@ function updMorosidadBadge(){
   if(n>0){sb.textContent=n;sb.classList.add('show');mob.textContent=n;mob.classList.add('show');}
   else{sb.classList.remove('show');mob.classList.remove('show');}
 }
-const PAGE_TITLES={vender:'Vender',fiado:'Fiado',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',cierre:'Cierre de caja',config:'Configuración'};
+const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',cierre:'Cierre de caja',config:'Configuración'};
 
 function renderPage(page){
   if(page!=='ventas'&&fechaVentasSeleccionada!==null){
@@ -1639,7 +1639,7 @@ function renderDashboard(){
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💳</span><span class="kpi-badge info">Débito</span></div><div class="kpi-value" style="font-size:22px;color:var(--blue)">${fmtARS(deb)}</div><div class="kpi-label">Tarjeta débito</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge" style="background:#f3e8ff;color:#a855f7">Crédito</span></div><div class="kpi-value" style="font-size:22px;color:#a855f7">${fmtARS(cred)}</div><div class="kpi-label">Tarjeta crédito</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">🏦</span><span class="kpi-badge info">Transf.</span></div><div class="kpi-value" style="font-size:22px;color:#0891b2">${fmtARS(transf)}</div><div class="kpi-label">Transferencias</div></div>
-      <div class="kpi-card d-ver-fiado" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">📒</span><span class="kpi-badge" style="background:var(--warn-bg);color:var(--warn)">Fiado</span></div><div class="kpi-value" style="font-size:22px;color:var(--warn)">${fmtARS(debenTotal)}</div><div class="kpi-label">Me deben${fiadoHoy?' · hoy +'+fmtARS(fiadoHoy):''}</div></div>
+      <div class="kpi-card d-ver-fiado" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">📒</span><span class="kpi-badge" style="background:var(--warn-bg);color:var(--warn)">En cuenta</span></div><div class="kpi-value" style="font-size:22px;color:var(--warn)">${fmtARS(debenTotal)}</div><div class="kpi-label">Me deben${fiadoHoy?' · hoy +'+fmtARS(fiadoHoy):''}</div></div>
       <div class="kpi-card d-ver-gastos" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">🧮</span><span class="kpi-badge" style="background:#fee2e2;color:var(--danger)">Gastos</span></div><div class="kpi-value" style="font-size:22px;color:var(--danger)">${fmtARS(totalGastos)}</div><div class="kpi-label">Gastos del día</div></div>
     </div>
     <div style="display:grid;grid-template-columns:${tieneMultiNegocio()?'1fr 1fr':'1fr'};gap:20px">
@@ -2107,7 +2107,7 @@ function renderCierre(){
       <div class="cierre-row"><span class="cierre-label">💰 Crédito</span><span class="cierre-val" style="color:#a855f7">${fmtARS(cred)}</span></div>
       <div class="cierre-row"><span class="cierre-label">🏦 Transferencia</span><span class="cierre-val" style="color:#0891b2">${fmtARS(transf)}</span></div>
       <div class="cierre-row cierre-total"><span class="cierre-label">Total cobrado del día</span><span class="cierre-val">${fmtARS(ef+mp+deb+cred+transf)}</span></div>
-      ${fiadoDia?`<div class="cierre-row"><span class="cierre-label">📒 Fiado del día (no entró plata)</span><span class="cierre-val" style="color:var(--warn)">${fmtARS(fiadoDia)}</span></div>`:''}
+      ${fiadoDia?`<div class="cierre-row"><span class="cierre-label">📒 En cuenta del día (no entró plata)</span><span class="cierre-val" style="color:var(--warn)">${fmtARS(fiadoDia)}</span></div>`:''}
       <button class="btn-sm gold" style="width:100%;justify-content:center;margin-top:16px;padding:12px">🔒 Cerrar caja del día</button>
     </div>`;
   }).join('');
@@ -2150,7 +2150,7 @@ async function cargarPractica(){
     });
     [['Doña Marta','1155550001',3],['Don Raúl','1155550002',2],['Lucía (vecina)','1155550003',1]].forEach(([nombre,telefono,n])=>{
       const cref=doc(collection(db,'clientes'));let saldo=0;
-      for(let k=0;k<n;k++){const imp=_rnd(2,8)*1000;saldo+=imp;ops.push([doc(collection(db,'ventas')),{negocioId:neg.id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:'Valentina',importe:imp,medio:'fiado',pagos:[{medio:'fiado',importe:imp}],descripcion:'Compra fiada',fecha:fechaAR(hoyD),hora:'11:00',createdAt:Timestamp.fromDate(hoyD),clienteId:cref.id,clienteNombre:nombre,_demo:true}]);}
+      for(let k=0;k<n;k++){const imp=_rnd(2,8)*1000;saldo+=imp;ops.push([doc(collection(db,'ventas')),{negocioId:neg.id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:'Valentina',importe:imp,medio:'fiado',pagos:[{medio:'fiado',importe:imp}],descripcion:'Compra en cuenta',fecha:fechaAR(hoyD),hora:'11:00',createdAt:Timestamp.fromDate(hoyD),clienteId:cref.id,clienteNombre:nombre,_demo:true}]);}
       ops.push([cref,{tipo:'cc',ownerUid:me.uid,negocioId:neg.id,nombre,telefono,nota:'Cliente de práctica',saldo,ultimoMov:fechaAR(hoyD),createdAt:Timestamp.fromDate(hoyD),_demo:true}]);
     });
     await _commitOps(ops);
@@ -2160,7 +2160,7 @@ async function cargarPractica(){
 }
 async function quitarPractica(){
   if(!me)return;
-  if(!confirm('Se quitan SOLO los datos de práctica (ventas, gastos y clientes de fiado marcados). Tus datos reales no se tocan. ¿Seguir?'))return;
+  if(!confirm('Se quitan SOLO los datos de práctica (ventas, gastos y clientes de cuenta marcados). Tus datos reales no se tocan. ¿Seguir?'))return;
   try{
     toast('Quitando práctica…');
     const ops=[];
@@ -2536,7 +2536,7 @@ function renderVender(){
     ${pasosHTML()}
     <div class="vd-resumen">
       <div class="vd-res"><b>${fmtARS(sumCobrado(vh))}</b><span>Cobrado hoy</span></div>
-      <div class="vd-res"><b>${fmtARS(sumMedio(vh,'fiado'))}</b><span>Fiado hoy</span></div>
+      <div class="vd-res"><b>${fmtARS(sumMedio(vh,'fiado'))}</b><span>En cuenta hoy</span></div>
       <div class="vd-res" id="vd-deben" style="cursor:pointer"><b>${fmtARS(deben)}</b><span>Me deben</span></div>
     </div>
     <div class="emp-form-card">
@@ -2551,7 +2551,7 @@ function renderVender(){
         <select class="vd-sel" id="vd-s-m2">${opcionesMedios(MEDIOS_VENTA,'transferencia')}</select>
       </div>
       <div id="vd-cliente-wrap" style="display:none">
-        <label style="font-size:12px;color:var(--muted)">¿A quién se le anota el fiado?</label>
+        <label style="font-size:12px;color:var(--muted)">¿A quién se le anota en cuenta?</label>
         <div style="display:flex;gap:8px"><select class="vd-sel" id="vd-cliente" style="flex:1">${opcionesClientes('')}</select><button type="button" class="btn-sm gold" id="vd-cli-nuevo" style="height:42px">＋ Nuevo</button></div>
       </div>
       <div class="depto-chips" id="depto-chips-vender" style="margin-bottom:8px"></div>
@@ -2597,16 +2597,16 @@ async function vdGuardar(){
   }
   const fp=pagos.filter(p=>p.medio==='fiado').reduce((a,p)=>a+p.importe,0);
   let cli=null;
-  if(fp>0){cli=cuentas.find(c=>c.id===$id('vd-cliente').value);if(!cli){toast('Elegí a qué cliente se le anota el fiado','err');return;}}
+  if(fp>0){cli=cuentas.find(c=>c.id===$id('vd-cliente').value);if(!cli){toast('Elegí a qué cliente se le anota en cuenta','err');return;}}
   const btn=$id('vd-guardar');btn.disabled=true;
   try{
     await guardarVentaPagos({importe,desc:$id('vd-desc').value.trim(),pagos,cli});
-    toast(fp>0?'Venta anotada al fiado':'Venta registrada','green');
+    toast(fp>0?'Venta anotada en cuenta':'Venta registrada','green');
     await loadOwnerData(fechaVentasSeleccionada);renderVender();
   }catch(e){logError('vdGuardar',e.message);toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');btn.disabled=false;}
 }
 
-// ── FIADO: cuenta corriente por cliente (deuda que crece con cada fiado y baja con cada cobro)
+// ── EN CUENTA: cuenta corriente por cliente (deuda que crece con cada fiado y baja con cada cobro)
 function renderFiado(){
   const el=$id('page-fiado');
   const deben=cuentas.reduce((a,c)=>a+(Number(c.saldo)||0),0);
@@ -2621,7 +2621,7 @@ function renderFiado(){
   const pintar=()=>{
     const q=($id('fd-buscar').value||'').toLowerCase().trim();
     const lista=[...cuentas].filter(c=>!q||String(c.nombre).toLowerCase().includes(q)).sort((a,b)=>(b.saldo||0)-(a.saldo||0)||String(a.nombre).localeCompare(String(b.nombre),'es'));
-    $id('fd-lista').innerHTML=lista.length?lista.map(c=>`<div class="fd-row" data-cc="${c.id}"><div class="nm">${sanitizeHTML(c.nombre)}<small>${sanitizeHTML(c.telefono||'sin teléfono')}${c.ultimoMov?' · último mov. '+fmtFechaCorta(c.ultimoMov):''}</small></div>${c.saldo>0?`<span class="fd-saldo debe">${fmtARS(c.saldo)}</span>`:'<span class="fd-saldo ok">Al día ✓</span>'}</div>`).join(''):emptyHTML('📒',q?'No hay clientes con ese nombre':'Todavía no anotaste ningún cliente','Sumá a quienes te compran fiado y se acabó el cuaderno');
+    $id('fd-lista').innerHTML=lista.length?lista.map(c=>`<div class="fd-row" data-cc="${c.id}"><div class="nm">${sanitizeHTML(c.nombre)}<small>${sanitizeHTML(c.telefono||'sin teléfono')}${c.ultimoMov?' · último mov. '+fmtFechaCorta(c.ultimoMov):''}</small></div>${c.saldo>0?`<span class="fd-saldo debe">${fmtARS(c.saldo)}</span>`:'<span class="fd-saldo ok">Al día ✓</span>'}</div>`).join(''):emptyHTML('📒',q?'No hay clientes con ese nombre':'Todavía no anotaste ningún cliente','Sumá a quienes te compran en cuenta y se acabó el cuaderno');
     $id('fd-lista').querySelectorAll('[data-cc]').forEach(r=>r.addEventListener('click',()=>abrirFiado(r.dataset.cc)));
   };
   $id('fd-buscar').addEventListener('input',pintar);
@@ -2658,6 +2658,25 @@ $id('btn-mcc-save').addEventListener('click',async()=>{
 $id('modal-cc').addEventListener('click',e=>{if(e.target.id==='modal-cc')cerrarCC();});
 
 function telWA(t){let d=String(t||'').replace(/\D/g,'');if(!d)return '';d=d.replace(/^0+/,'');if(d.startsWith('54'))return d;return '549'+d;}
+// Libretita: notas con fecha y hora guardadas dentro de la ficha del cliente (máx. 60, las más nuevas primero)
+function notasHTML(c){
+  const n=Array.isArray(c.notas)?c.notas:[];
+  if(!n.length)return '';
+  return `<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📝 Notas</div>`+n.map((x,i)=>`<div class="fd-mov"><div class="d">${sanitizeHTML(x.t)}<small>${fmtFechaCorta(x.f)} ${sanitizeHTML(x.h||'')}</small></div><button class="btn-sm danger" data-delnota="${i}" style="padding:4px 8px">✕</button></div>`).join('')+'<div style="height:12px"></div>';
+}
+async function guardarNota(c,txt){
+  if(!txt){toast('Escribí la nota','err');return;}
+  const ahora=new Date();
+  const notas=[{t:txt.slice(0,300),f:fechaAR(ahora),h:fmtHora(ahora)},...(Array.isArray(c.notas)?c.notas:[])].slice(0,60);
+  try{await updateDoc(doc(db,'clientes',c.id),{notas});toast('Nota guardada','green');await refrescarFiado(c.id);}
+  catch(e){logError('guardarNota',e.message);toast('Error al guardar la nota','err');}
+}
+async function borrarNota(c,i){
+  if(!confirm('¿Borrar esta nota?'))return;
+  const notas=(Array.isArray(c.notas)?c.notas:[]).filter((_,k)=>k!==i);
+  try{await updateDoc(doc(db,'clientes',c.id),{notas});await refrescarFiado(c.id);}
+  catch(e){toast('Error al borrar la nota','err');}
+}
 async function abrirFiado(id){
   const c=cuentas.find(x=>x.id===id);if(!c)return;
   const body=$id('modal-fiado-body');
@@ -2665,9 +2684,15 @@ async function abrirFiado(id){
     <div style="text-align:center;margin-bottom:14px"><div style="font-size:12px;color:var(--muted)">Saldo que debe</div><div style="font-size:30px;font-weight:800;color:${c.saldo>0?'var(--red)':'var(--green)'}">${fmtARS(c.saldo||0)}</div>${c.telefono?`<div style="font-size:12px;color:var(--muted)">📞 ${sanitizeHTML(c.telefono)}</div>`:''}${c.nota?`<div style="font-size:12px;color:var(--muted)">${sanitizeHTML(c.nota)}</div>`:''}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <button class="btn-sm gold" id="fd-b-cobrar" style="justify-content:center;padding:11px"${c.saldo>0?'':' disabled'}>💵 Cobrar</button>
-      <button class="btn-sm" id="fd-b-fiar" style="justify-content:center;padding:11px">＋ Anotar fiado</button>
+      <button class="btn-sm" id="fd-b-fiar" style="justify-content:center;padding:11px">＋ Anotar en cuenta</button>
       <button class="btn-sm" id="fd-b-wa" style="justify-content:center;padding:11px"${c.telefono&&c.saldo>0?'':' disabled'}>📲 Avisar por WhatsApp</button>
-      <button class="btn-sm" id="fd-b-edit" style="justify-content:center;padding:11px">✏️ Editar</button>
+      <button class="btn-sm" id="fd-b-nota" style="justify-content:center;padding:11px">📝 Anotar nota</button>
+      <button class="btn-sm" id="fd-b-edit" style="justify-content:center;padding:11px">✏️ Editar cliente</button>
+    </div>
+    <div id="fd-nota" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted)">Nota (queda con fecha y hora)</label>
+      <input class="vd-sel" id="fd-n-txt" maxlength="300" placeholder="Ej: dijo que paga el viernes"/>
+      <button class="btn-venta" id="fd-n-ok" style="padding:11px;font-size:15px">Guardar nota</button>
     </div>
     <div id="fd-cobrar" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
       <label style="font-size:12px;color:var(--muted)">¿Cuánto paga?</label>
@@ -2677,18 +2702,23 @@ async function abrirFiado(id){
       <button class="btn-venta" id="fd-c-ok" style="padding:11px;font-size:15px">Confirmar cobro</button>
     </div>
     <div id="fd-fiar" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
-      <label style="font-size:12px;color:var(--muted)">Monto que se lleva fiado</label>
+      <label style="font-size:12px;color:var(--muted)">Monto que se lleva en cuenta</label>
       <input class="vd-sel" id="fd-f-monto" type="number" inputmode="decimal" placeholder="$"/>
       <input class="vd-sel" id="fd-f-desc" placeholder="Qué se llevó (opcional)"/>
-      <button class="btn-venta" id="fd-f-ok" style="padding:11px;font-size:15px">Anotar al fiado</button>
+      <button class="btn-venta" id="fd-f-ok" style="padding:11px;font-size:15px">Anotar en cuenta</button>
     </div>
+    <div id="fd-notas">${notasHTML(c)}</div>
     <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Movimientos</div>
     <div id="fd-movs" style="font-size:13px;color:var(--muted)">Cargando…</div>
     ${c.saldo<=0?`<button class="btn-sm danger" id="fd-b-del" style="margin-top:14px;width:100%;justify-content:center;padding:10px">🗑 Eliminar cliente</button>`:''}`;
   $id('modal-fiado').classList.add('open');
   $id('fd-cerrar').addEventListener('click',()=>$id('modal-fiado').classList.remove('open'));
-  $id('fd-b-cobrar').addEventListener('click',()=>{$id('fd-cobrar').style.display='block';$id('fd-fiar').style.display='none';});
-  $id('fd-b-fiar').addEventListener('click',()=>{$id('fd-fiar').style.display='block';$id('fd-cobrar').style.display='none';});
+  const panel=(k)=>['fd-cobrar','fd-fiar','fd-nota'].forEach(x=>$id(x).style.display=(x===k?'block':'none'));
+  $id('fd-b-cobrar').addEventListener('click',()=>panel('fd-cobrar'));
+  $id('fd-b-fiar').addEventListener('click',()=>panel('fd-fiar'));
+  $id('fd-b-nota').addEventListener('click',()=>{panel('fd-nota');$id('fd-n-txt').focus();});
+  $id('fd-n-ok').addEventListener('click',()=>guardarNota(c,$id('fd-n-txt').value.trim()));
+  document.querySelectorAll('[data-delnota]').forEach(b=>b.addEventListener('click',()=>borrarNota(c,Number(b.dataset.delnota))));
   $id('fd-b-edit').addEventListener('click',()=>abrirModalCC(c,false));
   $id('fd-b-wa').addEventListener('click',()=>{
     const nn=negocios[0]?.nombre||'el negocio';
@@ -2708,7 +2738,7 @@ async function abrirFiado(id){
     const box=$id('fd-movs');if(!box)return;
     box.innerHTML=movs.length?movs.map(v=>{
       const cobro=v.tipo==='cobro';const monto=cobro?Number(v.importe):sumMedio([v],'fiado');
-      return `<div class="fd-mov"><div class="d">${sanitizeHTML(v.descripcion||(cobro?'Cobro':'Fiado'))}<small>${fmtFechaCorta(v.fecha||'0000-00-00')} ${sanitizeHTML(v.hora||'')}${cobro?' · '+((MEDIOS_PV[v.medio]||{}).label||''):''}</small></div><b style="color:${cobro?'var(--green)':'var(--red)'}">${cobro?'−':'+'} ${fmtARS(monto)}</b><button class="btn-sm danger" data-anular="${v.id}" style="padding:4px 8px">Anular</button></div>`;
+      return `<div class="fd-mov"><div class="d">${sanitizeHTML(v.descripcion||(cobro?'Cobro':'En cuenta'))}<small>${fmtFechaCorta(v.fecha||'0000-00-00')} ${sanitizeHTML(v.hora||'')}${cobro?' · '+((MEDIOS_PV[v.medio]||{}).label||''):''}</small></div><b style="color:${cobro?'var(--green)':'var(--red)'}">${cobro?'−':'+'} ${fmtARS(monto)}</b><button class="btn-sm danger" data-anular="${v.id}" style="padding:4px 8px">Anular</button></div>`;
     }).join(''):'Todavía no tiene movimientos.';
     box.querySelectorAll('[data-anular]').forEach(b=>b.addEventListener('click',()=>anularMovimiento(movs.find(m=>m.id===b.dataset.anular))));
   }catch(e){const box=$id('fd-movs');if(box)box.textContent='No se pudieron cargar los movimientos.';}
@@ -2724,7 +2754,7 @@ async function cobrarFiado(c,monto,medio){
   try{
     const batch=writeBatch(db);
     batch.set(doc(collection(db,'ventas')),{negocioId:c.negocioId||negocios[0].id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
-      tipo:'cobro',clienteId:c.id,clienteNombre:c.nombre,importe:monto,medio,pagos:[{medio,importe:monto}],descripcion:'Cobro fiado — '+c.nombre,
+      tipo:'cobro',clienteId:c.id,clienteNombre:c.nombre,importe:monto,medio,pagos:[{medio,importe:monto}],descripcion:'Cobro cuenta — '+c.nombre,
       fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()});
     batch.update(doc(db,'clientes',c.id),{saldo:increment(-monto),ultimoMov:hoy()});
     await batch.commit();toast('Cobro registrado','green');await refrescarFiado(c.id);
@@ -2732,7 +2762,7 @@ async function cobrarFiado(c,monto,medio){
 }
 async function fiarMas(c,monto,desc){
   if(!monto||monto<=0){toast('Ingresá el monto','err');return;}
-  try{await guardarVentaPagos({importe:monto,desc,pagos:[{medio:'fiado',importe:monto}],cli:c});toast('Anotado al fiado','green');await refrescarFiado(c.id);}
+  try{await guardarVentaPagos({importe:monto,desc,pagos:[{medio:'fiado',importe:monto}],cli:c});toast('Anotado en cuenta','green');await refrescarFiado(c.id);}
   catch(e){logError('fiarMas',e.message);toast('Error al anotar: '+(e.message||e.code||'desconocido'),'err');}
 }
 // Anular un fiado o un cobro: borra el movimiento y devuelve el saldo del cliente a lo que era (una sola operación)
@@ -2762,7 +2792,7 @@ function pasosHTML(){
   const pasos=[
     {k:'nombre',t:'Ponele el nombre a tu negocio',ok:!!n&&n!=='Mi negocio'&&!/^Negocio de /.test(n),go:'config',b:'Configurar'},
     {k:'venta',t:'Registrá tu primera venta',ok:!!p.venta||ventas.length>0,go:null,b:''},
-    {k:'fiado',t:'Anotá un cliente con fiado',ok:cuentas.length>0,go:'fiado',b:'Ir a Fiado'},
+    {k:'fiado',t:'Anotá un cliente en cuenta',ok:cuentas.length>0,go:'fiado',b:'Ir a En cuenta'},
     {k:'cierre',t:'Mirá el cierre de caja del día',ok:!!p.cierre,go:'cierre',b:'Ver cierre'}];
   if(pasos.every(x=>x.ok))return '';
   const hechos=pasos.filter(x=>x.ok).length;
@@ -2783,7 +2813,7 @@ function planCardHTML(){
   if(!myDoc||myRole!=='owner')return '';
   const basico=esBasico();
   return `<div class="cierre-card" style="margin-bottom:14px;border-left:4px solid var(--gold)"><div class="cierre-title">${basico?'⭐ Tu plan: Básico':'⭐ Tu plan: Avanzada'}</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">${basico?'Un negocio, una sucursal: vender con todas las formas de pago, fiado, gastos y cierre de caja.':'Varias sucursales, empleados con su propio acceso y reportes completos.'}</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">${basico?'Un negocio, una sucursal: vender con todas las formas de pago, cuentas de clientes, gastos y cierre de caja.':'Varias sucursales, empleados con su propio acceso y reportes completos.'}</p>
     ${basico?`<a class="btn-sm gold" style="display:inline-flex;text-decoration:none" target="_blank" rel="noopener" href="${waLink('Hola RavenTechs, quiero pasar mi PuntoVenta al plan Avanzada (sucursales, empleados y reportes)')}">📲 Quiero el plan Avanzada</a>`:''}</div>`;
 }
 
