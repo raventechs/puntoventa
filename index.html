@@ -919,10 +919,7 @@ var __rtPWA = (function() {
     </div>
     <div class="field"><label>Nombre del negocio *</label><input id="neg-nombre" placeholder="Kiosco Don Luis"/></div>
     <div class="field"><label>Tipo</label>
-      <select id="neg-tipo">
-        <option>Kiosco</option><option>Ferretería</option><option>Almacén</option>
-        <option>Verdulería</option><option>Panadería</option><option>Farmacia</option><option>Otro</option>
-      </select>
+      <select id="neg-tipo"></select>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" id="btn-modal-neg-cancel">Cancelar</button>
@@ -1592,13 +1589,46 @@ function updMorosidadBadge(){
 }
 const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Caja',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',config:'Configuración'};
 
+// ── RUBROS: una sola app; el rubro cambia el ícono, el ejemplo y los atajos de venta (los datos y las reglas son los mismos)
+const RUBROS={
+  'Kiosco':{icon:'🏪',ej:'Gaseosa, cigarrillos…',items:['Gaseosa','Cigarrillos','Golosinas','Alfajor','Recarga']},
+  'Almacén':{icon:'🛒',ej:'Fideos, leche, pan…',items:['Almacén','Lácteos','Bebidas','Limpieza','Pan']},
+  'Fiambrería':{icon:'🧀',ej:'Jamón, queso 200g…',items:['Jamón','Queso','Salame','Fiambre 200g','Sándwich']},
+  'Verdulería':{icon:'🥦',ej:'Tomate, papa, banana…',items:['Verdura','Fruta','Papa','Tomate','Cajón']},
+  'Panadería':{icon:'🥖',ej:'Pan, facturas…',items:['Pan','Facturas','Medialunas','Tortas','Sándwich']},
+  'Bazar':{icon:'🏠',ej:'Vaso, plato, sartén…',items:['Vajilla','Cocina','Limpieza','Regalería','Plásticos']},
+  'Tienda de ropa':{icon:'👕',ej:'Remera, jean, campera…',items:['Remera','Jean','Camisa','Campera','Accesorio']},
+  'Ferretería':{icon:'🔧',ej:'Tornillos, pintura…',items:['Tornillos','Pintura','Herramienta','Eléctrico','Plomería']},
+  'Farmacia':{icon:'💊',ej:'Perfumería, medicamento…',items:['Perfumería','Medicamento','Higiene','Vitaminas','Pañales']},
+  'Otro':{icon:'🏬',ej:'Lo que vendiste',items:[]}};
+const rubroDe=n=>RUBROS[(n&&n.tipo)||'']||null;
+const opcionesRubros=sel=>Object.keys(RUBROS).map(t=>`<option value="${t}"${sel===t?' selected':''}>${RUBROS[t].icon} ${t}</option>`).join('');
+document.getElementById('neg-tipo').innerHTML=opcionesRubros('Kiosco');
+function preguntarRubro(){
+  const n=negocios[0];
+  if(!n||negocios.length!==1||!esBasico()||!me||me.uid!==n.ownerUid||RUBROS[n.tipo])return;
+  try{if(localStorage.getItem('pv_rubro_skip_'+me.uid))return;}catch(e){}
+  if($id('modal-rubro'))return;
+  const ov=document.createElement('div');ov.className='modal-overlay open';ov.id='modal-rubro';ov.style.zIndex=1200;
+  ov.innerHTML=`<div class="modal"><div class="modal-header"><span class="modal-title">¿Qué tipo de negocio tenés?</span></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Así la app te muestra ejemplos y atajos de tu rubro. Lo podés cambiar después en Configuración.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${Object.keys(RUBROS).map(t=>`<button class="btn-sm" data-rubro="${t}" style="justify-content:center;padding:12px">${RUBROS[t].icon} ${t}</button>`).join('')}</div>
+    <button class="btn-cancel" id="rubro-luego" style="width:100%;margin-top:12px">Más tarde</button></div>`;
+  document.body.appendChild(ov);
+  ov.querySelectorAll('[data-rubro]').forEach(b=>b.addEventListener('click',async()=>{
+    const t=b.dataset.rubro;
+    try{await updateDoc(doc(db,'negocios',n.id),{tipo:t,icon:RUBROS[t].icon});n.tipo=t;n.icon=RUBROS[t].icon;ov.remove();setTopTitle();if(currentPage==='vender')renderVender();toast('Listo: '+t,'green');}
+    catch(e){toast('No se pudo guardar el rubro','err');}
+  }));
+  $id('rubro-luego').addEventListener('click',()=>{try{localStorage.setItem('pv_rubro_skip_'+me.uid,'1');}catch(e){}ov.remove();});
+}
 // Barra de arriba: el nombre del negocio va grande y «PuntoVenta · pantalla» chico (con varios negocios o sin nombre queda PuntoVenta)
 function setTopTitle(page){
   const el=document.getElementById('owner-page-title');if(!el)return;
   const pg=page||currentPage;
   const nombre=(negocios.length===1&&negocios[0].nombre&&String(negocios[0].nombre).trim())||'';
   const main=el.querySelector('.tt-main'),sub=el.querySelector('.tt-sub');
-  main.textContent=nombre||'PuntoVenta';
+  main.textContent=(nombre&&negocios[0].icon?negocios[0].icon+' ':'')+(nombre||'PuntoVenta');
   sub.textContent=(nombre?'PuntoVenta':'')+(nombre&&PAGE_TITLES[pg]?' · ':'')+(PAGE_TITLES[pg]||'');
 }
 function renderPage(page){
@@ -1611,6 +1641,7 @@ function renderPage(page){
   document.querySelectorAll('.page[id^=page-]').forEach(p=>p.style.display='none');
   document.getElementById(`page-${page}`).style.display='block';
   setTopTitle(page);
+  setTimeout(preguntarRubro,600);
   document.getElementById('topbar-money-anim').style.display=page==='dashboard'?'block':'none';
   if(page==='dashboard')renderDashboard();
   else if(page==='vender')renderVender();
@@ -2212,9 +2243,9 @@ function renderConfig(){
         <div class="field"><label>Nombre del negocio</label>
           <input class="config-nombre-input" data-neg-id="${n.id}" value="${sanitizeHTML(n.nombre)}" placeholder="Nombre del negocio" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px"/>
         </div>
-        ${modoNegocio==='multi'?`<div class="field" style="margin-top:10px"><label>Tipo</label>
+        ${true?`<div class="field" style="margin-top:10px"><label>Rubro</label>
           <select class="config-tipo-select" data-neg-id="${n.id}" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:15px">
-            ${['Kiosco','Ferretería','Almacén','Verdulería','Panadería','Farmacia','Negocio único','Otro'].map(t=>`<option${n.tipo===t?' selected':''}>${t}</option>`).join('')}
+            ${RUBROS[n.tipo]?'':`<option value="${sanitizeHTML(n.tipo||'')}" selected>${sanitizeHTML(n.tipo||'Elegí tu rubro')}</option>`}${opcionesRubros(n.tipo)}
           </select>
         </div>`:''}
         <button class="btn-sm gold" data-save-neg="${n.id}" style="width:100%;justify-content:center;margin-top:14px;padding:11px">💾 Guardar cambios</button>
@@ -2230,10 +2261,10 @@ function renderConfig(){
       btn.disabled=true;btn.textContent='Guardando...';
       try{
         const data={nombre:nuevoNombre};
-        if(tipoSelect)data.tipo=tipoSelect.value;
+        if(tipoSelect&&RUBROS[tipoSelect.value]){data.tipo=tipoSelect.value;data.icon=RUBROS[tipoSelect.value].icon;}
         await updateDoc(doc(db,'negocios',negId),data);
         const neg=negocios.find(n=>n.id===negId);
-        if(neg){neg.nombre=nuevoNombre;if(tipoSelect)neg.tipo=tipoSelect.value;}
+        if(neg){neg.nombre=nuevoNombre;if(data.tipo){neg.tipo=data.tipo;neg.icon=data.icon;}}
         toast('Datos guardados','green');setTopTitle();
       }catch(e){toast('Error al guardar','err');}
       btn.disabled=false;btn.textContent='💾 Guardar cambios';
@@ -2385,7 +2416,7 @@ document.getElementById('btn-modal-neg-save').addEventListener('click',async()=>
     return;
   }
   const tipo=document.getElementById('neg-tipo').value;
-  const icons={"Kiosco":"🏪","Ferretería":"🔧","Almacén":"🛒","Verdulería":"🥦","Panadería":"🥖","Farmacia":"💊","Otro":"🏬"};
+  const icons=Object.fromEntries(Object.keys(RUBROS).map(t=>[t,RUBROS[t].icon]));
   const btn=document.getElementById('btn-modal-neg-save');btn.disabled=true;btn.textContent='Guardando...';
   try{
     const ref=await addDoc(collection(db,'negocios'),{nombre,tipo,icon:icons[tipo]||'🏬',ownerUid:me.uid,ownerEmail:me.email,createdAt:serverTimestamp()});
@@ -2581,7 +2612,7 @@ function renderVender(){
         <div style="display:flex;gap:8px"><select class="vd-sel" id="vd-cliente" style="flex:1">${opcionesClientes('')}</select><button type="button" class="btn-sm gold" id="vd-cli-nuevo" style="height:42px">＋ Nuevo</button></div>
       </div>
       <div class="depto-chips" id="depto-chips-vender" style="margin-bottom:8px"></div>
-      <input class="desc-input" type="text" id="vd-desc" placeholder="Qué vendiste (opcional)"/>
+      <input class="desc-input" type="text" id="vd-desc" placeholder="${sanitizeHTML(rubroDe(negocios[0])?'Ej: '+rubroDe(negocios[0]).ej:'Qué vendiste (opcional)')}"/>
       <button class="btn-venta" id="vd-guardar">✓ Registrar venta</button>
     </div>
     <div class="sec-header"><span class="sec-title">Últimas ventas de hoy</span><button class="btn-sm" id="vd-ver-todas">Ver todas →</button></div>
@@ -2606,7 +2637,11 @@ function renderVender(){
   $id('vd-deben').addEventListener('click',()=>renderPage('fiado'));
   el.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>renderPage(b.dataset.go)));
   renderChipsDeptos();
-  if(departamentos.every((d,i)=>d===DEPTOS_DEFAULT[i]))$id('depto-chips-vender').innerHTML='';   // los de fábrica («Departamento 1…») no ayudan
+  if(departamentos.every((d,i)=>d===DEPTOS_DEFAULT[i])){   // los de fábrica («Departamento 1…») no ayudan: se usan los atajos del rubro
+    const it=(rubroDe(negocios[0])||{}).items||[];
+    $id('depto-chips-vender').innerHTML=it.map(t=>`<button type="button" class="depto-chip" data-atajo="${sanitizeHTML(t)}">${sanitizeHTML(t)}</button>`).join('');
+    $id('depto-chips-vender').querySelectorAll('[data-atajo]').forEach(b=>b.addEventListener('click',()=>{const i=$id('vd-desc');i.value=b.dataset.atajo;i.focus();}));
+  }
 }
 async function vdGuardar(){
   const importe=parseFloat($id('vd-importe').value);
