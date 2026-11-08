@@ -1,7 +1,7 @@
 // sw-puntoventa.js — Service Worker PuntoVenta v2.1
 // P3 ROBUSTEZ: Caja + Ventas offline
 
-const CACHE_NAME = 'puntoventa-v2.3';
+const CACHE_NAME = 'puntoventa-v2.4';
 // Rutas en la raíz del dominio (puntoventa.raventechsapp.com)
 const SHELL = ['/', '/index.html'];
 const EXTRA = [
