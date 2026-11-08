@@ -1185,8 +1185,7 @@ async function loadAdminUsers(){
       ${demoActions}
       ${u.rol==='owner'?`<div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <span style="font-size:12px;color:var(--muted)">Límite de negocios:</span>
-        <input type="number" min="1" max="20" value="${u.features?.limiteNegocios??1}" style="width:56px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font)" data-lim-uid="${d.id}"/>
-        <button class="btn-alim" data-uid="${d.id}">💾 Guardar</button>
+        ${[[1,'1'],[3,'Hasta 3'],[20,'Todos']].map(([v,l])=>`<button class="btn-alim" data-uid="${d.id}" data-val="${v}" style="padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:${((u.features?.limiteNegocios??1)===v)?'var(--gold)':'var(--surface)'};color:${((u.features?.limiteNegocios??1)===v)?'#000':'var(--text)'}">${l}</button>`).join('')}
       </div>
       <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
         <span style="font-size:12px;color:var(--muted)">Plus Morosidad:</span>
@@ -1219,11 +1218,12 @@ document.getElementById('admin-users-list').addEventListener('click',async e=>{
     toast('Cuenta activada','green');await loadAdminUsers();
   }
   if(lim){
-    const nuevoLimite=parseInt(document.querySelector(`input[data-lim-uid="${lim.dataset.uid}"]`)?.value)||1;
+    const nuevoLimite=parseInt(lim.dataset.val)||1;
     try{
       await updateDoc(doc(db,'usuarios',lim.dataset.uid),{'features.limiteNegocios':nuevoLimite});
       toast(`Límite actualizado a ${nuevoLimite}`,'green');
       if(me&&me.uid===lim.dataset.uid){myFeatures={...myFeatures,limiteNegocios:nuevoLimite};applyModoUI();}
+      await loadAdminUsers();
     }catch(e){toast('Error al actualizar límite','err');}
   }
   if(moros){
