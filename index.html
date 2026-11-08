@@ -708,12 +708,11 @@ var __rtPWA = (function() {
     <div class="nav-item" data-page="vender"><span class="nav-icon">🛒</span>Vender</div>
     <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-item" data-page="negocios"><span class="nav-icon">🏪</span>Mis negocios</div>
-    <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Ventas del día</div>
+    <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Caja</div>
     <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
     <div class="nav-item" data-page="gastos"><span class="nav-icon">🧮</span>Gastos</div>
     <div class="nav-item" data-page="fiado"><span class="nav-icon">📒</span>En cuenta</div>
     <div class="nav-item" data-page="clientes"><span class="nav-icon">💳</span>Clientes<span class="nav-badge" id="sb-morosidad-badge">0</span></div>
-    <div class="nav-item" data-page="cierre"><span class="nav-icon">🔒</span>Cierre de caja</div>
     <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
     <div class="sb-bottom">
       <div id="superuser-mode-switch" style="display:none;margin-bottom:12px;padding:10px;background:rgba(255,255,255,.06);border-radius:8px;border:1px dashed rgba(255,255,255,.2)">
@@ -773,7 +772,6 @@ var __rtPWA = (function() {
     <div id="page-empleados" class="page" style="display:none"></div>
     <div id="page-gastos" class="page" style="display:none"></div>
     <div id="page-clientes" class="page" style="display:none"></div>
-    <div id="page-cierre" class="page" style="display:none"></div>
     <div id="page-config" class="page" style="display:none"></div>
   </div>
   <div class="mob-nav">
@@ -781,12 +779,11 @@ var __rtPWA = (function() {
       <div class="mob-item" data-page="vender"><span class="mob-icon">🛒</span>Vender</div>
       <div class="mob-item active" data-page="dashboard"><span class="mob-icon">📊</span>Dashboard</div>
       <div class="mob-item" data-page="negocios"><span class="mob-icon">🏪</span>Negocios</div>
-      <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Ventas</div>
+      <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Caja</div>
       <div class="mob-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge" id="mob-pend-badge">0</span></div>
       <div class="mob-item" data-page="gastos"><span class="mob-icon">🧮</span>Gastos</div>
       <div class="mob-item" data-page="fiado"><span class="mob-icon">📒</span>En cuenta</div>
       <div class="mob-item" data-page="clientes"><span class="mob-icon">💳</span>Clientes<span class="mob-badge" id="mob-morosidad-badge">0</span></div>
-      <div class="mob-item" data-page="cierre"><span class="mob-icon">🔒</span>Cierre</div>
     </div>
   </div>
 </div>
@@ -1590,7 +1587,7 @@ function updMorosidadBadge(){
   if(n>0){sb.textContent=n;sb.classList.add('show');mob.textContent=n;mob.classList.add('show');}
   else{sb.classList.remove('show');mob.classList.remove('show');}
 }
-const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Ventas del día',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',cierre:'Cierre de caja',config:'Configuración'};
+const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Caja',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',config:'Configuración'};
 
 function renderPage(page){
   if(page!=='ventas'&&fechaVentasSeleccionada!==null){
@@ -1611,7 +1608,6 @@ function renderPage(page){
   else if(page==='empleados')renderEmpleados();
   else if(page==='gastos')renderGastos();
   else if(page==='clientes')renderClientes();
-  else if(page==='cierre'){pasoMarcar('cierre');renderCierre();}
   else if(page==='config')renderConfig();
 }
 
@@ -1675,6 +1671,41 @@ function renderNegocios(){
     </div>`;
   el.querySelector('#btn-add-neg')?.addEventListener('click',()=>document.getElementById('modal-negocio').classList.add('open'));
 }
+// ── CAJA: resumen del día por medio de pago + cierre enviado por WhatsApp (como en las otras apps)
+function resumenDatos(n,fecha){
+  const vn=ventas.filter(v=>v.fecha===fecha&&(!n||v.negocioId===n.id));
+  const g=gastos.filter(x=>x.fecha===fecha&&(!n||x.negocioId===n.id)).reduce((a,x)=>a+(Number(x.importe)||0),0);
+  const m={ef:sumMedio(vn,'efectivo'),mp:sumMedio(vn,'mp'),deb:sumMedio(vn,'debito'),cred:sumMedio(vn,'credito'),tr:sumMedio(vn,'transferencia'),cta:sumMedio(vn,'fiado')};
+  m.total=m.ef+m.mp+m.deb+m.cred+m.tr;m.gastos=g;m.cant=vn.filter(v=>v.tipo!=='cobro').length;
+  return m;
+}
+function resumenCajaHTML(fecha){
+  if(!negocios.length)return '';
+  return negocios.map(n=>{
+    const m=resumenDatos(n,fecha);
+    const fila=(l,v,st)=>`<div class="cierre-row"><span class="cierre-label">${l}</span><span class="cierre-val"${st?` style="color:${st}"`:''}>${fmtARS(v)}</span></div>`;
+    return `<div class="cierre-card" style="padding:16px;margin-bottom:14px"><div class="cierre-title" style="margin-bottom:8px">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)} — Resumen de caja</div>
+      ${fila('💵 Efectivo',m.ef)}${fila('📱 Mercado Pago',m.mp,'var(--mp)')}${fila('💳 Débito',m.deb,'var(--blue)')}${fila('💰 Crédito',m.cred,'#a855f7')}${fila('🏦 Transferencia',m.tr,'#0891b2')}
+      <div class="cierre-row cierre-total"><span class="cierre-label">Total cobrado</span><span class="cierre-val">${fmtARS(m.total)}</span></div>
+      ${m.cta?fila('📒 En cuenta (no entró plata)',m.cta,'var(--warn)'):''}${m.gastos?fila('🧮 Gastos',m.gastos,'var(--red)'):''}
+    </div>`;
+  }).join('')+`<button class="btn-venta" id="btn-cerrar-caja" style="margin-bottom:16px;padding:13px;font-size:15px">🔒 Cerrar caja y enviar resumen por WhatsApp</button>`;
+}
+function cerrarCajaWA(fecha){
+  pasoMarcar('cierre');
+  const f=new Date(fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const bloques=negocios.map(n=>{
+    const m=resumenDatos(n,fecha);
+    const l=[`*🔒 Cierre de caja — ${n.nombre}*`,f,'',`💵 Efectivo: ${fmtARS(m.ef)}`,`📱 Mercado Pago: ${fmtARS(m.mp)}`,`💳 Débito: ${fmtARS(m.deb)}`,`💰 Crédito: ${fmtARS(m.cred)}`,`🏦 Transferencia: ${fmtARS(m.tr)}`,`*Total cobrado: ${fmtARS(m.total)}*`];
+    if(m.cta)l.push(`📒 En cuenta (no entró plata): ${fmtARS(m.cta)}`);
+    if(m.gastos){l.push(`🧮 Gastos: ${fmtARS(m.gastos)}`);l.push(`Cobrado menos gastos: ${fmtARS(m.total-m.gastos)}`);}
+    const deben=cuentas.reduce((a,c)=>a+(Number(c.saldo)||0),0);
+    if(deben>0)l.push(`📒 Me deben en total: ${fmtARS(deben)}`);
+    l.push(`Ventas del día: ${m.cant}`);
+    return l.join('\n');
+  });
+  window.open('https://wa.me/?text='+encodeURIComponent(bloques.join('\n\n')+'\n\n_PuntoVenta · RavenTechs_'),'_blank');
+}
 function renderVentas(){
   const el=document.getElementById('page-ventas');
   const fechaMostrada=fechaVentasSeleccionada||hoy();
@@ -1682,15 +1713,17 @@ function renderVentas(){
   const vh=ventas; // ya viene filtrado por la fecha cargada en loadOwnerData
   el.innerHTML=`
     <div class="sec-header" style="flex-wrap:wrap;gap:10px">
-      <span class="sec-title" style="font-size:17px">Ventas — ${new Date(fechaMostrada+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}${esHoy?' (hoy)':''}</span>
+      <span class="sec-title" style="font-size:17px">Caja — ${new Date(fechaMostrada+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}${esHoy?' (hoy)':''}</span>
       <div style="display:flex;gap:8px;align-items:center">
         <input type="date" id="ventas-fecha-filtro" value="${fechaMostrada}" max="${hoy()}" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px"/>
         ${!esHoy?`<button class="btn-sm" id="btn-ventas-hoy">Volver a hoy</button>`:''}
         ${esHoy?`<button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button>`:''}
       </div>
     </div>
+    ${resumenCajaHTML(fechaMostrada)}
     ${vh.length===0?emptyHTML('🧾',esHoy?'Sin ventas hoy':'Sin ventas ese día',esHoy?'Las ventas aparecen acá en tiempo real':''):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`}`;
   el.querySelector('#btn-nueva-venta')?.addEventListener('click',()=>openModalVentaOwner());
+  el.querySelector('#btn-cerrar-caja')?.addEventListener('click',()=>cerrarCajaWA(fechaMostrada));
   el.querySelector('#ventas-fecha-filtro')?.addEventListener('change',async e=>{
     const nuevaFecha=e.target.value;
     if(!nuevaFecha)return;
@@ -2093,25 +2126,6 @@ document.getElementById('btn-modal-cobrar-save').addEventListener('click',async(
   }
   btn.disabled=false;btn.textContent='Confirmar cobro';
 });
-function renderCierre(){
-  const el=document.getElementById('page-cierre');
-  if(!negocios.length){el.innerHTML=emptyHTML('🔒','Sin negocios');return;}
-  const vh=ventas.filter(v=>v.fecha===hoy());
-  el.innerHTML=negocios.map(n=>{
-    const vn=vh.filter(v=>v.negocioId===n.id);
-    const ef=sumMedio(vn,'efectivo'),mp=sumMedio(vn,'mp'),deb=sumMedio(vn,'debito'),cred=sumMedio(vn,'credito'),transf=sumMedio(vn,'transferencia'),fiadoDia=sumMedio(vn,'fiado');
-    return`<div class="cierre-card"><div class="cierre-title">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)} — Resumen del día</div>
-      <div class="cierre-row"><span class="cierre-label">💵 Efectivo</span><span class="cierre-val">${fmtARS(ef)}</span></div>
-      <div class="cierre-row"><span class="cierre-label">📱 Mercado Pago</span><span class="cierre-val" style="color:var(--mp)">${fmtARS(mp)}</span></div>
-      <div class="cierre-row"><span class="cierre-label">💳 Débito</span><span class="cierre-val" style="color:var(--blue)">${fmtARS(deb)}</span></div>
-      <div class="cierre-row"><span class="cierre-label">💰 Crédito</span><span class="cierre-val" style="color:#a855f7">${fmtARS(cred)}</span></div>
-      <div class="cierre-row"><span class="cierre-label">🏦 Transferencia</span><span class="cierre-val" style="color:#0891b2">${fmtARS(transf)}</span></div>
-      <div class="cierre-row cierre-total"><span class="cierre-label">Total cobrado del día</span><span class="cierre-val">${fmtARS(ef+mp+deb+cred+transf)}</span></div>
-      ${fiadoDia?`<div class="cierre-row"><span class="cierre-label">📒 En cuenta del día (no entró plata)</span><span class="cierre-val" style="color:var(--warn)">${fmtARS(fiadoDia)}</span></div>`:''}
-      <button class="btn-sm gold" style="width:100%;justify-content:center;margin-top:16px;padding:12px">🔒 Cerrar caja del día</button>
-    </div>`;
-  }).join('');
-}
 // ══════════ MODO PRÁCTICA ══════════
 // Todo lo que se crea acá lleva _demo:true y se puede quitar sin tocar datos reales.
 const _rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -2793,7 +2807,7 @@ function pasosHTML(){
     {k:'nombre',t:'Ponele el nombre a tu negocio',ok:!!n&&n!=='Mi negocio'&&!/^Negocio de /.test(n),go:'config',b:'Configurar'},
     {k:'venta',t:'Registrá tu primera venta',ok:!!p.venta||ventas.length>0,go:null,b:''},
     {k:'fiado',t:'Anotá un cliente en cuenta',ok:cuentas.length>0,go:'fiado',b:'Ir a En cuenta'},
-    {k:'cierre',t:'Mirá el cierre de caja del día',ok:!!p.cierre,go:'cierre',b:'Ver cierre'}];
+    {k:'cierre',t:'Cerrá la caja y mandá el resumen por WhatsApp',ok:!!p.cierre,go:'ventas',b:'Ir a Caja'}];
   if(pasos.every(x=>x.ok))return '';
   const hechos=pasos.filter(x=>x.ok).length;
   const sig=pasos.find(x=>!x.ok);
@@ -2813,7 +2827,7 @@ function planCardHTML(){
   if(!myDoc||myRole!=='owner')return '';
   const basico=esBasico();
   return `<div class="cierre-card" style="margin-bottom:14px;border-left:4px solid var(--gold)"><div class="cierre-title">${basico?'⭐ Tu plan: Básico':'⭐ Tu plan: Avanzada'}</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">${basico?'Un negocio, una sucursal: vender con todas las formas de pago, cuentas de clientes, gastos y cierre de caja.':'Varias sucursales, empleados con su propio acceso y reportes completos.'}</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">${basico?'Un negocio, una sucursal: vender con todas las formas de pago, cuentas de clientes, gastos y caja con cierre por WhatsApp.':'Varias sucursales, empleados con su propio acceso y reportes completos.'}</p>
     ${basico?`<a class="btn-sm gold" style="display:inline-flex;text-decoration:none" target="_blank" rel="noopener" href="${waLink('Hola RavenTechs, quiero pasar mi PuntoVenta al plan Avanzada (sucursales, empleados y reportes)')}">📲 Quiero el plan Avanzada</a>`:''}</div>`;
 }
 
