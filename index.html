@@ -1433,6 +1433,12 @@ function applyModoUI(){
   mostrar('empleados',!basico&&!esUnico);
   mostrar('clientes',!basico&&tieneMorosidad());
   mostrar('fiado',true);
+  // Básico: «Caja» es el inicio (donde se vende y se cierra el día) e «Historial» es la lista de ventas con búsqueda
+  const lbl=(page,txt)=>document.querySelectorAll(`[data-page="${page}"]`).forEach(el=>{const t=[...el.childNodes].reverse().find(n=>n.nodeType===3);if(t)t.textContent=txt;});
+  lbl('vender',basico?'Caja':'Vender');
+  lbl('ventas',basico?'Historial':'Caja');
+  PAGE_TITLES.vender=basico?'Caja':'Vender';PAGE_TITLES.ventas=basico?'Historial':'Caja';
+  try{setTopTitle();}catch(e){}
 }
 const SUPERUSER_EMAILS=['rgaraventa@gmail.com'];
 function mostrarSelectorSuperusuario(email){
@@ -1724,10 +1730,12 @@ function resumenDatos(n,fecha){
 }
 function resumenCajaHTML(fecha){
   if(!negocios.length)return '';
-  return negocios.map(n=>{
-    const m=resumenDatos(n,fecha);
+  // Básico = un solo negocio y una sola sucursal: un único resumen que junta todo (aunque la cuenta tenga más negocios cargados)
+  const lista=esBasico()?[{id:null,_todos:true,icon:negocios[0].icon,nombre:negocios.length===1?negocios[0].nombre:'Resumen de caja'}]:negocios;
+  return lista.map(n=>{
+    const m=resumenDatos(n._todos?null:n,fecha);
     const fila=(l,v,st)=>`<div class="cierre-row"><span class="cierre-label">${l}</span><span class="cierre-val"${st?` style="color:${st}"`:''}>${fmtARS(v)}</span></div>`;
-    return `<div class="cierre-card" style="padding:16px;margin-bottom:14px"><div class="cierre-title" style="margin-bottom:8px">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)} — Resumen de caja</div>
+    return `<div class="cierre-card" style="padding:16px;margin-bottom:14px"><div class="cierre-title" style="margin-bottom:8px">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)}${n._todos&&negocios.length!==1?'':' — Resumen de caja'}</div>
       ${fila('💵 Efectivo',m.ef)}${fila('📱 Mercado Pago',m.mp,'var(--mp)')}${fila('💳 Débito',m.deb,'var(--blue)')}${fila('💰 Crédito',m.cred,'#a855f7')}${fila('🏦 Transferencia',m.tr,'#0891b2')}
       <div class="cierre-row cierre-total"><span class="cierre-label">Total cobrado</span><span class="cierre-val">${fmtARS(m.total)}</span></div>
       ${m.cta?fila('📒 En cuenta (no entró plata)',m.cta,'var(--warn)'):''}${m.gastos?fila('🧮 Gastos',m.gastos,'var(--red)'):''}
@@ -1737,8 +1745,9 @@ function resumenCajaHTML(fecha){
 function cerrarCajaWA(fecha){
   pasoMarcar('cierre');
   const f=new Date(fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const bloques=negocios.map(n=>{
-    const m=resumenDatos(n,fecha);
+  const lista=esBasico()?[{_todos:true,nombre:negocios.length===1?negocios[0].nombre:'PuntoVenta'}]:negocios;
+  const bloques=lista.map(n=>{
+    const m=resumenDatos(n._todos?null:n,fecha);
     const l=[`*🔒 Cierre de caja — ${n.nombre}*`,f,'',`💵 Efectivo: ${fmtARS(m.ef)}`,`📱 Mercado Pago: ${fmtARS(m.mp)}`,`💳 Débito: ${fmtARS(m.deb)}`,`💰 Crédito: ${fmtARS(m.cred)}`,`🏦 Transferencia: ${fmtARS(m.tr)}`,`*Total cobrado: ${fmtARS(m.total)}*`];
     if(m.cta)l.push(`📒 En cuenta (no entró plata): ${fmtARS(m.cta)}`);
     if(m.gastos){l.push(`🧮 Gastos: ${fmtARS(m.gastos)}`);l.push(`Cobrado menos gastos: ${fmtARS(m.total-m.gastos)}`);}
@@ -1749,24 +1758,63 @@ function cerrarCajaWA(fecha){
   });
   window.open('https://wa.me/?text='+encodeURIComponent(bloques.join('\n\n')+'\n\n_PuntoVenta · RavenTechs_'),'_blank');
 }
+// ── HISTORIAL / CAJA del día: lista de ventas por fecha + búsqueda en todo el historial
+let _histCache={t:0,list:null};
+async function ventasHistorial(){
+  if(_histCache.list&&Date.now()-_histCache.t<60000)return _histCache.list;
+  const sn=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid)));
+  _histCache={t:Date.now(),list:sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0))};
+  return _histCache.list;
+}
+function coincideVenta(v,q){
+  const txt=[v.descripcion,v.clienteNombre,v.empleadoNombre,(MEDIOS_PV[v.medio]||{}).label,v.tipo==='cobro'?'cobro':'',String(v.importe||''),fmtARS(v.importe||0),v.fecha,fmtFechaCorta(v.fecha||'0000-00-00')].concat((v.pagos||[]).map(p=>(MEDIOS_PV[p.medio]||{}).label)).join(' ').toLowerCase();
+  return q.split(/\s+/).every(w=>txt.includes(w));
+}
 function renderVentas(){
+  _histCache={t:0,list:null};
   const el=document.getElementById('page-ventas');
+  const basico=esBasico();
   const fechaMostrada=fechaVentasSeleccionada||hoy();
   const esHoy=fechaMostrada===hoy();
   const vh=ventas; // ya viene filtrado por la fecha cargada en loadOwnerData
+  const fechaTxt=new Date(fechaMostrada+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+  const m0=resumenDatos(null,fechaMostrada);
   el.innerHTML=`
     <div class="sec-header" style="flex-wrap:wrap;gap:10px">
-      <span class="sec-title" style="font-size:17px">Caja — ${new Date(fechaMostrada+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}${esHoy?' (hoy)':''}</span>
+      <span class="sec-title" style="font-size:17px">${basico?'Historial':'Caja'} — ${fechaTxt}${esHoy?' (hoy)':''}</span>
       <div style="display:flex;gap:8px;align-items:center">
         <input type="date" id="ventas-fecha-filtro" value="${fechaMostrada}" max="${hoy()}" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px"/>
         ${!esHoy?`<button class="btn-sm" id="btn-ventas-hoy">Volver a hoy</button>`:''}
-        ${esHoy?`<button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button>`:''}
+        ${esHoy&&!basico?`<button class="btn-primary" id="btn-nueva-venta" style="margin-bottom:0;width:auto;padding:10px 18px;font-size:14px">＋ Nueva venta</button>`:''}
       </div>
     </div>
-    ${resumenCajaHTML(fechaMostrada)}
-    ${vh.length===0?emptyHTML('🧾',esHoy?'Sin ventas hoy':'Sin ventas ese día',esHoy?'Las ventas aparecen acá en tiempo real':''):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`}`;
+    <input class="vd-sel" id="ventas-buscar" type="search" placeholder="🔍 Buscar en todas las ventas (cliente, producto, medio, importe…)" style="margin:0 0 12px"/>
+    <div id="ventas-contenido"></div>`;
+  const cont=el.querySelector('#ventas-contenido');
+  const pintarDia=()=>{
+    cont.innerHTML=(basico
+      ?`<div class="vd-resumen" style="grid-template-columns:1fr 1fr"><div class="vd-res"><b>${fmtARS(m0.total)}</b><span>Cobrado ese día</span></div><div class="vd-res"><b>${fmtARS(m0.cta)}</b><span>En cuenta ese día</span></div></div>`
+      :resumenCajaHTML(fechaMostrada))
+      +(vh.length===0?emptyHTML('🧾',esHoy?'Sin ventas hoy':'Sin ventas ese día',esHoy?'Las ventas aparecen acá en tiempo real':''):`<div class="ventas-list">${vh.map(v=>ventaHTML(v,true)).join('')}</div>`);
+    cont.querySelector('#btn-cerrar-caja')?.addEventListener('click',()=>cerrarCajaWA(fechaMostrada));
+  };
+  let tmr=null,seq=0;
+  const pintarBusqueda=async q=>{
+    const mi=++seq;cont.innerHTML='<div style="color:var(--muted);padding:14px">Buscando…</div>';
+    try{
+      const todas=await ventasHistorial();if(mi!==seq)return;
+      const res=todas.filter(v=>coincideVenta(v,q)).slice(0,100);
+      const tot=res.reduce((a,v)=>a+(v.tipo==='cobro'?Number(v.importe)||0:sumCobrado([v])),0);
+      cont.innerHTML=res.length?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${res.length}${res.length===100?'+':''} resultado${res.length===1?'':'s'} · cobrado en esas ventas ${fmtARS(tot)}</div><div class="ventas-list">${res.map(v=>`<div style="font-size:11px;color:var(--muted);margin:8px 2px 2px">${fmtFechaCorta(v.fecha||'0000-00-00')}</div>${ventaHTML(v,false)}`).join('')}</div>`:emptyHTML('🔍','No encontré ventas con eso','Probá con otro nombre, producto o importe');
+    }catch(e){logError('buscarVentas',e.message);if(mi===seq)cont.innerHTML='<div style="color:var(--red);padding:14px">No se pudo buscar. Probá de nuevo.</div>';}
+  };
+  el.querySelector('#ventas-buscar').addEventListener('input',e=>{
+    clearTimeout(tmr);const q=e.target.value.toLowerCase().trim();
+    if(q.length<2){seq++;pintarDia();return;}
+    tmr=setTimeout(()=>pintarBusqueda(q),300);
+  });
+  pintarDia();
   el.querySelector('#btn-nueva-venta')?.addEventListener('click',()=>openModalVentaOwner());
-  el.querySelector('#btn-cerrar-caja')?.addEventListener('click',()=>cerrarCajaWA(fechaMostrada));
   el.querySelector('#ventas-fecha-filtro')?.addEventListener('change',async e=>{
     const nuevaFecha=e.target.value;
     if(!nuevaFecha)return;
@@ -2615,7 +2663,8 @@ function renderVender(){
       <input class="desc-input" type="text" id="vd-desc" placeholder="${sanitizeHTML(rubroDe(negocios[0])?'Ej: '+rubroDe(negocios[0]).ej:'Qué vendiste (opcional)')}"/>
       <button class="btn-venta" id="vd-guardar">✓ Registrar venta</button>
     </div>
-    <div class="sec-header"><span class="sec-title">Últimas ventas de hoy</span><button class="btn-sm" id="vd-ver-todas">Ver todas →</button></div>
+    ${resumenCajaHTML(hoy())}
+    <div class="sec-header"><span class="sec-title">Últimas ventas de hoy</span><button class="btn-sm" id="vd-ver-todas">Ver historial →</button></div>
     <div class="ventas-list">${vh.slice(0,5).map(v=>ventaHTML(v,true)).join('')||emptyHTML('🧾','Todavía no vendiste nada hoy')}</div>`;
   el.querySelectorAll('#vd-medios .medio-opt').forEach(b=>b.addEventListener('click',()=>{
     vdSel=b.dataset.m;
@@ -2634,6 +2683,7 @@ function renderVender(){
   $id('vd-cli-nuevo').addEventListener('click',()=>abrirModalCC(null,true));
   $id('vd-guardar').addEventListener('click',vdGuardar);
   $id('vd-ver-todas').addEventListener('click',()=>renderPage('ventas'));
+  $id('btn-cerrar-caja')?.addEventListener('click',()=>cerrarCajaWA(hoy()));
   $id('vd-deben').addEventListener('click',()=>renderPage('fiado'));
   el.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>renderPage(b.dataset.go)));
   renderChipsDeptos();
@@ -2854,7 +2904,7 @@ function pasosHTML(){
     {k:'nombre',t:'Ponele el nombre a tu negocio',ok:!!n&&n!=='Mi negocio'&&!/^Negocio de /.test(n),go:'config',b:'Configurar'},
     {k:'venta',t:'Registrá tu primera venta',ok:!!p.venta||ventas.length>0,go:null,b:''},
     {k:'fiado',t:'Anotá un cliente en cuenta',ok:cuentas.length>0,go:'fiado',b:'Ir a En cuenta'},
-    {k:'cierre',t:'Cerrá la caja y mandá el resumen por WhatsApp',ok:!!p.cierre,go:'ventas',b:'Ir a Caja'}];
+    {k:'cierre',t:'Cerrá la caja y mandá el resumen por WhatsApp',ok:!!p.cierre,go:'vender',b:'Ir a Caja'}];
   if(pasos.every(x=>x.ok))return '';
   const hechos=pasos.filter(x=>x.ok).length;
   const sig=pasos.find(x=>!x.ok);
