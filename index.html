@@ -821,6 +821,7 @@ var __rtPWA = (function() {
     </div>
     <div class="sec-title" style="margin-bottom:12px">Mis ventas de hoy</div>
     <div id="emp-ventas"></div>
+    <button class="btn-venta" id="btn-emp-cierre" style="margin:16px 0 30px;padding:13px;font-size:15px">🔒 Cerrar mi caja y enviar resumen por WhatsApp</button>
   </div>
 </div>
 
@@ -2610,6 +2611,17 @@ function startEmpVentasListener(){
   });
 }
 
+document.getElementById('btn-emp-cierre').addEventListener('click',()=>{
+  if(!empVentas.length){toast('Todavía no cargaste ventas hoy','err');return;}
+  const neg=(document.getElementById('emp-neg-name')?.textContent||'').trim();
+  const f=new Date(hoy()+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const m={ef:sumMedio(empVentas,'efectivo'),mp:sumMedio(empVentas,'mp'),deb:sumMedio(empVentas,'debito'),cred:sumMedio(empVentas,'credito'),tr:sumMedio(empVentas,'transferencia'),cta:sumMedio(empVentas,'fiado')};
+  const total=m.ef+m.mp+m.deb+m.cred+m.tr;
+  const l=[`*🔒 Cierre de caja — ${neg||'Negocio'}*`,`Cierra: ${me.email.split('@')[0]}`,f,'',`💵 Efectivo: ${fmtARS(m.ef)}`,`📱 Mercado Pago: ${fmtARS(m.mp)}`,`💳 Débito: ${fmtARS(m.deb)}`,`💰 Crédito: ${fmtARS(m.cred)}`,`🏦 Transferencia: ${fmtARS(m.tr)}`,`*Total cobrado: ${fmtARS(total)}*`];
+  if(m.cta)l.push(`📒 En cuenta (no entró plata): ${fmtARS(m.cta)}`);
+  l.push(`Ventas: ${empVentas.filter(v=>v.tipo!=='cobro').length}`,'','_PuntoVenta · RavenTechs_');
+  window.open('https://wa.me/?text='+encodeURIComponent(l.join('\n')),'_blank');
+});
 MEDIOS_SIMPLES.forEach(m=>{
   document.getElementById(`m-${m}`).addEventListener('click',()=>{
     selectedMedio=m;
