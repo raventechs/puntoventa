@@ -1679,6 +1679,7 @@ function renderDashboard(){
         ${alertaMorosidad.slice(0,4).map(({cl,e})=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px"><span style="font-size:13px;font-weight:600;color:var(--text)">${sanitizeHTML(cl.nombre)}</span><span style="font-size:12px;font-weight:700;color:${e.color==='red'?'var(--danger)':'var(--warn)'}">${e.label}</span></div>`).join('')}
       </div>
     </div>`:''}
+    <div id="dash-auto"></div>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(total)}</div><div class="kpi-label">Total del día</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(ef)}</div><div class="kpi-label">En caja</div></div>
@@ -1689,9 +1690,10 @@ function renderDashboard(){
       <div class="kpi-card d-ver-fiado" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">📒</span><span class="kpi-badge" style="background:var(--warn-bg);color:var(--warn)">En cuenta</span></div><div class="kpi-value" style="font-size:22px;color:var(--warn)">${fmtARS(debenTotal)}</div><div class="kpi-label">Me deben${fiadoHoy?' · hoy +'+fmtARS(fiadoHoy):''}</div></div>
       <div class="kpi-card d-ver-gastos" style="cursor:pointer"><div class="kpi-top"><span class="kpi-icon">🧮</span><span class="kpi-badge" style="background:#fee2e2;color:var(--danger)">Gastos</span></div><div class="kpi-value" style="font-size:22px;color:var(--danger)">${fmtARS(totalGastos)}</div><div class="kpi-label">Gastos del día</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:${tieneMultiNegocio()?'1fr 1fr':'1fr'};gap:20px">
-      ${tieneMultiNegocio()?`<div>
-        <div class="sec-header"><span class="sec-title">Negocios</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
+    <div id="dash-graf" style="margin-top:16px"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      ${(tieneMultiNegocio()||negocios.length>1)?`<div>
+        <div class="sec-header"><span class="sec-title">Sucursales</span><button class="btn-sm" id="d-ver-neg">Ver todo →</button></div>
         <div style="display:flex;flex-direction:column;gap:10px">
           ${negocios.length===0?emptyHTML('🏪','Sin negocios','Creá el primero desde Mis negocios'):negocios.map(n=>{const vn=vh.filter(v=>v.negocioId===n.id);const tn=sumCobrado(vn);return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);cursor:pointer" class="d-neg-card" data-id="${n.id}"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo)}</div><div style="font-size:15px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--text)">${fmtARS(tn)}</div><div style="font-size:11px;color:var(--muted)">${vn.length} ventas</div></div></div></div>`;}).join('')}
         </div>
@@ -1706,7 +1708,126 @@ function renderDashboard(){
   el.querySelector('#d-ver-clientes')?.addEventListener('click',()=>renderPage('clientes'));
   el.querySelector('.d-ver-gastos')?.addEventListener('click',()=>renderPage('gastos'));
   el.querySelector('.d-ver-fiado')?.addEventListener('click',()=>renderPage('fiado'));
-  el.querySelectorAll('.d-neg-card').forEach(c=>c.addEventListener('click',()=>renderPage('ventas')));
+  el.querySelectorAll('.d-neg-card').forEach(c=>c.addEventListener('click',()=>abrirFichaNegocio(c.dataset.id)));
+  pintarAnalisis();
+}
+// ── TABLERO DEL DUEÑO: frases automáticas, gráficos (barras 7 días, torta de medios, comparativa) y ficha por sucursal
+let _gastosCache={t:0,list:null};
+async function gastosHistorial(){
+  if(_gastosCache.list&&Date.now()-_gastosCache.t<60000)return _gastosCache.list;
+  let list=[];
+  try{const sn=await getDocs(query(collection(db,'gastos'),where('ownerUid','==',me.uid)));list=sn.docs.map(d=>({id:d.id,...d.data()}));}catch(e){console.error('gastos hist',e);}
+  _gastosCache={t:Date.now(),list};return list;
+}
+function sumarDias(f,n){const d=new Date(f+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function diaSem(f){return new Date(f+'T12:00:00Z').toLocaleDateString('es-AR',{weekday:'short',timeZone:'UTC'}).replace('.','');}
+function diaSemLargo(f){return new Date(f+'T12:00:00Z').toLocaleDateString('es-AR',{weekday:'long',timeZone:'UTC'});}
+function fmtK(n){n=Number(n)||0;if(n>=1e6)return'$'+(n/1e6).toFixed(n>=1e7?0:1).replace('.',',')+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(n>=1e4?0:1).replace('.',',')+'k';return'$'+Math.round(n);}
+function statsRango(V,G,negId,desde,hasta){
+  const vv=V.filter(v=>(!negId||v.negocioId===negId)&&v.fecha>=desde&&v.fecha<=hasta);
+  const gg=G.filter(x=>(!negId||x.negocioId===negId)&&x.fecha>=desde&&x.fecha<=hasta);
+  return{vv,total:sumCobrado(vv),cant:vv.filter(v=>v.tipo!=='cobro').length,gastos:gg.reduce((a,x)=>a+(Number(x.importe)||0),0),cta:sumMedio(vv,'fiado')};
+}
+function pct(a,b){return b?Math.round((a-b)/b*100):null;}
+function barrasSVG(vals,labels,hoyIdx){
+  const W=320,H=130,top=18,bot=22,max=Math.max(...vals,1),bw=W/vals.length;
+  return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Ventas de los últimos días">`+vals.map((v,i)=>{
+    const h=Math.max(v?3:0,Math.round((H-top-bot)*v/max)),x=i*bw+bw*0.18,w=bw*0.64,y=H-bot-h;
+    return`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="${i===hoyIdx?'var(--gold)':'var(--blue)'}" opacity="${i===hoyIdx?1:.85}"/><text x="${x+w/2}" y="${y-4}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--text)">${v?fmtK(v):''}</text><text x="${x+w/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="var(--muted)">${labels[i]}</text>`;
+  }).join('')+`</svg>`;
+}
+const COL_MEDIO={efectivo:'#16a34a',mp:'#009ee3',debito:'#1d4ed8',credito:'#a855f7',transferencia:'#0891b2'};
+function tortaHTML(list){
+  const it=MEDIOS_COBRO.map(m=>({m,v:sumMedio(list,m)})).filter(x=>x.v>0);
+  const tot=it.reduce((a,x)=>a+x.v,0);
+  if(!tot)return`<div style="font-size:13px;color:var(--muted);padding:10px 0">Todavía no hay cobros para mostrar.</div>`;
+  const R=40,C=2*Math.PI*R;let off=0;
+  const arcos=it.map(x=>{const l=C*x.v/tot;const s=`<circle cx="50" cy="50" r="${R}" fill="none" stroke="${COL_MEDIO[x.m]}" stroke-width="18" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"/>`;off+=l;return s;}).join('');
+  return`<div style="display:flex;align-items:center;gap:16px"><svg viewBox="0 0 100 100" width="110" height="110" role="img" aria-label="Medios de pago">${arcos}</svg><div style="flex:1;display:flex;flex-direction:column;gap:5px">${it.map(x=>`<div style="display:flex;align-items:center;gap:7px;font-size:13px"><span style="width:10px;height:10px;border-radius:3px;background:${COL_MEDIO[x.m]}"></span><span style="flex:1;color:var(--text)">${(MEDIOS_PV[x.m]||{}).label||x.m}</span><b style="color:var(--text)">${Math.round(x.v/tot*100)}%</b></div>`).join('')}</div></div>`;
+}
+function comparativaHTML(V,G,desde,hasta){
+  const filas=negocios.map(n=>({n,t:statsRango(V,G,n.id,desde,hasta).total})).sort((a,b)=>b.t-a.t);
+  const max=Math.max(...filas.map(f=>f.t),1);
+  return filas.map(f=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--text);font-weight:700">${sanitizeHTML(f.n.icon||'🏪')} ${sanitizeHTML(f.n.nombre)}</span><b style="color:var(--text)">${fmtARS(f.t)}</b></div><div style="height:10px;background:var(--surface2);border-radius:6px;overflow:hidden"><div style="height:100%;width:${Math.round(f.t/max*100)}%;background:var(--blue);border-radius:6px"></div></div></div>`).join('');
+}
+function frasesDelDia(V,G){
+  const h=hoy(),ay=sumarDias(h,-1),sp=sumarDias(h,-7);
+  const sh=statsRango(V,G,null,h,h),sa=statsRango(V,G,null,ay,ay),ss=statsRango(V,G,null,sp,sp);
+  const F=[];
+  if(!sh.vv.length&&!sa.total){F.push(['📭','Todavía no hay ventas cargadas hoy ni ayer.']);}
+  else{
+    const pa=pct(sh.total,sa.total);
+    if(sa.total)F.push([pa>=0?'📈':'📉',`Hoy, hasta ahora, se cobró <b>${fmtARS(sh.total)}</b>: ${pa===0?'igual que':Math.abs(pa)+'% '+(pa>0?'más que':'menos que')} ayer (${fmtARS(sa.total)}).`]);
+    else F.push(['💰',`Hoy, hasta ahora, se cobró <b>${fmtARS(sh.total)}</b>. Ayer no hubo cobros.`]);
+    const ps=pct(sh.total,ss.total);
+    if(ss.total&&ps!==null)F.push(['🗓️',`Comparado con el mismo día de la semana pasada (${fmtARS(ss.total)}): ${ps===0?'igual':Math.abs(ps)+'% '+(ps>0?'más':'menos')}.`]);
+  }
+  if(negocios.length>1&&sh.total>0){
+    const r=negocios.map(n=>({n,t:statsRango(V,G,n.id,h,h).total})).sort((a,b)=>b.t-a.t);
+    F.push(['🏆',`La sucursal que más vendió hoy es <b>${sanitizeHTML(r[0].n.nombre)}</b> (${fmtARS(r[0].t)}).`+(r[r.length-1].t<r[0].t?` La que menos, ${sanitizeHTML(r[r.length-1].n.nombre)} (${fmtARS(r[r.length-1].t)}).`:'')]);
+  }
+  if(sh.total>0){
+    const top=MEDIOS_COBRO.map(m=>({m,v:sumMedio(sh.vv,m)})).sort((a,b)=>b.v-a.v)[0];
+    if(top.v>0)F.push([(MEDIOS_PV[top.m]||{}).icon||'💳',`El ${Math.round(top.v/sh.total*100)}% de lo de hoy entró por ${(MEDIOS_PV[top.m]||{}).label}.`]);
+  }
+  const dias=[];for(let i=0;i<7;i++){const f=sumarDias(h,-i);dias.push({f,t:statsRango(V,G,null,f,f).total});}
+  const mejor=dias.slice().sort((a,b)=>b.t-a.t)[0];
+  if(mejor&&mejor.t>0&&mejor.f!==h)F.push(['⭐',`El mejor día de los últimos 7 fue el ${diaSemLargo(mejor.f)} (${fmtARS(mejor.t)}).`]);
+  const g28=G.filter(x=>x.fecha>=sumarDias(h,-28)&&x.fecha<h);
+  const diasG=new Set(g28.map(x=>x.fecha)).size;
+  if(diasG>=3&&sh.gastos>0){const prom=g28.reduce((a,x)=>a+(Number(x.importe)||0),0)/diasG;if(sh.gastos>prom*1.5)F.push(['🧮',`Los gastos de hoy (${fmtARS(sh.gastos)}) están por encima de lo habitual (${fmtARS(Math.round(prom))} por día).`]);}
+  const deben=cuentas.reduce((a,c)=>a+(Number(c.saldo)||0),0);
+  if(deben>0){const top=cuentas.slice().sort((a,b)=>(b.saldo||0)-(a.saldo||0))[0];F.push(['📒',`Te deben <b>${fmtARS(deben)}</b> en total; el saldo más alto es de ${sanitizeHTML(top.nombre||'un cliente')} (${fmtARS(top.saldo||0)}).`]);}
+  return F;
+}
+async function pintarAnalisis(){
+  _histCache={t:0,list:null};_gastosCache={t:0,list:null};   // al abrir el tablero siempre datos frescos
+  const a=document.getElementById('dash-auto'),g=document.getElementById('dash-graf');
+  if(!a||!g)return;
+  let V,G;
+  try{[V,G]=await Promise.all([ventasHistorial(),gastosHistorial()]);}catch(e){console.error(e);a.innerHTML='';g.innerHTML='';return;}
+  if(!document.getElementById('dash-auto'))return;   // cambió de pantalla mientras cargaba
+  const F=frasesDelDia(V,G);
+  a.innerHTML=`<div class="cierre-card" style="margin-bottom:16px;border-left:4px solid var(--gold)"><div class="cierre-title" style="margin-bottom:8px">✨ Lo importante de hoy</div>${F.map(([i,t])=>`<div style="display:flex;gap:10px;padding:7px 0;font-size:14px;color:var(--text);line-height:1.4"><span>${i}</span><span>${t}</span></div>`).join('')}</div>`;
+  const h=hoy(),dias=[];for(let i=6;i>=0;i--)dias.push(sumarDias(h,-i));
+  const vals=dias.map(f=>statsRango(V,G,null,f,f).total);
+  const s7=statsRango(V,G,null,dias[0],h);
+  g.innerHTML=`<div class="cierre-card" style="margin-bottom:16px"><div class="cierre-title" style="margin-bottom:6px">📊 Ventas de los últimos 7 días</div><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Total: ${fmtARS(s7.total)} · ${s7.cant} ventas</div>${barrasSVG(vals,dias.map(diaSem),6)}</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:16px">
+    <div class="cierre-card"><div class="cierre-title" style="margin-bottom:10px">💳 Cómo te pagan (7 días)</div>${tortaHTML(s7.vv)}</div>
+    ${negocios.length>1?`<div class="cierre-card"><div class="cierre-title" style="margin-bottom:10px">🏪 Comparativa entre sucursales (7 días)</div>${comparativaHTML(V,G,dias[0],h)}</div>`:''}
+  </div>`;
+}
+function ensureFicha(){
+  let o=document.getElementById('modal-ficha-neg');
+  if(!o){o=document.createElement('div');o.className='modal-overlay';o.id='modal-ficha-neg';o.innerHTML='<div class="modal" style="max-width:560px;padding:22px 18px 32px"></div>';document.body.appendChild(o);o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});}
+  return o;
+}
+async function abrirFichaNegocio(id){
+  const n=negocios.find(x=>x.id===id);if(!n)return;
+  const o=ensureFicha(),box=o.querySelector('.modal');
+  box.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted)">Cargando…</div>`;o.classList.add('open');
+  const[V,G]=await Promise.all([ventasHistorial(),gastosHistorial()]);
+  const h=hoy(),d7=sumarDias(h,-6),mes=h.slice(0,8)+'01';
+  const sh=statsRango(V,G,id,h,h),s7=statsRango(V,G,id,d7,h),sm=statsRango(V,G,id,mes,h);
+  const dias=[];for(let i=6;i>=0;i--)dias.push(sumarDias(h,-i));
+  const vals=dias.map(f=>statsRango(V,G,id,f,f).total);
+  const mios=V.filter(v=>v.negocioId===id).slice(0,8);
+  const tile=(t,s)=>`<div style="background:var(--surface2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--muted)">${t}</div><div style="font-size:17px;font-weight:800;color:var(--text)">${fmtARS(s.total)}</div><div style="font-size:11px;color:var(--muted)">${s.cant} ventas</div></div>`;
+  box.innerHTML=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><span style="font-size:30px">${sanitizeHTML(n.icon||'🏪')}</span><div style="flex:1"><div style="font-size:12px;color:var(--muted)">${sanitizeHTML(n.tipo||'')}</div><div style="font-size:18px;font-weight:800;color:var(--text)">${sanitizeHTML(n.nombre)}</div></div><button class="btn-sm" id="ficha-cerrar">✕</button></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">${tile('Hoy',sh)}${tile('7 días',s7)}${tile('Este mes',sm)}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px"><div style="background:var(--surface2);border-radius:12px;padding:10px;text-align:center"><div style="font-size:11px;color:var(--muted)">🧮 Gastos del mes</div><div style="font-weight:800;color:var(--red)">${fmtARS(sm.gastos)}</div></div><div style="background:var(--surface2);border-radius:12px;padding:10px;text-align:center"><div style="font-size:11px;color:var(--muted)">📒 En cuenta del mes</div><div style="font-weight:800;color:var(--warn)">${fmtARS(sm.cta)}</div></div></div>
+    <div class="cierre-title" style="margin-bottom:6px">📊 Últimos 7 días</div>${barrasSVG(vals,dias.map(diaSem),6)}
+    <div class="cierre-title" style="margin:14px 0 8px">💳 Cómo le pagan (este mes)</div>${tortaHTML(sm.vv)}
+    <div class="cierre-title" style="margin:16px 0 8px">🔎 Ventas de esta sucursal</div>
+    <input id="ficha-buscar" placeholder="Buscar en todo el historial…" style="width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:14px;margin-bottom:8px"/>
+    <div id="ficha-ventas" class="ventas-list">${mios.map(v=>ventaHTML(v,false)).join('')||emptyHTML('🧾','Sin ventas todavía')}</div>`;
+  box.querySelector('#ficha-cerrar').addEventListener('click',()=>o.classList.remove('open'));
+  box.querySelector('#ficha-buscar').addEventListener('input',e=>{
+    const q=e.target.value.trim().toLowerCase();
+    const l=(q?V.filter(v=>v.negocioId===id&&coincideVenta(v,q)):V.filter(v=>v.negocioId===id)).slice(0,30);
+    box.querySelector('#ficha-ventas').innerHTML=l.map(v=>`<div style="font-size:11px;color:var(--muted);margin:6px 0 2px">${fmtFechaCorta(v.fecha||'0000-00-00')}</div>`+ventaHTML(v,false)).join('')||emptyHTML('🔎','Sin resultados');
+  });
 }
 function renderNegocios(){
   const el=document.getElementById('page-negocios');
