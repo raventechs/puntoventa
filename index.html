@@ -469,6 +469,7 @@ button[class*="metodo"]:active, button[class*="pago"]:active {
 }
 /* ──────────────────────────────────────────────────── */
 
+body.pv-basico .depto-chips,body.pv-basico #card-deptos{display:none!important}
 </style>
 <script>
 // RavenTechs PWA Banner v1.1 — en el HEAD para capturar beforeinstallprompt temprano
@@ -880,7 +881,7 @@ var __rtPWA = (function() {
     </div>
     <div class="field"><label>Importe *</label><input id="mv-importe" type="number" placeholder="1500" inputmode="decimal"/></div>
     <div class="field">
-      <label>Departamento / Descripción</label>
+      <label>Descripción</label>
       <div class="depto-chips" id="depto-chips-venta" style="margin-bottom:8px;"></div>
       <input id="mv-desc" placeholder="Gaseosas, snacks..."/>
     </div>
@@ -1426,6 +1427,7 @@ function esBasico(){return !!myDoc&&myDoc.plan==='basico';}   // sin plan = cuen
 function applyModoUI(){
   const esUnico=modoNegocio==='single';
   const basico=esBasico();
+  document.body.classList.toggle('pv-basico',basico);
   const mostrar=(page,ok)=>document.querySelectorAll(`[data-page="${page}"]`).forEach(el=>{el.style.display=ok?'':'none';});
   mostrar('vender',basico);                                   // en Avanzada y cuentas anteriores se entra desde Ventas → Nueva venta
   mostrar('dashboard',!basico);
@@ -2321,7 +2323,7 @@ function renderConfig(){
 
   // Card departamentos
   el.insertAdjacentHTML('beforeend', `
-    <div class="cierre-card" style="margin-top:14px">
+    <div class="cierre-card" id="card-deptos" style="margin-top:14px">
       <div class="cierre-title">🏷️ Departamentos</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Se muestran como chips rápidos al registrar ventas y gastos. Editá los nombres y guardá.</p>
       <div id="config-deptos-list">
@@ -2659,8 +2661,8 @@ function renderVender(){
         <label style="font-size:12px;color:var(--muted)">¿A quién se le anota en cuenta?</label>
         <div style="display:flex;gap:8px"><select class="vd-sel" id="vd-cliente" style="flex:1">${opcionesClientes('')}</select><button type="button" class="btn-sm gold" id="vd-cli-nuevo" style="height:42px">＋ Nuevo</button></div>
       </div>
-      <div class="depto-chips" id="depto-chips-vender" style="margin-bottom:8px"></div>
-      <input class="desc-input" type="text" id="vd-desc" placeholder="${sanitizeHTML(rubroDe(negocios[0])?'Ej: '+rubroDe(negocios[0]).ej:'Qué vendiste (opcional)')}"/>
+      ${esBasico()?'':'<div class="depto-chips" id="depto-chips-vender" style="margin-bottom:8px"></div>'}
+      <input class="desc-input" type="text" id="vd-desc" placeholder="${esBasico()?'Descripción (opcional)':sanitizeHTML(rubroDe(negocios[0])?'Ej: '+rubroDe(negocios[0]).ej:'Qué vendiste (opcional)')}"/>
       <button class="btn-venta" id="vd-guardar">✓ Registrar venta</button>
     </div>
     ${resumenCajaHTML(hoy())}
@@ -2686,8 +2688,8 @@ function renderVender(){
   $id('btn-cerrar-caja')?.addEventListener('click',()=>cerrarCajaWA(hoy()));
   $id('vd-deben').addEventListener('click',()=>renderPage('fiado'));
   el.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>renderPage(b.dataset.go)));
-  renderChipsDeptos();
-  if(departamentos.every((d,i)=>d===DEPTOS_DEFAULT[i])){   // los de fábrica («Departamento 1…») no ayudan: se usan los atajos del rubro
+  if(!esBasico()) renderChipsDeptos();
+  if(!esBasico()&&departamentos.every((d,i)=>d===DEPTOS_DEFAULT[i])){   // los de fábrica («Departamento 1…») no ayudan: se usan los atajos del rubro
     const it=(rubroDe(negocios[0])||{}).items||[];
     $id('depto-chips-vender').innerHTML=it.map(t=>`<button type="button" class="depto-chip" data-atajo="${sanitizeHTML(t)}">${sanitizeHTML(t)}</button>`).join('');
     $id('depto-chips-vender').querySelectorAll('[data-atajo]').forEach(b=>b.addEventListener('click',()=>{const i=$id('vd-desc');i.value=b.dataset.atajo;i.focus();}));
