@@ -263,6 +263,7 @@ input,select,button,textarea{font-family:var(--font)}
 .admin-card-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
 .admin-card-actions{display:flex;gap:8px}
 .btn-adel{flex:1;padding:8px;background:var(--red-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-adelu{flex:1;padding:8px;background:var(--red-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .btn-aban{flex:1;padding:8px;background:var(--red-bg);border:1.5px solid #fecaca;border-radius:8px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .btn-aunban{flex:1;padding:8px;background:var(--green-bg);border:1.5px solid #86efac;border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .ban-badge{font-size:10px;font-weight:700;background:var(--red);color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px}
@@ -1027,7 +1028,7 @@ var __rtPWA = (function() {
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{getFirestore,collection,doc,setDoc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp,writeBatch,increment}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,doc,setDoc,addDoc,getDocs,getDoc,updateDoc,deleteDoc,query,where,orderBy,onSnapshot,serverTimestamp,Timestamp,writeBatch,increment,limit}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const FB={
   apiKey:"AIzaSyAP9PEuKM9ck-a9ltWorlFunxPYXw7trtE",
   authDomain:"puntoventa-f316c.firebaseapp.com",
@@ -1246,6 +1247,7 @@ async function loadAdminUsers(){
       ${demoInfo}
       <div class="admin-card-actions" style="margin-top:8px">
         ${ban?`<button class="btn-aunban" data-uid="${d.id}">✅ Desbanear</button>`:`<button class="btn-aban" data-uid="${d.id}">🚫 Banear</button>`}
+        ${(u.email||'').toLowerCase()==='rgaraventa@gmail.com'?'':`<button class="btn-adelu" data-uid="${d.id}" data-email="${sanitizeHTML(u.email||'')}" style="margin-left:6px">🗑 Eliminar</button>`}
       </div>
       ${demoActions}
       ${u.rol==='owner'?`<div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
@@ -1274,6 +1276,27 @@ document.getElementById('admin-users-list').addEventListener('click',async e=>{
   const ext=e.target.closest('.btn-aext');const act=e.target.closest('.btn-aact');
   const lim=e.target.closest('.btn-alim');const moros=e.target.closest('.btn-amoros');
   const plan=e.target.closest('.btn-aplan');const plus=e.target.closest('.btn-aplus');
+  const delu=e.target.closest('.btn-adelu');
+  if(delu){
+    const uid=delu.dataset.uid,email=delu.dataset.email||'esta cuenta';
+    try{
+      const uSnap=await getDoc(doc(db,'usuarios',uid));const u=uSnap.data()||{};
+      // Solo se eliminan cuentas SIN uso: si tiene ventas, gastos o clientes cargados no se borra (se puede banear)
+      const campo=u.rol==='employee'?'empleadoUid':'ownerUid';
+      const usado=await Promise.all([['ventas',campo],['gastos','ownerUid'],['clientes','ownerUid']].map(async([col,f])=>u.rol==='employee'&&col!=='ventas'?true:!(await getDocs(query(collection(db,col),where(f,'==',uid),limit(1)))).empty));
+      if(usado.some(Boolean)){alert('Esta cuenta tiene datos cargados (ventas, gastos o clientes), por eso no se elimina. Si no querés que entre, usá Banear.');return;}
+      if(!confirm('¿Eliminar la cuenta '+email+'?\n\nNo tiene datos cargados. Se borra la cuenta y sus negocios vacíos. Si esa persona vuelve a entrar con su Google, se da de alta de nuevo con una prueba nueva.'))return;
+      if(u.rol!=='employee'){
+        const negs=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',uid)));
+        for(const n of negs.docs)await deleteDoc(n.ref);
+        const emps=await getDocs(query(collection(db,'usuarios'),where('ownerUid','==',uid)));
+        for(const eu of emps.docs)await deleteDoc(eu.ref);
+      }
+      await deleteDoc(doc(db,'usuarios',uid));
+      toast('Cuenta eliminada','green');await loadAdminUsers();
+    }catch(err){logError('eliminarCuenta',err.message);toast('No se pudo eliminar: '+(err.code||err.message),'err');}
+    return;
+  }
   if(plus){
     const k=plus.dataset.k,activar=plus.dataset.val==='on';
     try{
