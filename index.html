@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PuntoVenta">
-<!-- PuntoVenta v3.0 — 2026-11-08 — PLAN BÁSICO/AVANZADA: cuentas nuevas arrancan en Básica (Vender, Ventas, En cuenta, Gastos, Caja); Avanzada se activa desde el menú admin. Formas de pago nuevas: Transferencia, Fiado y pago mixto. Fiado = cuenta corriente por cliente (deuda, cobros parciales, aviso por WhatsApp). Prueba de 14 días nueva (demoHasta, sin bloqueo) solo para cuentas nuevas. ARREGLO: la fecha del día usaba hora UTC (ventas de las 21 a 24 hs quedaban en el día siguiente); ahora hora de Argentina. Los empleados ya no se bloquean por la prueba. v2.2 — 2026-10-26 — BACKUP ARREGLADO: el botón no funcionaba (la función no era visible desde la pantalla) y el automático no guardaba nada. v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
+<!-- PuntoVenta v3.9 — 2026-11-09 — PLUS: Catálogo con stock y alertas (productos dentro del negocio, venta tocando productos, aviso de faltantes) y Tablero del dueño; ambos se activan con botones en el menú admin; cuentas anteriores y pruebas de 14 días los ven. v3.0 — 2026-11-08 — PLAN BÁSICO/AVANZADA: cuentas nuevas arrancan en Básica (Vender, Ventas, En cuenta, Gastos, Caja); Avanzada se activa desde el menú admin. Formas de pago nuevas: Transferencia, Fiado y pago mixto. Fiado = cuenta corriente por cliente (deuda, cobros parciales, aviso por WhatsApp). Prueba de 14 días nueva (demoHasta, sin bloqueo) solo para cuentas nuevas. ARREGLO: la fecha del día usaba hora UTC (ventas de las 21 a 24 hs quedaban en el día siguiente); ahora hora de Argentina. Los empleados ya no se bloquean por la prueba. v2.2 — 2026-10-26 — BACKUP ARREGLADO: el botón no funcionaba (la función no era visible desde la pantalla) y el automático no guardaba nada. v2.1 — 2026-07-02 — P1+P3+P5 ROBUSTEZ -->
 <title>PuntoVenta</title>
 <meta name="theme-color" content="#F27B13">
 <meta name="mobile-web-app-capable" content="yes">
@@ -714,6 +714,7 @@ var __rtPWA = (function() {
     <div class="nav-item" data-page="ventas"><span class="nav-icon">🧾</span>Caja</div>
     <div class="nav-item" data-page="empleados"><span class="nav-icon">👥</span>Empleados<span class="nav-badge" id="sb-pend-badge">0</span></div>
     <div class="nav-item" data-page="gastos"><span class="nav-icon">🧮</span>Gastos</div>
+    <div class="nav-item" data-page="productos"><span class="nav-icon">📦</span>Productos</div>
     <div class="nav-item" data-page="fiado"><span class="nav-icon">📒</span>En cuenta</div>
     <div class="nav-item" data-page="clientes"><span class="nav-icon">💳</span>Clientes<span class="nav-badge" id="sb-morosidad-badge">0</span></div>
     <div class="nav-item" data-page="config"><span class="nav-icon">⚙️</span>Configuración</div>
@@ -768,6 +769,7 @@ var __rtPWA = (function() {
     </div>
     <div id="page-vender" class="page" style="display:none"></div>
     <div id="page-fiado" class="page" style="display:none"></div>
+    <div id="page-productos" class="page" style="display:none"></div>
     <div id="page-dashboard" class="page"></div>
     <div id="page-negocios" class="page" style="display:none"></div>
     <div id="page-ventas" class="page" style="display:none">
@@ -785,6 +787,7 @@ var __rtPWA = (function() {
       <div class="mob-item" data-page="ventas"><span class="mob-icon">🧾</span>Caja</div>
       <div class="mob-item" data-page="empleados"><span class="mob-icon">👥</span>Empleados<span class="mob-badge" id="mob-pend-badge">0</span></div>
       <div class="mob-item" data-page="gastos"><span class="mob-icon">🧮</span>Gastos</div>
+      <div class="mob-item" data-page="productos"><span class="mob-icon">📦</span>Productos</div>
       <div class="mob-item" data-page="fiado"><span class="mob-icon">📒</span>En cuenta</div>
       <div class="mob-item" data-page="clientes"><span class="mob-icon">💳</span>Clientes<span class="mob-badge" id="mob-morosidad-badge">0</span></div>
     </div>
@@ -1256,7 +1259,8 @@ async function loadAdminUsers(){
       <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
         <span style="font-size:12px;color:var(--muted)">Plus Morosidad:</span>
         <button class="btn-amoros" data-uid="${d.id}" data-val="${u.features?.morosidad?'off':'on'}">${u.features?.morosidad?'✅ Activado (tocá para desactivar)':'🔒 Desactivado (tocá para activar)'}</button>
-      </div>`:''}
+      </div>
+      ${['catalogo','tablero'].map(k=>`<div style="display:flex;gap:6px;align-items:center;margin-top:8px"><span style="font-size:12px;color:var(--muted)">Plus ${k==='catalogo'?'Catálogo y stock':'Tablero del dueño'}:</span><button class="btn-aplus" data-uid="${d.id}" data-k="${k}" data-val="${u.features?.[k]?'off':'on'}">${u.features?.[k]?'✅ Activado (tocá para desactivar)':'🔒 Desactivado (tocá para activar)'}</button></div>`).join('')}`:''}
     </div>`;
   }).join('');
 }
@@ -1269,7 +1273,17 @@ document.getElementById('admin-users-list').addEventListener('click',async e=>{
   const ban=e.target.closest('.btn-aban');const unban=e.target.closest('.btn-aunban');
   const ext=e.target.closest('.btn-aext');const act=e.target.closest('.btn-aact');
   const lim=e.target.closest('.btn-alim');const moros=e.target.closest('.btn-amoros');
-  const plan=e.target.closest('.btn-aplan');
+  const plan=e.target.closest('.btn-aplan');const plus=e.target.closest('.btn-aplus');
+  if(plus){
+    const k=plus.dataset.k,activar=plus.dataset.val==='on';
+    try{
+      await updateDoc(doc(db,'usuarios',plus.dataset.uid),{['features.'+k]:activar});
+      toast((k==='catalogo'?'Plus Catálogo y stock':'Plus Tablero del dueño')+(activar?' activado':' desactivado'),'green');
+      if(me&&me.uid===plus.dataset.uid){myFeatures={...myFeatures,[k]:activar};applyModoUI();}
+      await loadAdminUsers();
+    }catch(err){toast('Error al actualizar','err');}
+    return;
+  }
   if(plan){
     const val=plan.dataset.val;
     try{
@@ -1436,6 +1450,7 @@ function applyModoUI(){
   mostrar('empleados',!basico&&!esUnico);
   mostrar('clientes',!basico&&tieneMorosidad());
   mostrar('fiado',true);
+  mostrar('productos',!basico&&tienePlus('catalogo'));
   // Básico: «Caja» es el inicio (donde se vende y se cierra el día) e «Historial» es la lista de ventas con búsqueda
   const lbl=(page,txt)=>document.querySelectorAll(`[data-page="${page}"]`).forEach(el=>{const t=[...el.childNodes].reverse().find(n=>n.nodeType===3);if(t)t.textContent=txt;});
   lbl('vender',basico?'Caja':'Vender');
@@ -1596,7 +1611,7 @@ function updMorosidadBadge(){
   if(n>0){sb.textContent=n;sb.classList.add('show');mob.textContent=n;mob.classList.add('show');}
   else{sb.classList.remove('show');mob.classList.remove('show');}
 }
-const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Caja',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',config:'Configuración'};
+const PAGE_TITLES={vender:'Vender',fiado:'En cuenta',productos:'Productos',dashboard:'Dashboard',negocios:'Mis negocios',ventas:'Caja',empleados:'Empleados',gastos:'Gastos',clientes:'Clientes',config:'Configuración'};
 
 // ── RUBROS: una sola app; el rubro cambia el ícono, el ejemplo y los atajos de venta (los datos y las reglas son los mismos)
 const RUBROS={
@@ -1655,6 +1670,7 @@ function renderPage(page){
   if(page==='dashboard')renderDashboard();
   else if(page==='vender')renderVender();
   else if(page==='fiado')renderFiado();
+  else if(page==='productos')renderProductos();
   else if(page==='negocios')renderNegocios();
   else if(page==='ventas')renderVentas();
   else if(page==='empleados')renderEmpleados();
@@ -1681,6 +1697,7 @@ function renderDashboard(){
       </div>
     </div>`:''}
     <div id="dash-auto"></div>
+    <div id="dash-stock"></div>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💰</span><span class="kpi-badge ok">Hoy</span></div><div class="kpi-value">${fmtARS(total)}</div><div class="kpi-label">Total del día</div></div>
       <div class="kpi-card"><div class="kpi-top"><span class="kpi-icon">💵</span><span class="kpi-badge ok">Efectivo</span></div><div class="kpi-value" style="font-size:22px">${fmtARS(ef)}</div><div class="kpi-label">En caja</div></div>
@@ -1710,7 +1727,7 @@ function renderDashboard(){
   el.querySelector('.d-ver-gastos')?.addEventListener('click',()=>renderPage('gastos'));
   el.querySelector('.d-ver-fiado')?.addEventListener('click',()=>renderPage('fiado'));
   el.querySelectorAll('.d-neg-card').forEach(c=>c.addEventListener('click',()=>abrirFichaNegocio(c.dataset.id)));
-  pintarAnalisis();
+  pintarAnalisis();pintarAlertaStock('dash-stock');
 }
 // ── TABLERO DEL DUEÑO: frases automáticas, gráficos (barras 7 días, torta de medios, comparativa) y ficha por sucursal
 let _gastosCache={t:0,list:null};
@@ -1785,11 +1802,12 @@ async function pintarAnalisis(){
   _histCache={t:0,list:null};_gastosCache={t:0,list:null};   // al abrir el tablero siempre datos frescos
   const a=document.getElementById('dash-auto'),g=document.getElementById('dash-graf');
   if(!a||!g)return;
+  if(!tienePlus('tablero')){a.innerHTML=plusPromoHTML('tablero');g.innerHTML='';return;}
   let V,G;
   try{[V,G]=await Promise.all([ventasHistorial(),gastosHistorial()]);}catch(e){console.error(e);a.innerHTML='';g.innerHTML='';return;}
   if(!document.getElementById('dash-auto'))return;   // cambió de pantalla mientras cargaba
   const F=frasesDelDia(V,G);
-  a.innerHTML=`<div class="cierre-card" style="margin-bottom:16px;border-left:4px solid var(--gold)"><div class="cierre-title" style="margin-bottom:8px">✨ Lo importante de hoy</div>${F.map(([i,t])=>`<div style="display:flex;gap:10px;padding:7px 0;font-size:14px;color:var(--text);line-height:1.4"><span>${i}</span><span>${t}</span></div>`).join('')}</div>`;
+  a.innerHTML=`<div class="cierre-card" style="margin-bottom:16px;border-left:4px solid var(--gold)"><div class="cierre-title" style="margin-bottom:8px">✨ Lo importante de hoy${plusTagHTML('tablero')}</div>${F.map(([i,t])=>`<div style="display:flex;gap:10px;padding:7px 0;font-size:14px;color:var(--text);line-height:1.4"><span>${i}</span><span>${t}</span></div>`).join('')}</div>`;
   const h=hoy(),dias=[];for(let i=6;i>=0;i--)dias.push(sumarDias(h,-i));
   const vals=dias.map(f=>statsRango(V,G,null,f,f).total);
   const s7=statsRango(V,G,null,dias[0],h);
@@ -1806,6 +1824,7 @@ function ensureFicha(){
 }
 async function abrirFichaNegocio(id){
   const n=negocios.find(x=>x.id===id);if(!n)return;
+  if(!tienePlus('tablero')){toast('La ficha por sucursal es parte del Plus Tablero del dueño','err');return;}
   const o=ensureFicha(),box=o.querySelector('.modal');
   box.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted)">Cargando…</div>`;o.classList.add('open');
   const[V,G]=await Promise.all([ventasHistorial(),gastosHistorial()]);
@@ -2745,17 +2764,168 @@ function opcionesMedios(lista,sel){return lista.map(m=>`<option value="${m}"${m=
 function opcionesClientes(sel){return '<option value="">Elegí el cliente…</option>'+[...cuentas].sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${sanitizeHTML(c.nombre)}${c.saldo>0?' (debe '+fmtARS(c.saldo)+')':''}</option>`).join('');}
 
 // ── Guardar una venta (con uno o dos medios). Si hay parte en fiado, suma la deuda al cliente en la misma operación.
-async function guardarVentaPagos({importe,desc,pagos,cli}){
+async function guardarVentaPagos({importe,desc,pagos,cli,items}){
   const fp=pagos.filter(p=>p.medio==='fiado').reduce((a,p)=>a+p.importe,0);
   const batch=writeBatch(db);
   const vref=doc(collection(db,'ventas'));
   const data={negocioId:negocios[0].id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
     importe,medio:pagos.length>1?'mixto':pagos[0].medio,pagos,descripcion:desc||'',fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()};
   if(fp>0&&cli){data.clienteId=cli.id;data.clienteNombre=cli.nombre;}
+  if(items&&items.length)data.items=items;   // venta por catálogo: base del stock
   batch.set(vref,data);
   if(fp>0&&cli)batch.update(doc(db,'clientes',cli.id),{saldo:increment(fp),ultimoMov:hoy()});
   await batch.commit();
   pasoMarcar('venta');
+}
+
+// ── CATÁLOGO DE PRODUCTOS CON STOCK Y ALERTAS (adicional Plus «Catálogo») — v3.9
+// Los productos viven dentro del documento del negocio (negocio.productos): no usa colecciones nuevas ni cambia reglas.
+// Stock = base cargada − unidades vendidas desde ese momento (se calcula con las ventas con items): si se anula o borra una venta, el stock se corrige solo.
+function tienePlus(k){   // k: 'catalogo' | 'tablero'
+  if(myFeatures?.[k]===true)return true;
+  if(!myDoc||esBasico())return false;
+  if(!myDoc.plan)return true;                       // cuenta anterior (sin plan): conserva todo
+  const dh=myDoc.demoHasta?.toMillis?.();
+  return !!(dh&&dh>Date.now());                      // durante la prueba de 14 días se ve con etiqueta ⭐ Plus
+}
+function plusEnPrueba(k){return !!myDoc&&!!myDoc.plan&&!esBasico()&&myFeatures?.[k]!==true&&tienePlus(k);}
+function plusTagHTML(k){return plusEnPrueba(k)?'<span style="font-size:10px;font-weight:800;background:var(--gold);color:#000;border-radius:6px;padding:2px 6px;margin-left:6px">⭐ Plus · incluido en tu prueba</span>':'';}
+function plusPromoHTML(k){
+  const T={catalogo:['📦 Catálogo con stock y alertas','Cargá tus productos con precio, vendelos tocándolos y enterate solo cuando se está acabando la mercadería.','Hola RavenTechs, quiero el Plus Catálogo con stock y alertas de PuntoVenta'],
+           tablero:['✨ Tablero del dueño','Frases automáticas de cómo viene el día, gráficos de 7 días, comparativa entre sucursales y ficha de cada una.','Hola RavenTechs, quiero el Plus Tablero del dueño de PuntoVenta']}[k];
+  return`<div class="cierre-card" style="margin-bottom:16px;border-left:4px solid var(--gold)"><div class="cierre-title">⭐ Plus · ${T[0]}</div><p style="font-size:13px;color:var(--muted);margin:6px 0 10px">${T[1]}</p><a class="btn-sm gold" style="display:inline-flex;text-decoration:none" target="_blank" rel="noopener" href="${waLink(T[2])}">📲 Quiero este Plus</a></div>`;
+}
+const prodsDe=n=>Array.isArray(n?.productos)?n.productos:[];
+const prodId=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function ventasMs(v){return v.createdAt?.toMillis?.()||Date.now();}
+async function mapaStock(){   // {productoId: stock} de todos los negocios (solo los que llevan stock)
+  const V=await ventasHistorial();const out={};
+  const vend={};
+  V.forEach(v=>(v.items||[]).forEach(it=>{(vend[it.id]=vend[it.id]||[]).push([ventasMs(v),Number(it.c)||0]);}));
+  negocios.forEach(n=>prodsDe(n).forEach(p=>{
+    if(!p.sk)return;
+    const vendidas=(vend[p.id]||[]).filter(x=>x[0]>=(p.desde||0)).reduce((a,x)=>a+x[1],0);
+    out[p.id]=(Number(p.base)||0)-vendidas;
+  }));
+  return out;
+}
+async function alertasStock(){
+  const m=await mapaStock();const L=[];
+  negocios.forEach(n=>prodsDe(n).forEach(p=>{if(p.sk&&m[p.id]<=(Number(p.min)||0))L.push({n:p.nombre||p.n,stock:m[p.id],min:Number(p.min)||0,neg:n.nombre});}));
+  return L.sort((a,b)=>a.stock-b.stock);
+}
+function stockCardHTML(L){
+  if(!L.length)return'';
+  return`<div class="cierre-card" style="margin-bottom:16px;border-left:4px solid var(--danger)"><div class="cierre-title" style="margin-bottom:6px">⚠️ Se te está acabando</div>${L.slice(0,8).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;color:var(--text)"><span>${sanitizeHTML(x.n)}${negocios.length>1?` <small style="color:var(--muted)">· ${sanitizeHTML(x.neg||'')}</small>`:''}</span><b style="color:${x.stock<=0?'var(--red)':'var(--warn)'}">${x.stock<=0?'Sin stock':'Quedan '+x.stock}</b></div>`).join('')}${L.length>8?`<div style="font-size:12px;color:var(--muted);margin-top:4px">y ${L.length-8} más en Productos</div>`:''}<button class="btn-sm" style="margin-top:8px" data-go="productos">📦 Ver productos</button></div>`;
+}
+async function pintarAlertaStock(id){
+  const el=$id(id);if(!el||!tienePlus('catalogo')||!negocios.some(n=>prodsDe(n).some(p=>p.sk)))return;
+  try{const L=await alertasStock();const e2=$id(id);if(e2){e2.innerHTML=stockCardHTML(L);e2.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>renderPage(b.dataset.go)));}}catch(e){console.error('alerta stock',e);}
+}
+async function guardarProductos(neg,lista){
+  await updateDoc(doc(db,'negocios',neg.id),{productos:lista});
+  neg.productos=lista;
+}
+// ── Pantalla PRODUCTOS
+let prodNegId=null;
+async function renderProductos(){
+  const el=$id('page-productos');
+  if(!tienePlus('catalogo')){el.innerHTML=plusPromoHTML('catalogo');return;}
+  if(!negocios.length){el.innerHTML=emptyHTML('🏪','Primero creá tu negocio');return;}
+  const neg=negocios.find(n=>n.id===prodNegId)||negocios[0];prodNegId=neg.id;
+  const stock=await mapaStock();
+  el.innerHTML=`${plusEnPrueba('catalogo')?`<div style="margin-bottom:8px">${plusTagHTML('catalogo')}</div>`:''}
+    ${negocios.length>1?`<select class="vd-sel" id="pr-neg" style="margin-bottom:10px">${negocios.map(n=>`<option value="${n.id}"${n.id===neg.id?' selected':''}>${sanitizeHTML(n.nombre)}</option>`).join('')}</select>`:''}
+    <div id="pr-alerta"></div>
+    <div class="sec-header" style="gap:8px"><input class="vd-sel" id="pr-buscar" placeholder="Buscar producto…" style="margin:0;flex:1"/><button class="btn-sm gold" id="pr-nuevo">＋ Producto</button></div>
+    <div id="pr-lista" style="margin-top:12px"></div>`;
+  const pintar=()=>{
+    const q=($id('pr-buscar').value||'').toLowerCase().trim();
+    const L=prodsDe(neg).filter(p=>!q||String(p.nombre).toLowerCase().includes(q)).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));
+    $id('pr-lista').innerHTML=L.length?L.map(p=>{
+      const s=stock[p.id],bajo=p.sk&&s<=(Number(p.min)||0);
+      return`<div class="fd-row" data-pid="${p.id}"><div class="nm">${sanitizeHTML(p.nombre)}<small>${fmtARS(p.precio||0)}${p.sk?` · mínimo ${Number(p.min)||0}`:' · sin control de stock'}</small></div>${p.sk?`<div style="font-weight:800;color:${bajo?'var(--red)':'var(--text)'}">${s<=0?'Sin stock':s+' u.'}</div>`:''}</div>`;
+    }).join(''):emptyHTML('📦','Todavía no cargaste productos','Tocá ＋ Producto');
+    $id('pr-lista').querySelectorAll('[data-pid]').forEach(r=>r.addEventListener('click',()=>abrirProducto(neg,prodsDe(neg).find(p=>p.id===r.dataset.pid),stock)));
+  };
+  $id('pr-buscar').addEventListener('input',pintar);
+  $id('pr-nuevo').addEventListener('click',()=>abrirProducto(neg,null,stock));
+  $id('pr-neg')?.addEventListener('change',e=>{prodNegId=e.target.value;renderProductos();});
+  pintar();pintarAlertaStock('pr-alerta');
+}
+function abrirProducto(neg,p,stock){
+  let o=$id('modal-producto');
+  if(!o){o=document.createElement('div');o.className='modal-overlay';o.id='modal-producto';o.innerHTML='<div class="modal" style="max-width:520px"></div>';document.body.appendChild(o);o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});}
+  const box=o.querySelector('.modal'),act=p?(stock[p.id]??0):0;
+  box.innerHTML=`<div class="modal-header"><span class="modal-title">${p?'✏️ Editar producto':'📦 Nuevo producto'}</span><button class="modal-close" id="pm-x">✕</button></div>
+    <div class="field"><label>Nombre *</label><input id="pm-nombre" placeholder="Ej: Gaseosa 1,5 L" value="${sanitizeHTML(p?.nombre||'')}"/></div>
+    <div class="field"><label>Precio *</label><input id="pm-precio" type="number" inputmode="decimal" placeholder="1500" value="${p?.precio||''}"/></div>
+    <div class="field"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pm-sk" ${p?.sk?'checked':''} style="width:auto"/> Llevar el stock de este producto</label></div>
+    <div id="pm-stock" style="display:${p?.sk?'block':'none'}">
+      <div class="field"><label>Stock actual (unidades)</label><input id="pm-base" type="number" inputmode="numeric" value="${p?.sk?act:''}" placeholder="0"/></div>
+      ${p?.sk?`<div class="field"><label>Llegó mercadería (sumar)</label><input id="pm-sum" type="number" inputmode="numeric" placeholder="0"/></div>`:''}
+      <div class="field"><label>Avisarme cuando queden (o menos)</label><input id="pm-min" type="number" inputmode="numeric" value="${p?.min??2}"/></div>
+    </div>
+    <div class="modal-footer">${p?'<button class="btn-cancel" id="pm-del" style="color:var(--red)">🗑 Borrar</button>':'<button class="btn-cancel" id="pm-cancel">Cancelar</button>'}<button class="btn-save" id="pm-save">Guardar</button></div>`;
+  o.classList.add('open');
+  $id('pm-x').addEventListener('click',()=>o.classList.remove('open'));
+  $id('pm-cancel')?.addEventListener('click',()=>o.classList.remove('open'));
+  $id('pm-sk').addEventListener('change',e=>{$id('pm-stock').style.display=e.target.checked?'block':'none';});
+  $id('pm-del')?.addEventListener('click',async()=>{
+    if(!confirm('¿Borrar este producto? Las ventas ya hechas no cambian.'))return;
+    try{await guardarProductos(neg,prodsDe(neg).filter(x=>x.id!==p.id));o.classList.remove('open');toast('Producto borrado');renderProductos();}catch(e){toast('Error al borrar','err');}
+  });
+  $id('pm-save').addEventListener('click',async()=>{
+    const nombre=$id('pm-nombre').value.trim(),precio=parseFloat($id('pm-precio').value);
+    if(!nombre){toast('Poné el nombre','err');return;}
+    if(!(precio>=0)||$id('pm-precio').value===''){toast('Poné el precio','err');return;}
+    const sk=$id('pm-sk').checked;
+    const nuevo={id:p?.id||prodId(),nombre,precio,sk,min:sk?(parseInt($id('pm-min').value)||0):0};
+    if(sk){
+      let b=parseInt($id('pm-base').value);if(isNaN(b))b=0;
+      b+=parseInt($id('pm-sum')?.value)||0;
+      nuevo.base=b;nuevo.desde=Date.now();
+    }
+    const btn=$id('pm-save');btn.disabled=true;
+    try{
+      const lista=p?prodsDe(neg).map(x=>x.id===p.id?nuevo:x):[...prodsDe(neg),nuevo];
+      await guardarProductos(neg,lista);
+      _histCache={t:0,list:null};o.classList.remove('open');toast('Producto guardado','green');renderProductos();
+    }catch(e){logError('guardarProducto',e.message);toast('Error al guardar','err');btn.disabled=false;}
+  });
+}
+// ── Venta por catálogo (dentro de la pantalla Vender)
+let vdCarrito=[];
+function vdCatalogoHTML(){
+  if(!tienePlus('catalogo')||!prodsDe(negocios[0]).length)return'';
+  return`<div id="vd-cat" style="margin-bottom:12px"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">🛍️ Productos (tocá para sumar)${plusTagHTML('catalogo')}</div>
+    <input class="vd-sel" id="vd-cat-q" placeholder="Buscar producto…" style="margin-bottom:8px"/>
+    <div class="depto-chips" id="vd-cat-chips"></div><div id="vd-cart"></div></div>`;
+}
+function vdCartRender(){
+  const el=$id('vd-cart');if(!el)return;
+  const tot=vdCarrito.reduce((a,x)=>a+x.p*x.c,0);
+  el.innerHTML=vdCarrito.length?`<div style="margin-top:8px;border:1.5px solid var(--border);border-radius:12px;padding:8px 10px">${vdCarrito.map(x=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px;color:var(--text)"><span style="flex:1">${sanitizeHTML(x.n)}</span><button type="button" class="btn-sm" data-cm="${x.id}">−</button><b>${x.c}</b><button type="button" class="btn-sm" data-cp="${x.id}">＋</button><span style="min-width:70px;text-align:right">${fmtARS(x.p*x.c)}</span></div>`).join('')}<div style="text-align:right;font-weight:800;padding-top:4px;color:var(--text)">Total ${fmtARS(tot)}</div></div>`:'';
+  el.querySelectorAll('[data-cp]').forEach(b=>b.addEventListener('click',()=>{vdCarrito.find(x=>x.id===b.dataset.cp).c++;vdCartRender();}));
+  el.querySelectorAll('[data-cm]').forEach(b=>b.addEventListener('click',()=>{const x=vdCarrito.find(y=>y.id===b.dataset.cm);x.c--;if(x.c<=0)vdCarrito=vdCarrito.filter(y=>y!==x);vdCartRender();}));
+  $id('vd-importe').value=vdCarrito.length?tot:'';
+  if(!$id('vd-desc').dataset.manual)$id('vd-desc').value=vdCarrito.map(x=>`${x.c>1?x.c+'× ':''}${x.n}`).join(', ');
+  vdSync();
+}
+function vdCatalogoInit(){
+  if(!$id('vd-cat'))return;
+  const pintar=()=>{
+    const q=($id('vd-cat-q').value||'').toLowerCase().trim();
+    $id('vd-cat-chips').innerHTML=prodsDe(negocios[0]).filter(p=>!q||String(p.nombre).toLowerCase().includes(q)).slice(0,24).map(p=>`<button type="button" class="depto-chip" data-add="${p.id}">${sanitizeHTML(p.nombre)} · ${fmtARS(p.precio||0)}</button>`).join('');
+    $id('vd-cat-chips').querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
+      const p=prodsDe(negocios[0]).find(x=>x.id===b.dataset.add),x=vdCarrito.find(y=>y.id===p.id);
+      if(x)x.c++;else vdCarrito.push({id:p.id,n:p.nombre,p:Number(p.precio)||0,c:1});
+      vdCartRender();
+    }));
+  };
+  $id('vd-cat-q').addEventListener('input',pintar);
+  $id('vd-desc').addEventListener('input',()=>{$id('vd-desc').dataset.manual='1';});
+  pintar();
 }
 
 // ── Pantalla VENDER
@@ -2771,7 +2941,7 @@ function renderVender(){
   if(!negocios.length){el.innerHTML=emptyHTML('🏪','Todavía no tenés un negocio','Creá el tuyo desde Configuración');return;}
   const vh=ventas.filter(v=>v.fecha===hoy());
   const deben=cuentas.reduce((a,c)=>a+(Number(c.saldo)||0),0);
-  vdSel=null;vdSplit=false;
+  vdSel=null;vdSplit=false;vdCarrito=[];
   el.innerHTML=`
     ${pasosHTML()}
     <div class="vd-resumen">
@@ -2781,6 +2951,7 @@ function renderVender(){
     </div>
     <div class="emp-form-card">
       <div class="emp-form-title">Registrar venta</div>
+      ${vdCatalogoHTML()}
       <input class="importe-input" type="number" id="vd-importe" inputmode="decimal" placeholder="$ 0" min="0"/>
       <div class="medios-grid" id="vd-medios">${MEDIOS_VENTA.map(m=>`<div class="medio-opt" data-m="${m}"><div class="medio-opt-icon">${MEDIOS_PV[m].icon}</div><div class="medio-opt-label">${MEDIOS_PV[m].label}</div></div>`).join('')}</div>
       <button type="button" class="btn-sm" id="vd-split-btn" style="margin-bottom:12px">➗ Pagó con dos medios</button>
@@ -2798,6 +2969,7 @@ function renderVender(){
       <input class="desc-input" type="text" id="vd-desc" placeholder="${esBasico()?'Descripción (opcional)':sanitizeHTML(rubroDe(negocios[0])?'Ej: '+rubroDe(negocios[0]).ej:'Qué vendiste (opcional)')}"/>
       <button class="btn-venta" id="vd-guardar">✓ Registrar venta</button>
     </div>
+    <div id="stock-alerta"></div>
     ${resumenCajaHTML(hoy())}
     <div class="sec-header"><span class="sec-title">Últimas ventas de hoy</span><button class="btn-sm" id="vd-ver-todas">Ver historial →</button></div>
     <div class="ventas-list">${vh.slice(0,5).map(v=>ventaHTML(v,true)).join('')||emptyHTML('🧾','Todavía no vendiste nada hoy')}</div>`;
@@ -2821,6 +2993,7 @@ function renderVender(){
   $id('btn-cerrar-caja')?.addEventListener('click',()=>cerrarCajaWA(hoy()));
   $id('vd-deben').addEventListener('click',()=>renderPage('fiado'));
   el.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>renderPage(b.dataset.go)));
+  vdCatalogoInit();pintarAlertaStock('stock-alerta');
   if(!esBasico()) renderChipsDeptos();
   if(!esBasico()&&departamentos.every((d,i)=>d===DEPTOS_DEFAULT[i])){   // los de fábrica («Departamento 1…») no ayudan: se usan los atajos del rubro
     const it=(rubroDe(negocios[0])||{}).items||[];
@@ -2846,7 +3019,9 @@ async function vdGuardar(){
   if(fp>0){cli=cuentas.find(c=>c.id===$id('vd-cliente').value);if(!cli){toast('Elegí a qué cliente se le anota en cuenta','err');return;}}
   const btn=$id('vd-guardar');btn.disabled=true;
   try{
-    await guardarVentaPagos({importe,desc:$id('vd-desc').value.trim(),pagos,cli});
+    const items=vdCarrito.map(x=>({id:x.id,n:x.n,c:x.c,p:x.p}));
+    await guardarVentaPagos({importe,desc:$id('vd-desc').value.trim(),pagos,cli,items});
+    vdCarrito=[];_histCache={t:0,list:null};
     toast(fp>0?'Venta anotada en cuenta':'Venta registrada','green');
     await loadOwnerData(fechaVentasSeleccionada);renderVender();
   }catch(e){logError('vdGuardar',e.message);toast('Error al guardar: '+(e.message||e.code||'desconocido'),'err');btn.disabled=false;}
