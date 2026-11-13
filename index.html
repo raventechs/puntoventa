@@ -1462,6 +1462,23 @@ function tieneMorosidad(){
 }
 
 function esBasico(){return !!myDoc&&myDoc.plan==='basico';}   // sin plan = cuenta anterior: conserva todo como estaba
+// v3.11: Básico + sucursales activadas (limiteNegocios>1) = Básico con varias sucursales (versión simple). Básico de un solo local no cambia.
+function basicoUnico(){return esBasico()&&!tieneMultiNegocio();}
+// Sucursal donde se anotan las ventas/gastos del dueño (por defecto la primera, como siempre; con varias sucursales puede elegir)
+let negVentaId=null;
+function negVenta(){return negocios.find(n=>n.id===negVentaId)||negocios[0];}
+function negChipsHTML(){
+  if(negocios.length<2)return '';
+  const sel=negVenta().id;
+  return `<div id="vd-neg-chips" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--muted)">Vender en:</span>${negocios.map(n=>`<button type="button" class="btn-sm${n.id===sel?' gold':''}" data-neg="${n.id}">${sanitizeHTML(n.icon||'🏪')} ${sanitizeHTML(n.nombre)}</button>`).join('')}</div>`;
+}
+function bindNegChips(){
+  document.querySelectorAll('#vd-neg-chips [data-neg]').forEach(b=>b.addEventListener('click',()=>{
+    negVentaId=b.dataset.neg;
+    try{localStorage.setItem('pv_negventa_'+(me&&me.uid),negVentaId);}catch(e){}
+    const w=document.getElementById('vd-neg-chips');if(w){w.outerHTML=negChipsHTML();bindNegChips();}
+  }));
+}
 function applyModoUI(){
   const esUnico=modoNegocio==='single';
   const basico=esBasico();
@@ -1469,8 +1486,8 @@ function applyModoUI(){
   const mostrar=(page,ok)=>document.querySelectorAll(`[data-page="${page}"]`).forEach(el=>{el.style.display=ok?'':'none';});
   mostrar('vender',basico);                                   // en Avanzada y cuentas anteriores se entra desde Ventas → Nueva venta
   mostrar('dashboard',!basico);
-  mostrar('negocios',!basico&&tieneMultiNegocio());
-  mostrar('empleados',!basico&&!esUnico);
+  mostrar('negocios',tieneMultiNegocio());                      // v3.11: también en Básico si se activaron sucursales
+  mostrar('empleados',basico?tieneMultiNegocio():!esUnico);   // v3.11: Básico con sucursales también invita empleados
   mostrar('clientes',!basico&&tieneMorosidad());
   mostrar('fiado',true);
   mostrar('productos',!basico&&tienePlus('catalogo'));
@@ -1592,6 +1609,7 @@ async function loadOwnerData(fecha=null){
   const f=fecha||hoy();
   const negSnap=await getDocs(query(collection(db,'negocios'),where('ownerUid','==',me.uid)));
   negocios=negSnap.docs.map(d=>({id:d.id,...d.data()}));
+  try{const g=localStorage.getItem('pv_negventa_'+me.uid);if(g&&negocios.some(n=>n.id===g))negVentaId=g;}catch(e){}   // v3.11: recuerda la sucursal elegida para vender
   try{setTopTitle();}catch(e){}
   const ventasSnap=await getDocs(query(collection(db,'ventas'),where('ownerUid','==',me.uid),where('fecha','==',f),orderBy('createdAt','desc')));
   ventas=ventasSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1897,7 +1915,7 @@ function resumenDatos(n,fecha){
 function resumenCajaHTML(fecha){
   if(!negocios.length)return '';
   // Básico = un solo negocio y una sola sucursal: un único resumen que junta todo (aunque la cuenta tenga más negocios cargados)
-  const lista=esBasico()?[{id:null,_todos:true,icon:negocios[0].icon,nombre:negocios.length===1?negocios[0].nombre:'Resumen de caja'}]:negocios;
+  const lista=basicoUnico()?[{id:null,_todos:true,icon:negocios[0].icon,nombre:negocios.length===1?negocios[0].nombre:'Resumen de caja'}]:negocios;
   return lista.map(n=>{
     const m=resumenDatos(n._todos?null:n,fecha);
     const fila=(l,v,st)=>`<div class="cierre-row"><span class="cierre-label">${l}</span><span class="cierre-val"${st?` style="color:${st}"`:''}>${fmtARS(v)}</span></div>`;
@@ -1911,7 +1929,7 @@ function resumenCajaHTML(fecha){
 function cerrarCajaWA(fecha){
   pasoMarcar('cierre');
   const f=new Date(fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const lista=esBasico()?[{_todos:true,nombre:negocios.length===1?negocios[0].nombre:'PuntoVenta'}]:negocios;
+  const lista=basicoUnico()?[{_todos:true,nombre:negocios.length===1?negocios[0].nombre:'PuntoVenta'}]:negocios;
   const bloques=lista.map(n=>{
     const m=resumenDatos(n._todos?null:n,fecha);
     const l=[`*🔒 Cierre de caja — ${n.nombre}*`,f,'',`💵 Efectivo: ${fmtARS(m.ef)}`,`📱 Mercado Pago: ${fmtARS(m.mp)}`,`💳 Débito: ${fmtARS(m.deb)}`,`💰 Crédito: ${fmtARS(m.cred)}`,`🏦 Transferencia: ${fmtARS(m.tr)}`,`*Total cobrado: ${fmtARS(m.total)}*`];
@@ -2116,7 +2134,7 @@ async function agregarGasto(){
   if(!importe||importe<=0){toast('Ingresá un importe válido','err');return;}
   const btn=document.getElementById('btn-add-gasto');btn.disabled=true;btn.textContent='Guardando...';
   try{
-    const negocioActivo=negocios[0];
+    const negocioActivo=negVenta();
     await addDoc(collection(db,'gastos'),{
       negocioId:negocioActivo.id,ownerUid:me.uid,
       descripcion,importe,
@@ -2577,7 +2595,7 @@ document.getElementById('btn-modal-venta-save').addEventListener('click',async()
       });
       toast('Venta actualizada','green');
     } else {
-      const negocioActivo=negocios[0]; // en modo único hay uno solo; en multi, el primero hasta que se agregue selector
+      const negocioActivo=negVenta(); // en modo único hay uno solo; con varias sucursales, la elegida (por defecto la primera)
       await addDoc(collection(db,'ventas'),{
         negocioId:negocioActivo.id,ownerUid:me.uid,
         empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
@@ -2791,7 +2809,7 @@ async function guardarVentaPagos({importe,desc,pagos,cli,items}){
   const fp=pagos.filter(p=>p.medio==='fiado').reduce((a,p)=>a+p.importe,0);
   const batch=writeBatch(db);
   const vref=doc(collection(db,'ventas'));
-  const data={negocioId:negocios[0].id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
+  const data={negocioId:negVenta().id,ownerUid:me.uid,empleadoUid:me.uid,empleadoNombre:me.email.split('@')[0],
     importe,medio:pagos.length>1?'mixto':pagos[0].medio,pagos,descripcion:desc||'',fecha:hoy(),hora:fmtHora(),createdAt:serverTimestamp()};
   if(fp>0&&cli){data.clienteId=cli.id;data.clienteNombre=cli.nombre;}
   if(items&&items.length)data.items=items;   // venta por catálogo: base del stock
@@ -2988,6 +3006,7 @@ function renderVender(){
         <label style="font-size:12px;color:var(--muted)">¿A quién se le anota en cuenta?</label>
         <div style="display:flex;gap:8px"><select class="vd-sel" id="vd-cliente" style="flex:1">${opcionesClientes('')}</select><button type="button" class="btn-sm gold" id="vd-cli-nuevo" style="height:42px">＋ Nuevo</button></div>
       </div>
+      ${negChipsHTML()}
       ${esBasico()?'':'<div class="depto-chips" id="depto-chips-vender" style="margin-bottom:8px"></div>'}
       <input class="desc-input" type="text" id="vd-desc" placeholder="${esBasico()?'Descripción (opcional)':sanitizeHTML(rubroDe(negocios[0])?'Ej: '+rubroDe(negocios[0]).ej:'Qué vendiste (opcional)')}"/>
       <button class="btn-venta" id="vd-guardar">✓ Registrar venta</button>
@@ -2996,6 +3015,7 @@ function renderVender(){
     ${resumenCajaHTML(hoy())}
     <div class="sec-header"><span class="sec-title">Últimas ventas de hoy</span><button class="btn-sm" id="vd-ver-todas">Ver historial →</button></div>
     <div class="ventas-list">${vh.slice(0,5).map(v=>ventaHTML(v,true)).join('')||emptyHTML('🧾','Todavía no vendiste nada hoy')}</div>`;
+  bindNegChips();
   el.querySelectorAll('#vd-medios .medio-opt').forEach(b=>b.addEventListener('click',()=>{
     vdSel=b.dataset.m;
     el.querySelectorAll('#vd-medios .medio-opt').forEach(x=>x.className='medio-opt');
