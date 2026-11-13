@@ -1485,7 +1485,7 @@ function applyModoUI(){
   document.body.classList.toggle('pv-basico',basico);
   const mostrar=(page,ok)=>document.querySelectorAll(`[data-page="${page}"]`).forEach(el=>{el.style.display=ok?'':'none';});
   mostrar('vender',basico);                                   // en Avanzada y cuentas anteriores se entra desde Ventas → Nueva venta
-  mostrar('dashboard',!basico);
+  mostrar('dashboard',!basico||tieneMultiNegocio());          // v3.12: en Básico con sucursales es el «Tablero del dueño» (Plus, con candado si no está activo)
   mostrar('negocios',tieneMultiNegocio());                      // v3.11: también en Básico si se activaron sucursales
   mostrar('empleados',basico?tieneMultiNegocio():!esUnico);   // v3.11: Básico con sucursales también invita empleados
   mostrar('clientes',!basico&&tieneMorosidad());
@@ -1493,9 +1493,10 @@ function applyModoUI(){
   mostrar('productos',!basico&&tienePlus('catalogo'));
   // Básico: «Caja» es el inicio (donde se vende y se cierra el día) e «Historial» es la lista de ventas con búsqueda
   const lbl=(page,txt)=>document.querySelectorAll(`[data-page="${page}"]`).forEach(el=>{const t=[...el.childNodes].reverse().find(n=>n.nodeType===3);if(t)t.textContent=txt;});
+  lbl('dashboard',basico?(tienePlus('tablero')?'Tablero del dueño':'🔒 Tablero del dueño'):'Dashboard');
   lbl('vender',basico?'Caja':'Vender');
   lbl('ventas',basico?'Historial':'Caja');
-  PAGE_TITLES.vender=basico?'Caja':'Vender';PAGE_TITLES.ventas=basico?'Historial':'Caja';
+  PAGE_TITLES.dashboard=basico?'Tablero del dueño':'Dashboard';PAGE_TITLES.vender=basico?'Caja':'Vender';PAGE_TITLES.ventas=basico?'Historial':'Caja';
   try{setTopTitle();}catch(e){}
 }
 const SUPERUSER_EMAILS=['rgaraventa@gmail.com'];
@@ -1762,6 +1763,11 @@ function renderDashboard(){
         <div class="ventas-list">${vh.slice(0,4).map(v=>ventaHTML(v,true)).join('')||emptyHTML('🧾','Sin ventas hoy')}</div>
       </div>
     </div>`;
+  if(esBasico()){   // v3.12 Básico con sucursales: acá solo vive el Tablero del dueño (Plus); lo demás ya está en Caja / Sucursales
+    el.querySelector('.kpi-grid')?.remove();el.querySelector('#dash-stock')?.remove();
+    const gr=el.querySelector('div[style*="grid-template-columns"]');
+    if(gr){if(!tienePlus('tablero'))gr.remove();else gr.lastElementChild?.remove();}
+  }
   el.querySelector('#d-ver-neg')?.addEventListener('click',()=>renderPage('negocios'));
   el.querySelector('#d-ver-ven')?.addEventListener('click',()=>renderPage('ventas'));
   el.querySelector('#d-ver-clientes')?.addEventListener('click',()=>renderPage('clientes'));
